@@ -46,14 +46,8 @@ ENDIF(BUILD_PYTHON_INTERFACE)
 
 # Declare Headers
 SET(${PROJECT_NAME}_HEADERS
-		#~ include/centroidal-dynamics-lib/config.hh
-		#~ include/centroidal-dynamics-lib/util.hh
-		#~ include/centroidal-dynamics-lib/logger.hh
-		#~ include/centroidal-dynamics-lib/solver_LP_abstract.hh
-		#~ include/centroidal-dynamics-lib/solver_LP_qpoases.hh
-		#~ include/centroidal-dynamics-lib/solver_LP_clp.hh
-		#~ include/centroidal-dynamics-lib/centroidal_dynamics.hh
-		#~ include/centroidal-dynamics-lib/stop-watch.hh
+                include/bezier-com-traj/config.hh
+                include/bezier-com-traj/solve.hh
   )
 
 find_package(Eigen3)
