@@ -18,7 +18,7 @@ namespace centroidal_dynamics
     {
         ContactData()
             : contactPhase_(0)
-            , Kin_(Matrix3::Zero())
+            , Kin_(Eigen::Matrix3d::Zero())
             , kin_(Vector3::Zero()) {}
        ~ContactData(){}
 
@@ -37,6 +37,7 @@ namespace centroidal_dynamics
         std::vector<ContactData> contacts_;
         Vector3  c0_;
         Vector3 dc0_;
+        Vector3  l0_;
         bool useAngularMomentum_;
     };
 

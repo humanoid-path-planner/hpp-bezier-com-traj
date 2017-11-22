@@ -12,7 +12,7 @@
 
 namespace centroidal_dynamics
 {
-    ResultData solve0step(const ProblemData& pData, const double T);
+    ResultData solve0step(const ProblemData& pData, const std::vector<double> Ts, const double timeStep = -1);
 } // end namespace centroidal_dynamics
 
 #endif

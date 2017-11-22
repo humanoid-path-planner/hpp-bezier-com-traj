@@ -10,19 +10,17 @@
 
 using namespace centroidal_dynamics;
 
-typedef Eigen::Matrix<double, 6, 3, 0, 6, 3> matrix6_t;
-typedef Eigen::Matrix<double, 6, 1, 0, 6, 1> point6_t;
+typedef Matrix63 matrix6_t;
+typedef Vector6 point6_t;
 typedef std::pair<matrix6_t, point6_t> waypoint_t;
-typedef Eigen::Matrix3d matrix3_t;
 
-typedef const Eigen::Ref<const matrix3_t>& matrix3_tC;
 typedef const Eigen::Ref<const point_t>& point_t_tC;
 
 typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
 
-matrix3_t skew(point_t_tC x)
+Matrix3 skew(point_t_tC x)
 {
-    matrix3_t res = matrix3_t::Zero();
+    Matrix3 res = Matrix3::Zero();
     res(0,1) = - x(2); res(0,2) =   x(1);
     res(1,0) =   x(2); res(1,2) = - x(0);
     res(2,0) = - x(1); res(2,1) =   x(0);
@@ -37,10 +35,10 @@ waypoint_t initwp()
     return w;
 }
 
-waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, matrix3_tC p0X, matrix3_tC /*p1X*/, matrix3_tC /*gX*/, const double alpha)
+waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
     waypoint_t w = initwp();
-    w.first.block<3,3>(0,0) = 6*alpha*matrix3_t::Identity();
+    w.first.block<3,3>(0,0) = 6*alpha* Matrix3::Identity();
     w.first.block<3,3>(3,0) = 6*alpha*p0X;
     w.second.head(3) = 6*alpha*(p0 - 2*p1);
     w.second.tail(3) =-p0.cross(12*alpha*p1 + g);
@@ -54,10 +52,10 @@ waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, matrix3_tC p0X, matrix
     ws[3:]   = X(-p0, 12*alpha*p1 + g )
     return  (wx, ws)*/
 
-waypoint_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, matrix3_tC /*p0X*/, matrix3_tC /*p1X*/, matrix3_tC gX, const double alpha)
+waypoint_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& gX, const double alpha)
 {
     waypoint_t w = initwp();
-    w.first.block<3,3>(0,0) = 3*alpha*matrix3_t::Identity();
+    w.first.block<3,3>(0,0) = 3*alpha*Matrix3::Identity();
     w.first.block<3,3>(3,0) = skew(1.5 * (3*p1 - p0))*alpha;
     w.second.head(3) = 1.5 *alpha* (3*p0 - 5*p1);
     w.second.tail(3) =(3*alpha*p0).cross(-p1) + 0.25 * (gX * (3*p1 + p0)) ;
@@ -72,7 +70,7 @@ waypoint_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, matrix3_tC /*p0X*/
     ws[3:]   = X(3*alpha*p0, -p1) + 0.25 * (gX.dot(3*p1 + p0))
     return  (wx, ws)
 */
-waypoint_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, matrix3_tC /*p0X*/, matrix3_tC /*p1X*/, matrix3_tC gX, const double alpha)
+waypoint_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& gX, const double alpha)
 {
     waypoint_t w = initwp();
     // w.first.block<3,3>(0,0) = 0;
@@ -91,10 +89,10 @@ def w2(p0, p1, g, p0X, p1X, gX, alpha):
     ws[3:]   = 0.5 * gX.dot(p1)
     return  (wx, ws)
 */
-waypoint_t w3 (point_t_tC p0, point_t_tC p1, point_t_tC g, matrix3_tC /*p0X*/, matrix3_tC /*p1X*/, matrix3_tC /*gX*/, const double alpha)
+waypoint_t w3 (point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
     waypoint_t w = initwp();
-    w.first.block<3,3>(0,0) = -3*alpha*matrix3_t::Identity();
+    w.first.block<3,3>(0,0) = -3*alpha*Matrix3::Identity();
     w.first.block<3,3>(3,0) = skew(g - 1.5 *alpha* (p1 + p0));
     w.second.head(3) = 1.5*alpha * (p1 + p0);
     //w.second.tail(3) = 0;
@@ -110,10 +108,10 @@ def w3(p0, p1, g, p0X, p1X, gX, alpha):
     #~ ws[3:]   = 0
     return  (wx, ws)
 */
-waypoint_t w4 (point_t_tC /*p0*/, point_t_tC p1, point_t_tC g, matrix3_tC /*p0X*/, matrix3_tC /*p1X*/, matrix3_tC /*gX*/, const double alpha)
+waypoint_t w4 (point_t_tC /*p0*/, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
     waypoint_t w = initwp();
-    w.first.block<3,3>(0,0) = -6*alpha *matrix3_t::Identity();
+    w.first.block<3,3>(0,0) = -6*alpha * Matrix3::Identity();
     w.first.block<3,3>(3,0) = skew(g - 6*alpha* p1);
     w.second.head(3) = 6*alpha*p1;
     //w.second.tail(3) = 0;
@@ -183,11 +181,20 @@ std::vector<waypoint_t> ComputeDiscretizedWaypoints(const std::vector<waypoint_t
     return res;
 }
 
-std::vector<waypoint_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC p1, point_t_tC g, double T, int numSteps = -1 )
+
+int computeNumSteps(const double T, const double timeStep)
 {
-    matrix3_t p0X = skew(p0);
-    matrix3_t p1X = skew(p1);
-    matrix3_t  gX = skew( g);
+    return timeStep > 0. ? int(T / timeStep) : -1;
+}
+
+std::vector<waypoint_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, point_t_tC g, const double T, const double timeStep)
+{
+    int numSteps = computeNumSteps(T, timeStep);
+    static const double  n = 3.; //degree
+    point_t p1 = dc0 * T / n +  p0;
+    Matrix3 p0X = skew(p0);
+    Matrix3 p1X = skew(p1);
+    Matrix3  gX = skew( g);
     double alpha = 1. / (T*T);
     std::vector<waypoint_t> wps;
     wps.push_back(w0(p0, p1, g, p0X, p1X, gX, alpha));
@@ -200,10 +207,71 @@ std::vector<waypoint_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC p1, point_
     return wps;
 }
 
+MatrixXX initMatrixA(const int dimH, const std::vector<waypoint_t>& wps, Cref_vectorX kin)
+{
+    int dimKin = kin == point_t::Zero() ? 0 : kin.rows();
+    return MatrixXX::Zero(dimH * wps.size() + dimKin, 3);
+}
+
+
+/*def __add_kinematic_and_normalize(self,A,b):
+    if self._kinematic_constraints != None:
+        dim_kin = self._kinematic_constraints[0].shape[0]
+        A[-dim_kin:,:] = self._kinematic_constraints[0][:]
+        b[-dim_kin:] =  self._kinematic_constraints[1][:]
+    A, b = normalize(A,b)
+    self.__Ain = A[:]; self.__Aub = b[:]*/
+
+void addKinematicAndNormalize(Cref_matrixXX A, Cref_vectorX b, Cref_matrixX3 Kin, Cref_vectorX kin)
+{
+
+}
+
+/* compute the inequality methods that determine the 6D bezier curve w(t)
+as a function of a variable waypoint for the 3D COM trajectory.
+The initial curve is of degree 3 (init pos and velocity, 0 velocity constraints + one free variable).
+The 6d curve is of degree 2*n-2 = 4, thus 5 control points are to be computed.
+Each control point produces a 6 * 3 inequality matrix wix, and a 6 *1 column right member wsi.
+Premultiplying it by H gives mH w_xi * x <= mH_wsi where m is the mass
+Stacking all of these results in a big inequality matrix A and a column vector x that determines the constraints
+On the 6d curves, Ain x <= Aub
+*/
+std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, point_t_tC c0, point_t_tC dc0, point_t_tC l0, const bool useAngMomentum, double T, double timeStep)
+{
+    std::pair<MatrixXX, VectorX> res;
+    MatrixXX& A = res.first;
+    VectorX&  b = res.second;
+    // gravity vector
+    point_t g = point_t::Zero(); g(2) = -9.81;
+    // compute waypoints
+    std::vector<waypoint_t> wps = ComputeAllWaypoints(c0, dc0, g, T, timeStep);
+    // compute GIWC
+    MatrixXX H; VectorX h;
+    cData.contactPhase_->getPolytopeInequalities(H,h);
+    H = -H;
+    int dimH = H.rows();
+    MatrixXX mH = cData.contactPhase_->m_mass * H;
+    // init and fill Ab matrix
+    A = initMatrixA(dimH, wps, cData.kin_);
+    b = VectorX::Zero(A.rows());
+    point6_t bc = point6_t::Zero(); bc.head(3) = g; // constant part of Aub, Aubi = mH * (bc - wsi)
+    int i = 0;
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps.begin(); wpcit != wps.end(); ++wpcit)
+    {
+        A.block(i*dimH,0, dimH, 6) = mH * wpcit->first;
+        b.segment(i*dimH, dimH) = mH * (bc - wpcit->second); // TODO is this ok?
+        ++i;
+    }
+    return res;
+}
+
 // no angular momentum for now
-ResultData solve0step(const ProblemData& pData, const double T, int numSteps = -1)
+ResultData solve0step(const ProblemData& pData,  const std::vector<double> Ts, const double timeStep)
 {
     assert(pData.contacts_.size() ==1);
+    assert(Ts.size() == pData.contacts_.size());
+    compute6dControlPointInequalities(pData.contacts_.front(),pData.c0_, pData.dc0_, pData.l0_, false, Ts.front(),timeStep);
+
     ResultData res;
     return res;
 }
