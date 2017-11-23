@@ -209,7 +209,7 @@ std::vector<waypoint_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, point
 
 MatrixXX initMatrixA(const int dimH, const std::vector<waypoint_t>& wps, Cref_vectorX kin)
 {
-    int dimKin = kin == point_t::Zero() ? 0 : kin.rows();
+    int dimKin = kin == point_t::Zero() ? 0 : (int)(kin.rows());
     return MatrixXX::Zero(dimH * wps.size() + dimKin, 3);
 }
 
@@ -249,7 +249,7 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     MatrixXX H; VectorX h;
     cData.contactPhase_->getPolytopeInequalities(H,h);
     H = -H;
-    int dimH = H.rows();
+    int dimH = (int)(H.rows());
     MatrixXX mH = cData.contactPhase_->m_mass * H;
     // init and fill Ab matrix
     A = initMatrixA(dimH, wps, cData.kin_);
@@ -259,10 +259,23 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     for (std::vector<waypoint_t>::const_iterator wpcit = wps.begin(); wpcit != wps.end(); ++wpcit)
     {
         A.block(i*dimH,0, dimH, 6) = mH * wpcit->first;
-        b.segment(i*dimH, dimH) = mH * (bc - wpcit->second); // TODO is this ok?
+        b.segment(i*dimH, dimH) = mH * (bc - wpcit->second);
         ++i;
     }
+    addKinematicAndNormalize(A,b, cData.Kin_,cData.kin_);
+    if (useAngMomentum)
+    {
+
+    }
     return res;
+
+    /*
+use_angular_momentum = l0 != None
+        A,b = self.__add_kinematic_and_normalize(A,b, not use_angular_momentum)
+        if use_angular_momentum:
+            A,b = self.__add_angular_momentum(A,b, l0, T, num_steps)
+        self.__Ain = A[:]; self.__Aub = b[:]
+*/
 }
 
 // no angular momentum for now
