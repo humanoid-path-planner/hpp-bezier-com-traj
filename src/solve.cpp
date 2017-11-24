@@ -272,20 +272,19 @@ std::pair<MatrixXX, VectorX> computeCostFunction(point_t_tC p0, point_t_tC l0, c
     std::pair<MatrixXX, VectorX> res;
     res.first  = MatrixXX(dimPb,dimPb);
     res.second = VectorX (dimPb);
-    Ref_matrixXX D = res.first;
-    Ref_vectorX  d = res.second;
+    Ref_matrixXX H = res.first;
+    Ref_vectorX  g = res.second;
 
     //minimize distance to initial point
     double weightDist = useAngMomentum ? 0. : 1.;
-    D.block<3,3>(0,0) = Matrix3::Identity() * weightDist;
-    d.head(3) = p0 * weightDist;
+    H.block<3,3>(0,0) = Matrix3::Identity() * weightDist;
+    g.head(3) = - p0 * weightDist;
 
     // now angular momentum integral minimization
     if(useAngMomentum)
     {
-        double alpha = sqrt(12./5.);
-        D.block<3,3>(3,3) = Matrix3::Identity() * alpha;
-        d.tail(3) = (9.* l0) / (5. * alpha);
+        H.block<3,3>(3,3) = Matrix3::Identity() * 6./5.;
+        g.tail(3) = 0.5 *(-(9.* l0) / 5.);
     }
     return res;
 }
@@ -329,11 +328,12 @@ ResultData solve0step(const ProblemData& pData,  const std::vector<double> Ts, c
     assert(pData.contacts_.size() ==1);
     assert(Ts.size() == pData.contacts_.size());    
     std::pair<MatrixXX, VectorX> Ab = compute6dControlPointInequalities(pData.contacts_.front(),pData.c0_, pData.dc0_, pData.l0_, pData.useAngularMomentum_, Ts.front(),timeStep);
-    std::pair<MatrixXX, VectorX> Dd = computeCostFunction(pData.c0_, pData.l0_, pData.useAngularMomentum_);
+    std::pair<MatrixXX, VectorX> Hg = computeCostFunction(pData.c0_, pData.l0_, pData.useAngularMomentum_);
     int dimPb = pData.useAngularMomentum_ ? 6 : 3;
     VectorX init = VectorX(dimPb);
     init.head(3) = pData.c0_;
-    ResultData res = solve(Ab.first,Ab.second,Dd.first,Dd.second, init);
+    // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
+    ResultData res = solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
     if(res.success_)
         computeRealCost(pData, res);
     return res;
