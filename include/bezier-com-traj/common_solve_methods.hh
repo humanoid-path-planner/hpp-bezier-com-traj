@@ -25,7 +25,7 @@ typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
 Matrix3 skew(point_t_tC x);
 waypoint_t initwp();
 std::vector<waypoint_t> ComputeDiscretizedWaypoints(const std::vector<waypoint_t>& wps, const std::vector<spline::Bern<double> >& bernstein, int numSteps);
-std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum, double T, double timeStep);
+std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum);
 
 
 /**
@@ -36,7 +36,7 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
  * @param g cost Vector
  * @return
  */
-ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g);
+ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess);
 
 
 } // end namespace bezier_com_traj

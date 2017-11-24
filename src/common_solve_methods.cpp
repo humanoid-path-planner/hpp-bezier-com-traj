@@ -121,7 +121,7 @@ size_t Normalize(Ref_matrixXX& A, Ref_vectorX& b)
     return zeroindex;
 }
 
-std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum, double T, double timeStep)
+std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum)
 {
     std::pair<MatrixXX, VectorX> res;
     Ref_matrixXX A = res.first;
@@ -165,7 +165,7 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     return res;
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g)
+ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
 {
     /*
    * solves the problem
@@ -175,7 +175,18 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX 
    * Thus CI = -A; ci0 = b
    *      CI = 0; ce0 = 0
    */
-    tsid::solvers::EiquadprogFast solver();
-
-    //solver.solve_quadprog(H,h,)
+    MatrixXX CI = -A;
+    MatrixXX CE = MatrixXX::Zero(1,A.cols());
+    VectorX ce0  = VectorX::Zero(A.cols());
+    tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
+    VectorX x = initGuess;
+    tsid::solvers::EiquadprogFast_status status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
+    ResultData res;
+    res.success_ = status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL;
+    if(res.success_)
+    {
+        res.x = x;
+        res.cost_ = QPsolver.getObjValue();
+    }
+    return res;
 }

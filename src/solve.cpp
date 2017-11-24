@@ -263,7 +263,7 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     wps = ComputeAllWaypoints(c0, dc0, cData.contactPhase_->m_gravity, T, timeStep);
     if (useAngMomentum)
         wpL = ComputeAllWaypointsAngularMomentum(l0, T, timeStep);
-    return compute6dControlPointInequalities(cData,wps,wpL, useAngMomentum,T, timeStep);
+    return compute6dControlPointInequalities(cData,wps,wpL, useAngMomentum);
 }
 
 std::pair<MatrixXX, VectorX> computeCostFunction(point_t_tC p0, point_t_tC l0, const bool useAngMomentum)
@@ -330,7 +330,10 @@ ResultData solve0step(const ProblemData& pData,  const std::vector<double> Ts, c
     assert(Ts.size() == pData.contacts_.size());    
     std::pair<MatrixXX, VectorX> Ab = compute6dControlPointInequalities(pData.contacts_.front(),pData.c0_, pData.dc0_, pData.l0_, pData.useAngularMomentum_, Ts.front(),timeStep);
     std::pair<MatrixXX, VectorX> Dd = computeCostFunction(pData.c0_, pData.l0_, pData.useAngularMomentum_);
-    ResultData res = solve(Ab.first,Ab.second,Dd.first,Dd.second);
+    int dimPb = pData.useAngularMomentum_ ? 6 : 3;
+    VectorX init = VectorX(dimPb);
+    init.head(3) = pData.c0_;
+    ResultData res = solve(Ab.first,Ab.second,Dd.first,Dd.second, init);
     if(res.success_)
         computeRealCost(pData, res);
     return res;
