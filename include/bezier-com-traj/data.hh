@@ -19,12 +19,16 @@ namespace centroidal_dynamics
         ContactData()
             : contactPhase_(0)
             , Kin_(Eigen::Matrix3d::Zero())
-            , kin_(Vector3::Zero()) {}
+            , kin_(Vector3::Zero())
+            , Ang_(Eigen::Matrix3d::Zero())
+            , ang_(Vector3::Zero()) {}
        ~ContactData(){}
 
        centroidal_dynamics::Equilibrium* contactPhase_;
        MatrixX3 Kin_;
        VectorX kin_;
+       MatrixX3 Ang_;
+       VectorX ang_;
     };
 
     struct ProblemData
@@ -52,6 +56,8 @@ namespace centroidal_dynamics
         ~ResultData(){}
 
         bool success_;
+        double cost_;
+        VectorX x;
         bezier_t* c_of_t_;
         bezier_t* dL_of_t_;
     };

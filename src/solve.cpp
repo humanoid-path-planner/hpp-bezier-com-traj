@@ -4,36 +4,9 @@
  */
 
 #include <bezier-com-traj/solve.hh>
-#include <spline/bernstein.h>
-//#include <qpOASES.hpp>
-
+#include <bezier-com-traj/common_solve_methods.hh>
 
 using namespace centroidal_dynamics;
-
-typedef Matrix63 matrix6_t;
-typedef Vector6 point6_t;
-typedef std::pair<matrix6_t, point6_t> waypoint_t;
-
-typedef const Eigen::Ref<const point_t>& point_t_tC;
-
-typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
-
-Matrix3 skew(point_t_tC x)
-{
-    Matrix3 res = Matrix3::Zero();
-    res(0,1) = - x(2); res(0,2) =   x(1);
-    res(1,0) =   x(2); res(1,2) = - x(0);
-    res(2,0) = - x(1); res(2,1) =   x(0);
-    return res;
-}
-
-waypoint_t initwp()
-{
-    waypoint_t w;
-    w.first  = matrix6_t::Zero();
-    w.second = point6_t::Zero();
-    return w;
-}
 
 waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
@@ -125,34 +98,100 @@ def w4(p0, p1, g, p0X, p1X, gX, alpha):
     wx[3:,:] = skew(g - 6*alpha* p1)
     ws[:3]   = 6*alpha*p1
     #~ ws[3:]   = 0
-    return  (wx, ws)
+    return  (wx, ws)*/
 
+
+waypoint_t u0 (point_t_tC l0, const double alpha)
+{
+    waypoint_t w = initwp();
+    //w.first.block<3,3>(0,0) = 0;
+    w.first.block<3,3>(3,0) = 3*alpha * Matrix3::Identity();
+    //w.second.head(3) = 0;
+    w.second.tail(3) = -3*alpha*l0;
+    return w;
+}
+
+/*
 #angular momentum waypoints
 def u0(l0, alpha):
     ux, us = __init_6D()
     ux[3:] = identity(3)* 3 * alpha
     us[3:] = -3*alpha*l0[:]
     return  (ux, us)
+*/
 
+
+waypoint_t u1 (point_t_tC l0, const double alpha)
+{
+    waypoint_t w = initwp();
+    //w.first.block<3,3>(0,0) = 0;
+    //w.first.block<3,3>(3,0) = 0;
+    //w.second.head(3) = 0;
+    w.second.tail(3) = -1.5*alpha*l0;
+    return w;
+}
+
+
+/*
 def u1(l0, alpha):
     ux, us = __init_6D()
     us[3:] = -1.5*l0*alpha
     return  (ux, us)
+*/
 
+waypoint_t u2 (point_t_tC l0, const double alpha)
+{
+    waypoint_t w = initwp();
+    //w.first.block<3,3>(0,0) = 0;
+    w.first.block<3,3>(3,0) = -1.5*alpha * Matrix3::Identity();
+    //w.second.head(3) = 0;
+    w.second.tail(3) = -l0 / 2. * alpha;
+    return w;
+}
+
+
+/*
 def u2(l0, alpha):
     ux, us = __init_6D()
     ux[3:] = identity(3)* (-1.5) * alpha
     us[3:] = -l0 / 2. * alpha
-    return  (ux, us)
+*/
+
+waypoint_t u3 (point_t_tC /*l0*/, const double alpha)
+{
+    waypoint_t w = initwp();
+    //w.first.block<3,3>(0,0) = 0;
+    w.first.block<3,3>(3,0) = -1.5*alpha * Matrix3::Identity();
+    //w.second.head(3) = 0;
+    //w.second.tail(3) = 0.;
+    return w;
+}
+
+
+/*   return  (ux, us)
 
 def u3(l0, alpha):
     ux, us = __init_6D()
     ux[3:] = identity(3)*  (-1.5) * alpha
     return  (ux, us)
+*/
 
+waypoint_t u4 (point_t_tC /*l0*/, const double /*alpha*/)
+{
+    waypoint_t w = initwp();
+    //w.first.block<3,3>(0,0) = 0;
+    //w.first.block<3,3>(3,0) = 0;
+    //w.second.head(3) = 0;
+    //w.second.tail(3) = 0.;
+    return w;
+}
+
+
+/*
 def u4(l0, alpha):
     ux, us = __init_6D()
     return  (ux, us)*/
+
 
 std::vector<spline::Bern<double> > ComputeBersteinPolynoms()
 {
@@ -161,26 +200,6 @@ std::vector<spline::Bern<double> > ComputeBersteinPolynoms()
         res.push_back(spline::Bern<double>(4,i));
     return res;
 }
-
-std::vector<waypoint_t> ComputeDiscretizedWaypoints(const std::vector<waypoint_t>& wps,  int numSteps)
-{
-    double dt = 1./numSteps;
-    std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms();
-    std::vector<waypoint_t> res;
-    for (int i =0; i < numSteps + 1; ++i)
-    {
-        waypoint_t w = initwp();
-        for (int j = 0; j <5; ++j)
-        {
-            double b = berns[j](i*dt);
-            w.first +=b*(wps[j].first );
-            w.second+=b*(wps[j].second);
-        }
-        res.push_back(w);
-    }
-    return res;
-}
-
 
 int computeNumSteps(const double T, const double timeStep)
 {
@@ -203,29 +222,31 @@ std::vector<waypoint_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, point
     wps.push_back(w3(p0, p1, g, p0X, p1X, gX, alpha));
     wps.push_back(w4(p0, p1, g, p0X, p1X, gX, alpha));
     if (numSteps > 0)
-        wps = ComputeDiscretizedWaypoints(wps, numSteps);
+    {
+        std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms();
+        wps = ComputeDiscretizedWaypoints(wps, berns, numSteps);
+    }
     return wps;
 }
 
-MatrixXX initMatrixA(const int dimH, const std::vector<waypoint_t>& wps, Cref_vectorX kin)
+std::vector<waypoint_t> ComputeAllWaypointsAngularMomentum(point_t_tC l0, const double T, const double timeStep)
 {
-    int dimKin = kin == point_t::Zero() ? 0 : (int)(kin.rows());
-    return MatrixXX::Zero(dimH * wps.size() + dimKin, 3);
+    int numSteps = computeNumSteps(T, timeStep);
+    double alpha = 1. / (T);
+    std::vector<waypoint_t> wps;
+    wps.push_back(u0(l0, alpha));
+    wps.push_back(u1(l0, alpha));
+    wps.push_back(u2(l0, alpha));
+    wps.push_back(u3(l0, alpha));
+    wps.push_back(u4(l0, alpha));
+    if (numSteps > 0)
+    {
+        std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms();
+        wps = ComputeDiscretizedWaypoints(wps, berns, numSteps);
+    }
+    return wps;
 }
 
-
-/*def __add_kinematic_and_normalize(self,A,b):
-    if self._kinematic_constraints != None:
-        dim_kin = self._kinematic_constraints[0].shape[0]
-        A[-dim_kin:,:] = self._kinematic_constraints[0][:]
-        b[-dim_kin:] =  self._kinematic_constraints[1][:]
-    A, b = normalize(A,b)
-    self.__Ain = A[:]; self.__Aub = b[:]*/
-
-void addKinematicAndNormalize(Cref_matrixXX A, Cref_vectorX b, Cref_matrixX3 Kin, Cref_vectorX kin)
-{
-
-}
 
 /* compute the inequality methods that determine the 6D bezier curve w(t)
 as a function of a variable waypoint for the 3D COM trajectory.
@@ -238,54 +259,80 @@ On the 6d curves, Ain x <= Aub
 */
 std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, point_t_tC c0, point_t_tC dc0, point_t_tC l0, const bool useAngMomentum, double T, double timeStep)
 {
-    std::pair<MatrixXX, VectorX> res;
-    MatrixXX& A = res.first;
-    VectorX&  b = res.second;
-    // gravity vector
-    point_t g = point_t::Zero(); g(2) = -9.81;
-    // compute waypoints
-    std::vector<waypoint_t> wps = ComputeAllWaypoints(c0, dc0, g, T, timeStep);
-    // compute GIWC
-    MatrixXX H; VectorX h;
-    cData.contactPhase_->getPolytopeInequalities(H,h);
-    H = -H;
-    int dimH = (int)(H.rows());
-    MatrixXX mH = cData.contactPhase_->m_mass * H;
-    // init and fill Ab matrix
-    A = initMatrixA(dimH, wps, cData.kin_);
-    b = VectorX::Zero(A.rows());
-    point6_t bc = point6_t::Zero(); bc.head(3) = g; // constant part of Aub, Aubi = mH * (bc - wsi)
-    int i = 0;
-    for (std::vector<waypoint_t>::const_iterator wpcit = wps.begin(); wpcit != wps.end(); ++wpcit)
-    {
-        A.block(i*dimH,0, dimH, 6) = mH * wpcit->first;
-        b.segment(i*dimH, dimH) = mH * (bc - wpcit->second);
-        ++i;
-    }
-    addKinematicAndNormalize(A,b, cData.Kin_,cData.kin_);
+    std::vector<waypoint_t> wps, wpL;
+    wps = ComputeAllWaypoints(c0, dc0, cData.contactPhase_->m_gravity, T, timeStep);
     if (useAngMomentum)
-    {
+        wpL = ComputeAllWaypointsAngularMomentum(l0, T, timeStep);
+    return compute6dControlPointInequalities(cData,wps,wpL, useAngMomentum,T, timeStep);
+}
 
+std::pair<MatrixXX, VectorX> computeCostFunction(point_t_tC p0, point_t_tC l0, const bool useAngMomentum)
+{
+    int dimPb = useAngMomentum ? 6 : 3;
+    std::pair<MatrixXX, VectorX> res;
+    res.first  = MatrixXX(dimPb,dimPb);
+    res.second = VectorX (dimPb);
+    Ref_matrixXX D = res.first;
+    Ref_vectorX  d = res.second;
+
+    //minimize distance to initial point
+    double weightDist = useAngMomentum ? 0. : 1.;
+    D.block<3,3>(0,0) = Matrix3::Identity() * weightDist;
+    d.head(3) = p0 * weightDist;
+
+    // now angular momentum integral minimization
+    if(useAngMomentum)
+    {
+        double alpha = sqrt(12./5.);
+        D.block<3,3>(3,3) = Matrix3::Identity() * alpha;
+        d.tail(3) = (9.* l0) / (5. * alpha);
     }
     return res;
+}
+/*weight_dist_or = 1. if l0 == None else 0.
+            #weight_dist_or = 0
+            D = identity(dim_pb);
+            alpha = sqrt(12./5.)
+            for i in range(3):
+                D[i,i] = weight_dist_or
+            d = zeros(dim_pb);
+            d[:3]= self._p0 * weight_dist_or
+            if(l0 != None):
+                # minimizing integral of angular momentum
+                for i in range(3,6):
+                    D[i,i] = alpha
+                d[3:]= (9.* l0) / (5. * alpha)
+            D = (D[:]); d = (d[:]); A = (self.__Ain[:]);
+            lbA = (-100000.* ones(self.__Ain.shape[0]))[:]; ubA=(self.__Aub);
+            lb = (-100. * ones(dim_pb))[:]; ub = (100. * ones(dim_pb))[:];
+            self._qp_solver.setProblemData(D = D , d = d, A=A, lbA=lbA, ubA=ubA, lb = lb, ub = ub, x0=None)
+            (x, imode) =  self._qp_solver.solve(D = D , d = d, A=A, lbA=lbA, ubA=ubA, lb = lb, ub = ub, x0=None)
+            if l0 == None:
+                cost = norm(self._p0 - x)
+            else:
+                cost = (1./5.)*(9.*l0.dot(l0) -  9.*l0.dot(x[3:]) + 6.*x[3:].dot(x[3:]))*/
 
-    /*
-use_angular_momentum = l0 != None
-        A,b = self.__add_kinematic_and_normalize(A,b, not use_angular_momentum)
-        if use_angular_momentum:
-            A,b = self.__add_angular_momentum(A,b, l0, T, num_steps)
-        self.__Ain = A[:]; self.__Aub = b[:]
-*/
+void computeRealCost(const ProblemData& pData, ResultData& resData)
+{
+    if(pData.useAngularMomentum_)
+    {
+        Vector3 xL = resData.x.tail(3);
+        resData.cost_ = (1./5.)*(9.*pData.l0_.dot(pData.l0_) -  9.*pData.l0_.dot(xL) + 6.*xL.dot(xL));
+    }
+    else
+        resData.cost_ = (pData.c0_ - resData.x).norm();
 }
 
 // no angular momentum for now
 ResultData solve0step(const ProblemData& pData,  const std::vector<double> Ts, const double timeStep)
 {
     assert(pData.contacts_.size() ==1);
-    assert(Ts.size() == pData.contacts_.size());
-    compute6dControlPointInequalities(pData.contacts_.front(),pData.c0_, pData.dc0_, pData.l0_, false, Ts.front(),timeStep);
-
-    ResultData res;
+    assert(Ts.size() == pData.contacts_.size());    
+    std::pair<MatrixXX, VectorX> Ab = compute6dControlPointInequalities(pData.contacts_.front(),pData.c0_, pData.dc0_, pData.l0_, pData.useAngularMomentum_, Ts.front(),timeStep);
+    std::pair<MatrixXX, VectorX> Dd = computeCostFunction(pData.c0_, pData.l0_, pData.useAngularMomentum_);
+    ResultData res = solve(Ab.first,Ab.second,Dd.first,Dd.second);
+    if(res.success_)
+        computeRealCost(pData, res);
     return res;
 }
 
