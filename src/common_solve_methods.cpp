@@ -1,8 +1,9 @@
 
 #include <bezier-com-traj/common_solve_methods.hh>
+#include <solver/eiquadprog-fast.hpp>
 
 
-using namespace centroidal_dynamics;
+using namespace bezier_com_traj;
 
 
 Matrix3 skew(point_t_tC x)
@@ -14,7 +15,7 @@ Matrix3 skew(point_t_tC x)
     return res;
 }
 
-waypoint_t centroidal_dynamics::initwp()
+waypoint_t bezier_com_traj::initwp()
 {
     waypoint_t w;
     w.first  = matrix6_t::Zero();
@@ -128,9 +129,9 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     // gravity vector
     const point_t& g = cData.contactPhase_->m_gravity;
     // compute GIWC
-    MatrixXX H; VectorX h;
-    cData.contactPhase_->getPolytopeInequalities(H,h);
-    H = -H;
+    centroidal_dynamics::MatrixXX Hrow; VectorX h;
+    cData.contactPhase_->getPolytopeInequalities(Hrow,h);
+    MatrixXX H = -Hrow;
     int dimH = (int)(H.rows());
     MatrixXX mH = cData.contactPhase_->m_mass * H;
     // init and fill Ab matrix
@@ -162,4 +163,19 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     res.first.conservativeResize(zeroindex, A.cols());
     res.second.conservativeResize(zeroindex, 1);
     return res;
+}
+
+ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g)
+{
+    /*
+   * solves the problem
+   * min. x' Hess x + 2 g0' x
+   * s.t. CE x + ce0 = 0
+   *      CI x + ci0 >= 0
+   * Thus CI = -A; ci0 = b
+   *      CI = 0; ce0 = 0
+   */
+    tsid::solvers::EiquadprogFast solver();
+
+    //solver.solve_quadprog(H,h,)
 }

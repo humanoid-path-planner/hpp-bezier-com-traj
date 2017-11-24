@@ -12,8 +12,28 @@
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 #include <vector>
 
-namespace centroidal_dynamics
+namespace bezier_com_traj
 {
+    typedef double value_type;
+    typedef Eigen::Matrix <value_type, 3, 3>                           Matrix3;
+    typedef Eigen::Matrix <value_type, 6, 3>                           Matrix63;
+    typedef Eigen::Matrix <value_type, Eigen::Dynamic, 3>              MatrixX3;
+    typedef Eigen::Matrix <value_type, Eigen::Dynamic, Eigen::Dynamic> MatrixXX;
+    typedef centroidal_dynamics::Vector3 Vector3;
+    typedef centroidal_dynamics::Vector6 Vector6;
+    typedef centroidal_dynamics::VectorX VectorX;
+
+    typedef Eigen::Ref<Vector3>     Ref_vector3;
+    typedef Eigen::Ref<VectorX>     Ref_vectorX;
+    typedef Eigen::Ref<MatrixX3>    Ref_matrixX3;
+    typedef Eigen::Ref<MatrixXX>    Ref_matrixXX;
+
+    typedef const Eigen::Ref<const Vector3>     & Cref_vector3;
+    typedef const Eigen::Ref<const Vector6>     & Cref_vector6;
+    typedef const Eigen::Ref<const VectorX>     & Cref_vectorX;
+    typedef const Eigen::Ref<const MatrixXX>    & Cref_matrixXX;
+    typedef const Eigen::Ref<const MatrixX3>    & Cref_matrixX3;
+
     struct ContactData
     {
         ContactData()
@@ -62,6 +82,6 @@ namespace centroidal_dynamics
         bezier_t* dL_of_t_;
     };
 
-} // end namespace centroidal_dynamics
+} // end namespace bezier_com_traj
 
 #endif

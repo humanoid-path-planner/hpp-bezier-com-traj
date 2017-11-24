@@ -18,8 +18,10 @@ SET(${LIBRARY_NAME}_SOURCES
 		${INCLUDE_DIR}/bezier-com-traj/data.hh
                 ${INCLUDE_DIR}/bezier-com-traj/solve.hh
                 ${INCLUDE_DIR}/bezier-com-traj/common_solve_methods.hh
+                ${INCLUDE_DIR}/solver/eiquadprog-fast.hpp
                 solve.cpp
                 common_solve_methods.cpp
+                eiquadprog-fast.cpp
 		#~ ${INCLUDE_DIR}/centroidal-dynamics-lib/solver_LP_abstract.hh
 		#~ ${INCLUDE_DIR}/centroidal-dynamics-lib/solver_LP_qpoases.hh
 		#~ ${INCLUDE_DIR}/centroidal-dynamics-lib/solver_LP_clp.hh

@@ -10,9 +10,9 @@
 #include <bezier-com-traj/config.hh>
 #include <bezier-com-traj/data.hh>
 
-namespace centroidal_dynamics
+namespace bezier_com_traj
 {
     ResultData solve0step(const ProblemData& pData, const std::vector<double> Ts, const double timeStep = -1);
-} // end namespace centroidal_dynamics
+} // end namespace bezier_com_traj
 
 #endif

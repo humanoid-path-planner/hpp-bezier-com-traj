@@ -6,7 +6,7 @@
 #include <bezier-com-traj/solve.hh>
 #include <bezier-com-traj/common_solve_methods.hh>
 
-using namespace centroidal_dynamics;
+using namespace bezier_com_traj;
 
 waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
