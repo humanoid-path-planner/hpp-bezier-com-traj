@@ -71,13 +71,22 @@ namespace bezier_com_traj
     {
         ResultData():
             success_(false)
-          , c_of_t_(0)
-          , dL_of_t_(0) {}
+          , cost_(-1.){}
         ~ResultData(){}
 
         bool success_;
         double cost_;
         VectorX x;
+    };
+
+    struct BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj : public ResultData
+    {
+        ResultDataCOMTraj():
+            ResultData()
+          , c_of_t_(0)
+          , dL_of_t_(0) {}
+        ~ResultDataCOMTraj(){}
+
         bezier_t* c_of_t_;
         bezier_t* dL_of_t_;
     };

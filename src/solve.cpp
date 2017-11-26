@@ -352,7 +352,7 @@ bezier_t* computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts
 }
 
 // no angular momentum for now
-ResultData solve0step(const ProblemData& pData,  const std::vector<double>& Ts, const double timeStep)
+ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double>& Ts, const double timeStep)
 {
     assert(pData.contacts_.size() ==1);
     assert(Ts.size() == pData.contacts_.size());    
@@ -362,9 +362,12 @@ ResultData solve0step(const ProblemData& pData,  const std::vector<double>& Ts, 
     VectorX init = VectorX(dimPb);
     init.head(3) = pData.c0_;
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
-    ResultData res = solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
-    if(res.success_)
+    ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
+    ResultDataCOMTraj res;
+    if(resQp.success_)
     {
+        res.success_ = true;
+        res.x = resQp.x;
         computeRealCost(pData, res);
         res.c_of_t_  = computeC_of_T (pData,Ts,res.x);
         res.dL_of_t_ = computedL_of_T(pData,Ts,res.x);

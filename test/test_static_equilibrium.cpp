@@ -105,7 +105,7 @@ Vector6 computew(const Equilibrium* eq, const bezier_com_traj::Vector3& c, const
     return w;
 }
 
-bool checkTrajectory(const Equilibrium* eq, const bezier_com_traj::ResultData& resData, const double T, const int num_steps = 100)
+bool checkTrajectory(const Equilibrium* eq, const bezier_com_traj::ResultDataCOMTraj& resData, const double T, const int num_steps = 100)
 {
     // retrieve H
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
@@ -185,7 +185,7 @@ int main()
             pData.dc0_ << fRandom(-1.,1.) , fRandom(-1.,1.) , fRandom(-1.,1.);
             pData.contacts_.push_back(data);
             std::vector<double> Ts;
-            bezier_com_traj::ResultData rData;
+            bezier_com_traj::ResultDataCOMTraj rData;
             double T;
             for (int k = -1; k < 2; ++k)
             {
