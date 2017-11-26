@@ -8,6 +8,8 @@
 
 using namespace bezier_com_traj;
 
+namespace bezier_com_traj
+{
 waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
     waypoint_t w = initwp();
@@ -322,8 +324,35 @@ void computeRealCost(const ProblemData& pData, ResultData& resData)
         resData.cost_ = (pData.c0_ - resData.x).norm();
 }
 
+bezier_t* computeC_of_T(const ProblemData& pData, const std::vector<double>& Ts, Cref_vectorX x)
+{
+    std::vector<Vector3> wps;
+    wps.push_back(pData.c0_);
+    wps.push_back(pData.dc0_ * Ts[0] / 3 + pData.c0_);
+    wps.push_back(x.head(3));
+    wps.push_back(x.head(3));
+    return new bezier_t(wps.begin(), wps.end(),Ts[0]);
+}
+
+bezier_t* computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts, Cref_vectorX x)
+{
+    std::vector<Vector3> wps;
+    if(pData.useAngularMomentum_)
+    {
+        wps.push_back(3*(x.tail(3)  - pData.l0_));
+        wps.push_back(3*(-x.tail(3)));
+        wps.push_back(Vector3::Zero());
+    }
+    else
+    {
+        for (int i = 0; i < 3; ++i)
+            wps.push_back(Vector3::Zero());
+    }
+    return new bezier_t(wps.begin(), wps.end(),Ts[0]);
+}
+
 // no angular momentum for now
-ResultData solve0step(const ProblemData& pData,  const std::vector<double> Ts, const double timeStep)
+ResultData solve0step(const ProblemData& pData,  const std::vector<double>& Ts, const double timeStep)
 {
     assert(pData.contacts_.size() ==1);
     assert(Ts.size() == pData.contacts_.size());    
@@ -335,7 +364,17 @@ ResultData solve0step(const ProblemData& pData,  const std::vector<double> Ts, c
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
     ResultData res = solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
     if(res.success_)
+    {
         computeRealCost(pData, res);
+        // compute trajectory bezier curve
+        std::vector<Vector3> wps;
+        wps.push_back(pData.c0_);
+        wps.push_back(pData.dc0_ * Ts[0] / 3 + pData.c0_);
+        wps.push_back(res.x.head(3));
+        wps.push_back(res.x.head(3));
+        res.c_of_t_ = new bezier_t(wps.begin(), wps.end(),Ts[0]);
+
+    }
     return res;
 }
-
+} // namespace bezier_com_traj

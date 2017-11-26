@@ -31,7 +31,7 @@ SETUP_PROJECT()
 string (REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 MESSAGE( STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS} )
 
-OPTION (BUILD_PYTHON_INTERFACE "Build the python binding" ON)
+OPTION (BUILD_PYTHON_INTERFACE "Build the python binding" OFF)
 IF(BUILD_PYTHON_INTERFACE)
 # search for python
 	FINDPYTHON(2.7  REQUIRED)
@@ -60,24 +60,15 @@ else()
         find_package(Eigen2 REQUIRED)
 endif()
 
-find_package(CDD REQUIRED)
-find_package(CLP)
-
-IF("${CLP_LIBRARY}" STREQUAL "CLP_LIBRARY-NOTFOUND")
-  message(STATUS "CLP_LIBRARY equal to CLP_LIBRARY-NOTFOUND so I assume CLP was not found ")
-else()
-  message(STATUS "CLP library found, defining macro CLP_FOUND")
-  add_definitions(-DCLP_FOUND)
-endif()
 
 #SEARCH_FOR_QPOASES()
 ADD_REQUIRED_DEPENDENCY("qpOASES")
 
 add_subdirectory (src)
 add_subdirectory (test)
-IF(BUILD_PYTHON_INTERFACE)
-	add_subdirectory (python)
-ENDIF(BUILD_PYTHON_INTERFACE)
+#IF(BUILD_PYTHON_INTERFACE)
+#	add_subdirectory (python)
+#ENDIF(BUILD_PYTHON_INTERFACE)
 
 SETUP_PROJECT_FINALIZE()
 

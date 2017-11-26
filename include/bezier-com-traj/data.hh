@@ -34,7 +34,7 @@ namespace bezier_com_traj
     typedef const Eigen::Ref<const MatrixXX>    & Cref_matrixXX;
     typedef const Eigen::Ref<const MatrixX3>    & Cref_matrixX3;
 
-    struct ContactData
+    struct BEZIER_COM_TRAJ_DLLAPI ContactData
     {
         ContactData()
             : contactPhase_(0)
@@ -51,7 +51,7 @@ namespace bezier_com_traj
        VectorX ang_;
     };
 
-    struct ProblemData
+    struct BEZIER_COM_TRAJ_DLLAPI ProblemData
     {
         ProblemData()
             : c0_(Vector3::Zero())
@@ -67,7 +67,7 @@ namespace bezier_com_traj
 
     typedef Eigen::Vector3d point_t;
     typedef spline::bezier_curve  <double, double, 3, true, point_t > bezier_t;
-    struct ResultData
+    struct BEZIER_COM_TRAJ_DLLAPI ResultData
     {
         ResultData():
             success_(false)

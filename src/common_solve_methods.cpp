@@ -3,7 +3,8 @@
 #include <solver/eiquadprog-fast.hpp>
 
 
-using namespace bezier_com_traj;
+namespace bezier_com_traj
+{
 
 
 Matrix3 skew(point_t_tC x)
@@ -15,7 +16,7 @@ Matrix3 skew(point_t_tC x)
     return res;
 }
 
-waypoint_t bezier_com_traj::initwp()
+waypoint_t initwp()
 {
     waypoint_t w;
     w.first  = matrix6_t::Zero();
@@ -26,7 +27,7 @@ waypoint_t bezier_com_traj::initwp()
 
 std::vector<waypoint_t> ComputeDiscretizedWaypoints(const std::vector<waypoint_t>& wps, const std::vector<spline::Bern<double> >& berns,  int numSteps)
 {
-    double dt = 1./numSteps;
+    double dt = 1./double(numSteps);
     std::vector<waypoint_t> res;
     for (int i =0; i < numSteps + 1; ++i)
     {
@@ -48,7 +49,7 @@ MatrixXX initMatrixA(const int dimH, const std::vector<waypoint_t>& wps, const i
     return MatrixXX::Zero(dimH * wps.size() + extraConstraintSize, dimPb);
 }
 
-void addKinematic(Ref_matrixXX& A, Ref_vectorX& b, Cref_matrixX3 Kin, Cref_vectorX kin, const int otherConstraintIndex)
+void addKinematic(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Kin, Cref_vectorX kin, const int otherConstraintIndex)
 {
     int dimKin = (int)(kin.rows());
     if (dimKin == 0) return;
@@ -56,7 +57,7 @@ void addKinematic(Ref_matrixXX& A, Ref_vectorX& b, Cref_matrixX3 Kin, Cref_vecto
     b.tail(dimKin) = kin;
 }
 
-void addAngularMomentum(Ref_matrixXX& A, Ref_vectorX& b, Cref_matrixX3 Ang, Cref_vectorX ang)
+void addAngularMomentum(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Ang, Cref_vectorX ang)
 {
     int dimAng = (int)(ang.rows());
     A.block(A.rows() - dimAng  , 3, dimAng, 3) = Ang;
@@ -100,7 +101,7 @@ size_t removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
     {
         if (empty(i))
         {
-            assert(b(i) * b(i) < 10e-6);
+            assert(b(i) >= 0);
             A.row(i).swap(A.row(last));
             b.row(i).swap(b.row(last));
             empty.segment<1>(i).swap(empty.segment<1>(last));
@@ -112,7 +113,7 @@ size_t removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
     return last+1;
 }
 
-size_t Normalize(Ref_matrixXX& A, Ref_vectorX& b)
+size_t Normalize(Ref_matrixXX A, Ref_vectorX b)
 {
     size_t zeroindex = removeZeroRows(A,b);
     Eigen::VectorXd norm = A.block(0,0,zeroindex,A.cols()).rowwise().norm();
@@ -123,9 +124,8 @@ size_t Normalize(Ref_matrixXX& A, Ref_vectorX& b)
 
 std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum)
 {
-    std::pair<MatrixXX, VectorX> res;
-    Ref_matrixXX A = res.first;
-    Ref_vectorX  b = res.second;
+    MatrixXX A;
+    VectorX  b;
     // gravity vector
     const point_t& g = cData.contactPhase_->m_gravity;
     // compute GIWC
@@ -160,9 +160,9 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     // normalization removes 0 value rows, but resizing
     // must actually be done with matrices and not the references
     size_t zeroindex = Normalize(A,b);
-    res.first.conservativeResize(zeroindex, A.cols());
-    res.second.conservativeResize(zeroindex, 1);
-    return res;
+    A.conservativeResize(zeroindex, A.cols());
+    b.conservativeResize(zeroindex, 1);
+    return std::make_pair(A,b);
 }
 
 ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
@@ -176,8 +176,8 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
    *      CI = 0; ce0 = 0
    */
     MatrixXX CI = -A;
-    MatrixXX CE = MatrixXX::Zero(1,A.cols());
-    VectorX ce0  = VectorX::Zero(A.cols());
+    MatrixXX CE = MatrixXX::Zero(0,A.cols());
+    VectorX ce0  = VectorX::Zero(0);
     tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
     VectorX x = initGuess;
     tsid::solvers::EiquadprogFast_status status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
@@ -190,3 +190,4 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
     }
     return res;
 }
+} // namespace bezier_com_traj
