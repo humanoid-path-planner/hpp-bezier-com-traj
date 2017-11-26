@@ -101,6 +101,8 @@ size_t removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
     {
         if (empty(i))
         {
+            if(b(i) <0)
+                std::cout << "b(i) not 0" << std::endl;
             assert(b(i) >= 0);
             A.row(i).swap(A.row(last));
             b.row(i).swap(b.row(last));

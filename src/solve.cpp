@@ -366,13 +366,8 @@ ResultData solve0step(const ProblemData& pData,  const std::vector<double>& Ts, 
     if(res.success_)
     {
         computeRealCost(pData, res);
-        // compute trajectory bezier curve
-        std::vector<Vector3> wps;
-        wps.push_back(pData.c0_);
-        wps.push_back(pData.dc0_ * Ts[0] / 3 + pData.c0_);
-        wps.push_back(res.x.head(3));
-        wps.push_back(res.x.head(3));
-        res.c_of_t_ = new bezier_t(wps.begin(), wps.end(),Ts[0]);
+        res.c_of_t_  = computeC_of_T (pData,Ts,res.x);
+        res.dL_of_t_ = computedL_of_T(pData,Ts,res.x);
 
     }
     return res;

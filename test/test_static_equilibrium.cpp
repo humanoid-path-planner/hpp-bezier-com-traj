@@ -105,18 +105,19 @@ Vector6 computew(const Equilibrium* eq, const bezier_com_traj::Vector3& c, const
     return w;
 }
 
-bool checkTrajectory(const Equilibrium* eq, const bezier_com_traj::ResultData& resData)
+bool checkTrajectory(const Equilibrium* eq, const bezier_com_traj::ResultData& resData, const double T, const int num_steps = 100)
 {
     // retrieve H
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     eq->getPolytopeInequalities(Hrow,h);
     MatrixXX H = -Hrow;
     bezier_com_traj::bezier_t* c_of_t = resData.c_of_t_;
+    bezier_com_traj::bezier_t* dL_of_t = resData.dL_of_t_;
     bezier_com_traj::bezier_t ddc_of_t = c_of_t->compute_derivate(2);
-    for (int i = 0; i < 20; ++i)
+    for (int i = 0; i < num_steps; ++i)
     {
-        double dt = double(i) /20.;
-        Vector6 w = computew(eq,(*c_of_t)(dt),ddc_of_t(dt));
+        double dt = double(i) / float(num_steps) * T;
+        Vector6 w = computew(eq,(*c_of_t)(dt),ddc_of_t(dt),(*dL_of_t)(dt));
         VectorX res = H*w;
         for(long j=0; j<res.size(); j++)
           if(res(j)>0.00001)
@@ -155,7 +156,7 @@ int main()
   MatrixX3 p, N;
   RVector3 com_LB, com_UB;
   Equilibrium solver_PP ("PP", mass, generatorsPerContact, SOLVER_LP_QPOASES,false,10,false);
-  int success = 0;
+  int succContinuous = 0, succDiscretize = 0, succdL = 0, succDiscretizedL = 0;
   for(unsigned n_test=0; n_test<N_TESTS; n_test++)
   {
     generateContacts(N_CONTACTS, MIN_CONTACT_DISTANCE, LX, LY,
@@ -172,6 +173,7 @@ int main()
 
     Vector3 c0;
     solver_PP.setNewContacts(p,N,mu,EQUILIBRIUM_ALGORITHM_PP);
+    const double DISCRETIZATION_STEP = 0.1;
     if(findStaticEqCOMPos(&solver_PP, com_LB, com_UB,c0))
     {
         for(int j = 0; j < 100; ++j)
@@ -182,19 +184,78 @@ int main()
             pData.c0_ = c0;
             pData.dc0_ << fRandom(-1.,1.) , fRandom(-1.,1.) , fRandom(-1.,1.);
             pData.contacts_.push_back(data);
-            std::vector<double> Ts; Ts.push_back(1.);
-            bezier_com_traj::ResultData rData = bezier_com_traj::solve0step(pData,Ts);
-            if(rData.success_)
+            std::vector<double> Ts;
+            bezier_com_traj::ResultData rData;
+            double T;
+            for (int k = -1; k < 2; ++k)
             {
-                success += 1;
-                checkTrajectory(&solver_PP,rData);
+                bool succCont = false, succDisc = false, succdLbool= false, succDiscdL = false;
+                T = 1. + 0.3 * k;
+                Ts.clear();
+                Ts.push_back(T);
+                rData = bezier_com_traj::solve0step(pData,Ts);
+                if(rData.success_)
+                {
+                    succCont = true;
+                    succContinuous += 1;
+                    checkTrajectory(&solver_PP,rData, T);
+                }
+                else
+                {
+                    succCont = false;
+                }
+                // try discretize
+                rData = bezier_com_traj::solve0step(pData,Ts,DISCRETIZATION_STEP);
+                if(rData.success_)
+                {
+                    succDisc = true;
+                    succDiscretize += 1;
+                    checkTrajectory(&solver_PP,rData,int(T / DISCRETIZATION_STEP),T);
+                }
+                else
+                {
+                    if(succCont)
+                        std::cout << "error: Solver discretize failed while a solution was found for the continuous case" << std::endl;
+                    succDisc = false;
+                }
+
+                pData.useAngularMomentum_ = true;
+                rData = bezier_com_traj::solve0step(pData,Ts);
+                if(rData.success_)
+                {
+                    succdLbool = true;
+                    succdL += 1;
+                    checkTrajectory(&solver_PP,rData, T);
+                }
+                else
+                {
+                    if(succCont)
+                        std::cout << "error: Solver Ang momentum failed while a solution was found without angular momentum" << std::endl;
+                    succDisc = false;
+                }
+
+                rData = bezier_com_traj::solve0step(pData,Ts,DISCRETIZATION_STEP);
+                if(rData.success_)
+                {
+                    succDiscdL = true;
+                    succDiscretizedL += 1;
+                    checkTrajectory(&solver_PP,rData,int(T / DISCRETIZATION_STEP ),T);
+                }
+                else
+                {
+                    if(succCont || succDisc ||succdLbool)
+                        std::cout << "error: Solver discretize with angular momentum failed while a solution was found for another case" << std::endl;
+                    succDisc = false;
+                }
             }
         }
     }
   }
 
-  std::cout << "sucesses " << success << std::endl;
-  cout<<"*** END TEST WITH RANDOMLY GENERATED DATA ***\n";
+  std::cout << "sucesses continunous" << succContinuous << std::endl;
+  std::cout << "sucesses discretize " << succDiscretize << std::endl;
+  std::cout << "sucesses continunous with angular momentum" << succdL << std::endl;
+  std::cout << "sucesses discretize with angular momentum" << succDiscretizedL << std::endl;
 
   return 0;
 }
