@@ -93,7 +93,7 @@ def __compute_uixs(self, l0, T, num_step = -1):
  */
 
 
-size_t removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
+int removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
 {
     Eigen::Matrix<bool, Eigen::Dynamic, 1> empty = (A.array() == 0).rowwise().all();
     size_t last = A.rows() - 1;
@@ -102,8 +102,10 @@ size_t removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
         if (empty(i))
         {
             if(b(i) <0)
-                std::cout << "b(i) not 0" << std::endl;
-            assert(b(i) >= 0);
+            {
+                std::cout << "empty row for A while correponding b is negative. Problem is infeasible" << b(i) << std::endl;
+                return -1;
+            }
             A.row(i).swap(A.row(last));
             b.row(i).swap(b.row(last));
             empty.segment<1>(i).swap(empty.segment<1>(last));
@@ -115,16 +117,19 @@ size_t removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
     return last+1;
 }
 
-size_t Normalize(Ref_matrixXX A, Ref_vectorX b)
+int Normalize(Ref_matrixXX A, Ref_vectorX b)
 {
-    size_t zeroindex = removeZeroRows(A,b);
-    Eigen::VectorXd norm = A.block(0,0,zeroindex,A.cols()).rowwise().norm();
-    A.block(0,0,zeroindex,A.cols()).rowwise().normalize();
-    b.head(zeroindex) = b.head(zeroindex).cwiseQuotient(norm);
+    int zeroindex = removeZeroRows(A,b);
+    if(zeroindex > 0)
+    {
+        Eigen::VectorXd norm = A.block(0,0,zeroindex,A.cols()).rowwise().norm();
+        A.block(0,0,zeroindex,A.cols()).rowwise().normalize();
+        b.head(zeroindex) = b.head(zeroindex).cwiseQuotient(norm);
+    }
     return zeroindex;
 }
 
-std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum)
+std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum, bool& fail)
 {
     MatrixXX A;
     VectorX  b;
@@ -161,10 +166,22 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
         addAngularMomentum(A,b,cData.Kin_, cData.kin_);
     // normalization removes 0 value rows, but resizing
     // must actually be done with matrices and not the references
-    size_t zeroindex = Normalize(A,b);
-    A.conservativeResize(zeroindex, A.cols());
-    b.conservativeResize(zeroindex, 1);
+    int zeroindex = Normalize(A,b);
+    if(zeroindex < 0)
+        fail = true;
+    else
+    {
+        A.conservativeResize(zeroindex, A.cols());
+        b.conservativeResize(zeroindex, 1);
+        fail = false;
+    }
     return std::make_pair(A,b);
+}
+
+template<typename Derived>
+inline bool is_nan(const Eigen::MatrixBase<Derived>& x)
+{
+    return !((x.array()==x.array()).all());
 }
 
 ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
@@ -177,6 +194,9 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
    * Thus CI = -A; ci0 = b
    *      CI = 0; ce0 = 0
    */
+
+    assert (!(is_nan(A) || is_nan(ci0) || is_nan(initGuess)));
+
     MatrixXX CI = -A;
     MatrixXX CE = MatrixXX::Zero(0,A.cols());
     VectorX ce0  = VectorX::Zero(0);
@@ -189,6 +209,15 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
     {
         res.x = x;
         res.cost_ = QPsolver.getObjValue();
+        VectorX deb = A*x - ci0;
+        for (int l = 0; l < deb.size(); ++ l)
+        {
+            if(deb(l) > 0.0001)
+            {
+                std::cout << "inequality sanity check failed " << std::endl;
+                break;
+            }
+        }
     }
     return res;
 }

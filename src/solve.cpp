@@ -259,13 +259,13 @@ Premultiplying it by H gives mH w_xi * x <= mH_wsi where m is the mass
 Stacking all of these results in a big inequality matrix A and a column vector x that determines the constraints
 On the 6d curves, Ain x <= Aub
 */
-std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, point_t_tC c0, point_t_tC dc0, point_t_tC l0, const bool useAngMomentum, double T, double timeStep)
+std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, point_t_tC c0, point_t_tC dc0, point_t_tC l0, const bool useAngMomentum, const double T, const double timeStep, bool& fail)
 {
     std::vector<waypoint_t> wps, wpL;
     wps = ComputeAllWaypoints(c0, dc0, cData.contactPhase_->m_gravity, T, timeStep);
     if (useAngMomentum)
         wpL = ComputeAllWaypointsAngularMomentum(l0, T, timeStep);
-    return compute6dControlPointInequalities(cData,wps,wpL, useAngMomentum);
+    return compute6dControlPointInequalities(cData,wps,wpL, useAngMomentum, fail);
 }
 
 std::pair<MatrixXX, VectorX> computeCostFunction(point_t_tC p0, point_t_tC l0, const bool useAngMomentum)
@@ -278,7 +278,7 @@ std::pair<MatrixXX, VectorX> computeCostFunction(point_t_tC p0, point_t_tC l0, c
     Ref_vectorX  g = res.second;
 
     //minimize distance to initial point
-    double weightDist = useAngMomentum ? 0. : 1.;
+    double weightDist = useAngMomentum ? 0.1 : 1.;
     H.block<3,3>(0,0) = Matrix3::Identity() * weightDist;
     g.head(3) = - p0 * weightDist;
 
@@ -331,6 +331,8 @@ bezier_t* computeC_of_T(const ProblemData& pData, const std::vector<double>& Ts,
     wps.push_back(pData.dc0_ * Ts[0] / 3 + pData.c0_);
     wps.push_back(x.head(3));
     wps.push_back(x.head(3));
+    bezier_com_traj::bezier_t c_of_t (wps.begin(), wps.end(),Ts[0]);
+    bezier_com_traj::bezier_t dc_of_t = c_of_t.compute_derivate(1);
     return new bezier_t(wps.begin(), wps.end(),Ts[0]);
 }
 
@@ -345,25 +347,30 @@ bezier_t* computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts
     }
     else
     {
-        for (int i = 0; i < 3; ++i)
+        for (int i = 0; i < 1; ++i)
             wps.push_back(Vector3::Zero());
     }
-    return new bezier_t(wps.begin(), wps.end(),Ts[0]);
+    return new bezier_t(wps.begin(), wps.end(),Ts[0], 1./Ts[0]);
 }
 
 // no angular momentum for now
 ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double>& Ts, const double timeStep)
 {
     assert(pData.contacts_.size() ==1);
-    assert(Ts.size() == pData.contacts_.size());    
-    std::pair<MatrixXX, VectorX> Ab = compute6dControlPointInequalities(pData.contacts_.front(),pData.c0_, pData.dc0_, pData.l0_, pData.useAngularMomentum_, Ts.front(),timeStep);
+    assert(Ts.size() == pData.contacts_.size());
+    bool fail = false;
+    std::pair<MatrixXX, VectorX> Ab = compute6dControlPointInequalities(pData.contacts_.front(),pData.c0_, pData.dc0_, pData.l0_, pData.useAngularMomentum_, Ts.front(),timeStep, fail);
+    ResultDataCOMTraj res;
+    if(fail)
+        return res;
     std::pair<MatrixXX, VectorX> Hg = computeCostFunction(pData.c0_, pData.l0_, pData.useAngularMomentum_);
     int dimPb = pData.useAngularMomentum_ ? 6 : 3;
     VectorX init = VectorX(dimPb);
     init.head(3) = pData.c0_;
+    if(dimPb > 3)
+        init.tail(3) = pData.l0_;
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
     ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
-    ResultDataCOMTraj res;
     if(resQp.success_)
     {
         res.success_ = true;

@@ -35,7 +35,7 @@ eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_A
 # setting up optimization problem
 c0 = matrix([0.,0.,1.]) 
 #~ dc0 = matrix(np.random.uniform(-1, 1, size=3)); 
-dc0 =  matrix([0.,0.,0.]) 
+dc0 =  matrix([0.1,0.,0.]) 
 l0 = matrix([0.,0.,0.]) 
 T = 1.2
 tstep = -1.
@@ -55,3 +55,5 @@ kin[2] = 0.5
 a = zeroStepCapturability(eq,c0,dc0,l0,False,T,tstep,Kin,matrix(kin))
 assert(np.asarray(a.x[2])[0][0] <=0.5)
 
+
+a = zeroStepCapturability(eq,c0,dc0,l0,True,T,tstep,Kin,matrix(kin))

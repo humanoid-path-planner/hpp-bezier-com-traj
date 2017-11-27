@@ -105,7 +105,7 @@ Vector6 computew(const Equilibrium* eq, const bezier_com_traj::Vector3& c, const
     return w;
 }
 
-bool checkTrajectory(const Equilibrium* eq, const bezier_com_traj::ResultDataCOMTraj& resData, const double T, const int num_steps = 100)
+bool checkTrajectory(const std::string& solver, const Equilibrium* eq, const bezier_com_traj::ResultDataCOMTraj& resData, const double T, const int num_steps = 100)
 {
     // retrieve H
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
@@ -122,7 +122,7 @@ bool checkTrajectory(const Equilibrium* eq, const bezier_com_traj::ResultDataCOM
         for(long j=0; j<res.size(); j++)
           if(res(j)>0.00001)
           {
-            std::cout << "check trajectory fafiled "<<  res(j)  << ";" << j<< std::endl;
+            std::cout << "check trajectory failed for solver " << solver  << " " <<  res(j)  << "; iteration " << dt<< "; numsteps " << num_steps << " c_of_t(dt) " << (*c_of_t)(dt)  << " dL_of_t(dt) " << (*c_of_t)(dt)  << std::endl;
             return false;
           }
     }
@@ -136,7 +136,7 @@ int main()
   RVector3 RPY_LOWER_BOUNDS, RPY_UPPER_BOUNDS;
 
   /************************************** USER PARAMETERS *******************************/
-  unsigned int N_TESTS = 10;
+  unsigned int N_TESTS = 500;
   double mass = 55.0;
   double mu = 0.3;  // friction coefficient
   unsigned int generatorsPerContact = 4;
@@ -157,6 +157,7 @@ int main()
   RVector3 com_LB, com_UB;
   Equilibrium solver_PP ("PP", mass, generatorsPerContact, SOLVER_LP_QPOASES,false,10,false);
   int succContinuous = 0, succDiscretize = 0, succdL = 0, succDiscretizedL = 0;
+  int numSol = 0;
   for(unsigned n_test=0; n_test<N_TESTS; n_test++)
   {
     generateContacts(N_CONTACTS, MIN_CONTACT_DISTANCE, LX, LY,
@@ -176,6 +177,7 @@ int main()
     const double DISCRETIZATION_STEP = 0.1;
     if(findStaticEqCOMPos(&solver_PP, com_LB, com_UB,c0))
     {
+        numSol +=1;
         for(int j = 0; j < 100; ++j)
         {
             bezier_com_traj::ContactData data;
@@ -183,12 +185,15 @@ int main()
             bezier_com_traj::ProblemData pData;
             pData.c0_ = c0;
             pData.dc0_ << fRandom(-1.,1.) , fRandom(-1.,1.) , fRandom(-1.,1.);
+            //pData.dc0_ *= 1;
+            pData.l0_ = Vector3(0.,0.,0.);
             pData.contacts_.push_back(data);
             std::vector<double> Ts;
             bezier_com_traj::ResultDataCOMTraj rData;
             double T;
             for (int k = -1; k < 2; ++k)
             {
+                pData.useAngularMomentum_ = false;
                 bool succCont = false, succDisc = false, succdLbool= false, succDiscdL = false;
                 T = 1. + 0.3 * k;
                 Ts.clear();
@@ -198,7 +203,8 @@ int main()
                 {
                     succCont = true;
                     succContinuous += 1;
-                    checkTrajectory(&solver_PP,rData, T);
+                    std::string solverName("continuous");
+                    checkTrajectory(solverName, &solver_PP,rData, T);
                 }
                 else
                 {
@@ -210,7 +216,8 @@ int main()
                 {
                     succDisc = true;
                     succDiscretize += 1;
-                    checkTrajectory(&solver_PP,rData,int(T / DISCRETIZATION_STEP),T);
+                    std::string solverName("discretize");
+                    checkTrajectory(solverName, &solver_PP,rData,int(T / DISCRETIZATION_STEP),T);
                 }
                 else
                 {
@@ -219,13 +226,14 @@ int main()
                     succDisc = false;
                 }
 
-                pData.useAngularMomentum_ = true;
+                //pData.useAngularMomentum_ = true;
                 rData = bezier_com_traj::solve0step(pData,Ts);
                 if(rData.success_)
                 {
                     succdLbool = true;
                     succdL += 1;
-                    checkTrajectory(&solver_PP,rData, T);
+                    std::string solverName("continuous AngularMomentum");
+                    checkTrajectory(solverName, &solver_PP,rData, T);
                 }
                 else
                 {
@@ -239,7 +247,8 @@ int main()
                 {
                     succDiscdL = true;
                     succDiscretizedL += 1;
-                    checkTrajectory(&solver_PP,rData,int(T / DISCRETIZATION_STEP ),T);
+                    std::string solverName("discretize AngularMomentum");
+                    checkTrajectory(solverName, &solver_PP,rData,int(T / DISCRETIZATION_STEP ),T);
                 }
                 else
                 {
@@ -256,6 +265,7 @@ int main()
   std::cout << "sucesses discretize " << succDiscretize << std::endl;
   std::cout << "sucesses continunous with angular momentum" << succdL << std::endl;
   std::cout << "sucesses discretize with angular momentum" << succDiscretizedL << std::endl;
+  std::cout << "eq static point found " << numSol << std::endl;
 
   return 0;
 }

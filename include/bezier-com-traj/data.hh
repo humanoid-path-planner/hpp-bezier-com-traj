@@ -85,6 +85,13 @@ namespace bezier_com_traj
           , x(other.x){}
         ~ResultData(){}
 
+        ResultData& operator=(const ResultData& other)
+        {
+            success_= (other.success_);
+            cost_ = (other.cost_);
+            x = (other.x);
+        }
+
         bool success_;
         double cost_;
         VectorX x;
@@ -100,6 +107,17 @@ namespace bezier_com_traj
         ResultDataCOMTraj(const ResultDataCOMTraj& other):
             ResultData(other.success_,other.cost_, other.x)
         {
+            if(other.constC_of_t())
+                c_of_t_   = new bezier_t(*(other.constC_of_t()));
+            if(other.constDL_of_t())
+                dL_of_t_  = new bezier_t(*(other.constDL_of_t()));
+        }
+
+        ResultDataCOMTraj& operator=(const ResultDataCOMTraj& other)
+        {
+            success_= (other.success_);
+            cost_ = (other.cost_);
+            x = (other.x);
             if(other.constC_of_t())
                 c_of_t_   = new bezier_t(*(other.constC_of_t()));
             if(other.constDL_of_t())

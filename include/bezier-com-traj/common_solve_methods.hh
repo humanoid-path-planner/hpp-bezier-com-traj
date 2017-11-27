@@ -44,9 +44,10 @@ BEZIER_COM_TRAJ_DLLAPI  std::vector<waypoint_t> ComputeDiscretizedWaypoints(cons
  * @param wps waypoints or the linear part of the trajectory
  * @param wpL waypoints or the angular part of the trajectory
  * @param useAngMomentum whether the angular momentum is consider or equal to 0
+ * @param fail set to true if problem is found infeasible
  * @return
  */
-BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum);
+BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum, bool& fail);
 
 
 /**
