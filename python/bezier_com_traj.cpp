@@ -32,6 +32,25 @@ ResultDataCOMTraj* zeroStepCapturability(centroidal_dynamics::Equilibrium* eq, c
     return new ResultDataCOMTraj(res);
 }
 
+ResultDataCOMTraj* zeroStepCapturabilityWithKinConstraints(centroidal_dynamics::Equilibrium* eq, const Vector3& com ,const Vector3& dCom ,const Vector3& l0, const bool useAngMomentum
+                              , const double timeDuration, const double timeStep, const MatrixXX& Kin, const MatrixXX& kin)
+{
+    bezier_com_traj::ContactData data;
+    data.Kin_ = Kin;
+    data.kin_ = kin;
+    data.contactPhase_ = eq;
+    bezier_com_traj::ProblemData pData;
+    pData.c0_  = com;
+    pData.dc0_ = dCom;
+    pData.l0_  = l0;
+    pData.contacts_.push_back(data);
+    pData.useAngularMomentum_ = useAngMomentum;
+    std::vector<double> Ts;
+    Ts.push_back(timeDuration);
+    ResultDataCOMTraj  res = solve0step(pData, Ts, timeStep);
+    return new ResultDataCOMTraj(res);
+}
+
 
 
 
@@ -110,6 +129,7 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
 
     eigenpy::enableEigenPySpecific<Vector3,Vector3>();
     eigenpy::enableEigenPySpecific<VectorX,VectorX>();
+    eigenpy::enableEigenPySpecific<MatrixXX,MatrixXX>();
     /*eigenpy::exposeAngleAxis();
     eigenpy::exposeQuaternion();*/
 
@@ -131,6 +151,7 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
             ;
 
     def("zeroStepCapturability", &zeroStepCapturability, return_value_policy<manage_new_object>());
+    def("zeroStepCapturability", &zeroStepCapturabilityWithKinConstraints, return_value_policy<manage_new_object>());
 
     /** END eigenpy init**/
 

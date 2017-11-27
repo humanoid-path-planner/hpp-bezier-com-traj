@@ -46,3 +46,12 @@ assert(a.success)
 a.c_of_t(0)
 a.dL_of_t(T)
 
+Kin = matrix(np.identity(3))
+kin = 10*np.ones(3); 
+a = zeroStepCapturability(eq,c0,dc0,l0,False,T,tstep,Kin,matrix(kin))
+assert(a.success)
+
+kin[2] = 0.5
+a = zeroStepCapturability(eq,c0,dc0,l0,False,T,tstep,Kin,matrix(kin))
+assert(np.asarray(a.x[2])[0][0] <=0.5)
+
