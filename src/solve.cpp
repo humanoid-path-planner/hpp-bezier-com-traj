@@ -369,8 +369,8 @@ ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double
         res.success_ = true;
         res.x = resQp.x;
         computeRealCost(pData, res);
-        res.c_of_t_  = computeC_of_T (pData,Ts,res.x);
-        res.dL_of_t_ = computedL_of_T(pData,Ts,res.x);
+        res.SetC_of_t(computeC_of_T (pData,Ts,res.x));
+        res.SetDL_of_t(computedL_of_T(pData,Ts,res.x));
 
     }
     return res;

@@ -66,9 +66,9 @@ ADD_REQUIRED_DEPENDENCY("qpOASES")
 
 add_subdirectory (src)
 add_subdirectory (test)
-#IF(BUILD_PYTHON_INTERFACE)
-#	add_subdirectory (python)
-#ENDIF(BUILD_PYTHON_INTERFACE)
+IF(BUILD_PYTHON_INTERFACE)
+        add_subdirectory (python)
+ENDIF(BUILD_PYTHON_INTERFACE)
 
 SETUP_PROJECT_FINALIZE()
 

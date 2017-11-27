@@ -85,8 +85,34 @@ namespace bezier_com_traj
             ResultData()
           , c_of_t_(0)
           , dL_of_t_(0) {}
-        ~ResultDataCOMTraj(){}
+        ~ResultDataCOMTraj()
+        {
+            if(c_of_t_)
+                delete c_of_t_;
+            if(dL_of_t_)
+                delete dL_of_t_;
+        }
+        const bezier_t* C_of_t() const
+        {
+            return c_of_t_;
+        }
+        const bezier_t* DL_of_t() const
+        {
+            return dL_of_t_;
+        }
 
+        void SetC_of_t(bezier_t* c_of_t)
+        {
+            c_of_t_ = c_of_t;
+        }
+
+        void SetDL_of_t(bezier_t* dL_of_t)
+        {
+            dL_of_t_ = dL_of_t;
+        }
+
+
+    private:
         bezier_t* c_of_t_;
         bezier_t* dL_of_t_;
     };

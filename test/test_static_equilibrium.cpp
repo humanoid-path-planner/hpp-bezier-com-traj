@@ -111,8 +111,8 @@ bool checkTrajectory(const Equilibrium* eq, const bezier_com_traj::ResultDataCOM
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     eq->getPolytopeInequalities(Hrow,h);
     MatrixXX H = -Hrow;
-    bezier_com_traj::bezier_t* c_of_t = resData.c_of_t_;
-    bezier_com_traj::bezier_t* dL_of_t = resData.dL_of_t_;
+    const bezier_com_traj::bezier_t* c_of_t = resData.C_of_t();
+    const bezier_com_traj::bezier_t* dL_of_t = resData.DL_of_t();
     bezier_com_traj::bezier_t ddc_of_t = c_of_t->compute_derivate(2);
     for (int i = 0; i < num_steps; ++i)
     {
