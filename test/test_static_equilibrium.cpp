@@ -111,13 +111,13 @@ bool checkTrajectory(const Equilibrium* eq, const bezier_com_traj::ResultDataCOM
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     eq->getPolytopeInequalities(Hrow,h);
     MatrixXX H = -Hrow;
-    const bezier_com_traj::bezier_t* c_of_t = resData.C_of_t();
-    const bezier_com_traj::bezier_t* dL_of_t = resData.DL_of_t();
+    const bezier_com_traj::bezier_t* c_of_t = resData.constC_of_t();
+    const bezier_com_traj::bezier_t dL_of_t = resData.DL_of_t();
     bezier_com_traj::bezier_t ddc_of_t = c_of_t->compute_derivate(2);
     for (int i = 0; i < num_steps; ++i)
     {
         double dt = double(i) / float(num_steps) * T;
-        Vector6 w = computew(eq,(*c_of_t)(dt),ddc_of_t(dt),(*dL_of_t)(dt));
+        Vector6 w = computew(eq,(*c_of_t)(dt),ddc_of_t(dt),dL_of_t(dt));
         VectorX res = H*w;
         for(long j=0; j<res.size(); j++)
           if(res(j)>0.00001)

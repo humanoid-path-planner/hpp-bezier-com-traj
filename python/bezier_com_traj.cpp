@@ -3,50 +3,108 @@
 #include <eigenpy/eigenpy.hpp>
 
 #include <boost/python.hpp>
+#include <boost/python/exception_translator.hpp>
 
 EIGENPY_DEFINE_STRUCT_ALLOCATOR_SPECIALIZATION(bezier_com_traj::ContactData)
 EIGENPY_DEFINE_STRUCT_ALLOCATOR_SPECIALIZATION(bezier_com_traj::ProblemData)
+EIGENPY_DEFINE_STRUCT_ALLOCATOR_SPECIALIZATION(bezier_com_traj::ResultData)
 EIGENPY_DEFINE_STRUCT_ALLOCATOR_SPECIALIZATION(bezier_com_traj::ResultDataCOMTraj)
+EIGENPY_DEFINE_STRUCT_ALLOCATOR_SPECIALIZATION(bezier_com_traj::bezier_t)
 
 namespace bezier_com_traj
 {
 using namespace boost::python;
 
-ResultDataCOMTraj* zeroStepCapturability(Equilibrium& eq, const Vector3& com ,const Vector3& dCom ,const Vector3& l0, const bool useAngMomentum
-                              , const double timeDuration, const double timestep)
+ResultDataCOMTraj* zeroStepCapturability(centroidal_dynamics::Equilibrium* eq, const Vector3& com ,const Vector3& dCom ,const Vector3& l0, const bool useAngMomentum
+                              , const double timeDuration, const double timeStep)
 {
     bezier_com_traj::ContactData data;
     data.contactPhase_ = eq;
     bezier_com_traj::ProblemData pData;
-    pData.c0_ = com;
+    pData.c0_  = com;
     pData.dc0_ = dCom;
+    pData.l0_  = l0;
     pData.contacts_.push_back(data);
+    pData.useAngularMomentum_ = useAngMomentum;
     std::vector<double> Ts;
-    Ts.pushback(timeDuration);
-    ResultDataCOMTraj res = solve0step( pData, Ts, timeStep);
-    ResultDataCOMTraj* ret = new ResultDataCOMTraj();
+    Ts.push_back(timeDuration);
+    ResultDataCOMTraj  res = solve0step(pData, Ts, timeStep);
+    return new ResultDataCOMTraj(res);
 }
 
-boost::python::tuple wrapComputeEquilibriumRobustness(Equilibrium& self, const Vector3& com, const Vector3& acc)
+
+
+
+struct res_data_exception : std::exception
 {
-    double robustness;
-    LP_status status = self.computeEquilibriumRobustness(com, acc, robustness);
-    return boost::python::make_tuple(status, robustness);
-}
+  char const* what() const throw() { return "attributes not accessible for false resData"; }
+};
 
-boost::python::tuple wrapGetPolytopeInequalities(Equilibrium& self)
+void translate(const res_data_exception & e)
 {
-    MatrixXX H;
-    VectorX h;
-    self.getPolytopeInequalities(H,h);
-    MatrixXXColMajor _H = H;
-    return boost::python::make_tuple(_H, h);
+    // Use the Python 'C' API to set up an exception object
+    PyErr_SetString(PyExc_RuntimeError, e.what());
 }
 
 
+VectorX get_xD(const ResultData& res)
+{
+    if (res.x.size() > 0)
+        return res.x;
+    std::cout << "x is not defined" << std::endl;
+    throw res_data_exception();
+}
+
+double get_costD(const ResultData& res)
+{
+    return res.cost_;
+}
+
+bool get_succD(const ResultData& res)
+{
+    return res.success_;
+}
+
+bezier_t* getC_of_t(const ResultDataCOMTraj& res)
+{
+    const bezier_t * curve = res.constC_of_t();
+    if(curve)
+        return new bezier_t(*curve);
+    std::cout << "x is not defined" << std::endl;
+    throw res_data_exception();
+}
+
+bezier_t* getDL_of_t(const ResultDataCOMTraj& res)
+{
+    const bezier_t * curve = res.constDL_of_t();
+    if(curve)
+        return new bezier_t(*curve);
+    std::cout << "x is not defined" << std::endl;
+    throw res_data_exception();
+}
+
+VectorX get_x(const ResultDataCOMTraj& res)
+{
+    if (res.x.size() > 0)
+        return res.x;
+    std::cout << "x is not defined" << std::endl;
+    throw res_data_exception();
+}
+
+double get_cost(const ResultDataCOMTraj& res)
+{
+    return res.cost_;
+}
+
+bool get_succ(const ResultDataCOMTraj& res)
+{
+    return res.success_;
+}
 
 BOOST_PYTHON_MODULE(bezier_com_traj)
 {
+    using namespace boost::python;
+    register_exception_translator<res_data_exception>(&translate);
     /** BEGIN eigenpy init**/
     eigenpy::enableEigenPy();
 
@@ -55,54 +113,27 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
     /*eigenpy::exposeAngleAxis();
     eigenpy::exposeQuaternion();*/
 
+    class_<ResultDataCOMTraj>("ResultDataCOMTraj", init<> ())
+                .add_property("c_of_t",  make_function(&getC_of_t,
+                                                       return_value_policy<manage_new_object>()))
+                .add_property("dL_of_t",make_function(&getDL_of_t,
+                                                       return_value_policy<manage_new_object>()))
+                .add_property("success", &get_succ)
+                .add_property("cost",    &get_cost)
+                .add_property("x",       &get_x)
+            ;
+
+
+    class_<ResultData>("ResultData", init<> ())
+                .add_property("success", &get_succD)
+                .add_property("cost",    &get_costD)
+                .add_property("x",       &get_xD)
+            ;
+
+    def("zeroStepCapturability", &zeroStepCapturability, return_value_policy<manage_new_object>());
+
     /** END eigenpy init**/
 
-    /** BEGIN enum types **/
-  #ifdef CLP_FOUND
-    enum_<SolverLP>("SolverLP")
-            .value("SOLVER_LP_QPOASES", SOLVER_LP_QPOASES)
-            .value("SOLVER_LP_CLP", SOLVER_LP_CLP)
-            .export_values();
-  #else
-    enum_<SolverLP>("SolverLP")
-            .value("SOLVER_LP_QPOASES", SOLVER_LP_QPOASES)
-            .export_values();
-  #endif
-
-
-    enum_<EquilibriumAlgorithm>("EquilibriumAlgorithm")
-            .value("EQUILIBRIUM_ALGORITHM_LP", EQUILIBRIUM_ALGORITHM_LP)
-            .value("EQUILIBRIUM_ALGORITHM_LP2", EQUILIBRIUM_ALGORITHM_LP2)
-            .value("EQUILIBRIUM_ALGORITHM_DLP", EQUILIBRIUM_ALGORITHM_DLP)
-            .value("EQUILIBRIUM_ALGORITHM_PP", EQUILIBRIUM_ALGORITHM_PP)
-            .value("EQUILIBRIUM_ALGORITHM_IP", EQUILIBRIUM_ALGORITHM_IP)
-            .value("EQUILIBRIUM_ALGORITHM_DIP", EQUILIBRIUM_ALGORITHM_DIP)
-            .export_values();
-
-    enum_<LP_status>("LP_status")
-            .value("LP_STATUS_UNKNOWN", LP_STATUS_UNKNOWN)
-            .value("LP_STATUS_OPTIMAL", LP_STATUS_OPTIMAL)
-            .value("LP_STATUS_INFEASIBLE", LP_STATUS_INFEASIBLE)
-            .value("LP_STATUS_UNBOUNDED", LP_STATUS_UNBOUNDED)
-            .value("LP_STATUS_MAX_ITER_REACHED", LP_STATUS_MAX_ITER_REACHED)
-            .value("LP_STATUS_ERROR", LP_STATUS_ERROR)
-            .export_values();
-
-    /** END enum types **/
-
-    bool (Equilibrium::*setNewContacts)
-            (const MatrixX3ColMajor&, const MatrixX3ColMajor&, const double, const EquilibriumAlgorithm) = &Equilibrium::setNewContacts;
-
-    class_<Equilibrium>("Equilibrium", init<std::string, double, unsigned int, optional <SolverLP, bool, const unsigned int, const bool> >())
-            .def("useWarmStart", &Equilibrium::useWarmStart)
-            .def("setUseWarmStart", &Equilibrium::setUseWarmStart)
-            .def("getName", &Equilibrium::getName)
-            .def("getAlgorithm", &Equilibrium::getAlgorithm)
-            .def("setNewContacts", setNewContacts)
-            .def("computeEquilibriumRobustness", wrapComputeQuasiEquilibriumRobustness)
-            .def("computeEquilibriumRobustness", wrapComputeEquilibriumRobustness)
-            .def("getPolytopeInequalities", wrapGetPolytopeInequalities)
-    ;
 }
 
-} // namespace centroidal_dynamics
+} // namespace bezier_com_traj

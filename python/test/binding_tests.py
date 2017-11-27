@@ -1,4 +1,6 @@
 from centroidal_dynamics import *
+from spline import *
+from bezier_com_traj import *
 
 #testing constructors
 eq = Equilibrium("test", 54., 4) 
@@ -20,28 +22,27 @@ assert(eq.getName() == "test")
 
 # creating contact points
 from numpy import array, asmatrix, matrix
+import numpy as np
 
 z = array([0.,0.,1.])
 P = asmatrix(array([array([x,y,0]) for x in [-0.05,0.05] for y in [-0.1,0.1]]))
 N = asmatrix(array([z for _ in range(4)]))
 
 #setting contact positions and normals, as well as friction coefficients 
-eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_LP)
-
-c= asmatrix(array([0.,0.,1.]))
-
-#computing robustness of a given configuration, first with no argument (0 acceleration, static equilibrium)
-status, robustness = eq.computeEquilibriumRobustness(c)
-assert (status == LP_STATUS_OPTIMAL), "LP should not fail"
-assert (robustness > 0), "first test should be in equilibrirum"
-	
-#computing robustness of a given configuration with non zero acceleration
-ddc= asmatrix(array([1000.,0.,0.]))
-status, robustness = eq.computeEquilibriumRobustness(c,ddc)
-assert (status == LP_STATUS_OPTIMAL), "LP should not fail"
-assert (robustness < 0), "first test should NOT be in equilibrirum"
-
-#now, use polytope projection algorithm
 eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_PP)
-H,h = eq.getPolytopeInequalities()
+#~ eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_LP)
+
+# setting up optimization problem
+c0 = matrix([0.,0.,1.]) 
+#~ dc0 = matrix(np.random.uniform(-1, 1, size=3)); 
+dc0 =  matrix([0.,0.,0.]) 
+l0 = matrix([0.,0.,0.]) 
+T = 1.2
+tstep = -1.
+
+a = zeroStepCapturability(eq,c0,dc0,l0,False,T,tstep)
+
+assert(a.success)
+a.c_of_t(0)
+a.dL_of_t(T)
 

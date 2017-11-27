@@ -71,7 +71,18 @@ namespace bezier_com_traj
     {
         ResultData():
             success_(false)
-          , cost_(-1.){}
+          , cost_(-1.)
+          , x(VectorX::Zero(0)){}
+
+        ResultData(const bool success, const double cost, Cref_vectorX x ):
+            success_(success)
+          , cost_(cost)
+          , x(x){}
+
+        ResultData(const ResultData& other):
+            success_(other.success_)
+          , cost_(other.cost_)
+          , x(other.x){}
         ~ResultData(){}
 
         bool success_;
@@ -85,6 +96,16 @@ namespace bezier_com_traj
             ResultData()
           , c_of_t_(0)
           , dL_of_t_(0) {}
+
+        ResultDataCOMTraj(const ResultDataCOMTraj& other):
+            ResultData(other.success_,other.cost_, other.x)
+        {
+            if(other.constC_of_t())
+                c_of_t_   = new bezier_t(*(other.constC_of_t()));
+            if(other.constDL_of_t())
+                dL_of_t_  = new bezier_t(*(other.constDL_of_t()));
+        }
+
         ~ResultDataCOMTraj()
         {
             if(c_of_t_)
@@ -92,11 +113,33 @@ namespace bezier_com_traj
             if(dL_of_t_)
                 delete dL_of_t_;
         }
-        const bezier_t* C_of_t() const
+        /**
+         * @brief C_of_t return a copy of the trajectory curve.
+         * Only valid if c_of_t_ was initialized(success_ is true.)
+         * @return a copy of C_of_t
+         */
+        bezier_t C_of_t() const
+        {
+            assert(c_of_t_);
+            return *c_of_t_;
+        }
+        /**
+         * @brief DL_of_t return a copy of the trajectory curve.
+         * Only valid if c_of_t_ was initialized(success_ is true.)
+         * @return a copy of DL_of_t
+         */
+        bezier_t DL_of_t() const
+        {
+            assert(dL_of_t_);
+            return *dL_of_t_;
+        }
+
+        const bezier_t* constC_of_t() const
         {
             return c_of_t_;
         }
-        const bezier_t* DL_of_t() const
+
+        const bezier_t* constDL_of_t() const
         {
             return dL_of_t_;
         }
