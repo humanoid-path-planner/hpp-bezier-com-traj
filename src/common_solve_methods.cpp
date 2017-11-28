@@ -54,7 +54,7 @@ void addKinematic(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Kin, Cref_vectorX
     int dimKin = (int)(kin.rows());
     if (dimKin == 0) return;
     A.block(A.rows() - dimKin - otherConstraintIndex ,0, dimKin, 3) = Kin;
-    b.tail(dimKin) = kin;
+    b.segment(A.rows() - dimKin - otherConstraintIndex, dimKin) = kin;
 }
 
 void addAngularMomentum(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Ang, Cref_vectorX ang)
@@ -63,35 +63,6 @@ void addAngularMomentum(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Ang, Cref_v
     A.block(A.rows() - dimAng  , 3, dimAng, 3) = Ang;
     b.tail(dimAng) = ang;
 }
-/*
- *
- *
-def __compute_uixs(self, l0, T, num_step = -1):
-        alpha = 1. / (T)
-        wps = [ui(l0, alpha)  for ui in uis]
-        if num_step > 0:
-            dt = (1./float(num_step))
-            wps_bern = [ [ (b(i*dt)*wps[idx][0], b(i*dt)*wps[idx][1]) for idx,b in enumerate(b4)] for i in range(num_step + 1) ]
-            wps = [reduce(lambda a, b : (a[0] + b[0], a[1] + b[1]), wps_bern_i) for wps_bern_i in wps_bern]
-        return wps
- *
- * ups = self.__compute_uixs(l0, T ,num_steps)
-        AL, bL = self._init_matrices_AL_bL(ups, A, b)
-        dimH  = self._H.shape[0]
-        #final matrix has num rows equal to initial matrix rows + angular momentum constraints
-        # the angular momentum constraints are added AFTER the eventual kinematic ones
-        for i, (uxi, usi) in enumerate(ups):
-            AL[i*dimH : (i+1)*dimH, 3:]  = self._H.dot(uxi) #constant part of A, Ac = Ac * wxi
-            bL[i*dimH : (i+1)*dimH    ] += self._H.dot(-usi)
-
-        if self._angular_momentum_constraints != None:
-            dimL = self._angular_momentum_constraints[0].shape[0]
-            AL[-dimL:,3:] = self._angular_momentum_constraints[0][:]
-            bL[-dimL:   ] = self._angular_momentum_constraints[1][:]
-
-        AL, bL = normalize(AL,bL)
- */
-
 
 int removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
 {
@@ -140,11 +111,12 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     cData.contactPhase_->getPolytopeInequalities(Hrow,h);
     MatrixXX H = -Hrow;
+    H.rowwise().normalize();
     int dimH = (int)(H.rows());
     MatrixXX mH = cData.contactPhase_->m_mass * H;
     // init and fill Ab matrix
-    int dimKin =  cData.kin_ == point_t::Zero() ? 0 : (int)(cData.kin_.rows());
-    int dimAng = (cData.ang_ != point_t::Zero() && useAngMomentum)  ? (int)(cData.ang_.rows()) : 0;
+    int dimKin =  cData.kin_.size();
+    int dimAng = useAngMomentum  ? (int)(cData.ang_.size()) : 0;
     A = initMatrixA(dimH, wps, dimKin + dimAng, useAngMomentum);
     b = VectorX::Zero(A.rows());
     point6_t bc = point6_t::Zero(); bc.head(3) = g; // constant part of Aub, Aubi = mH * (bc - wsi)
@@ -165,9 +137,10 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     addKinematic(A,b, cData.Kin_,cData.kin_, dimAng);
     if (useAngMomentum)
         addAngularMomentum(A,b,cData.Kin_, cData.kin_);
+    fail = false;
     // normalization removes 0 value rows, but resizing
     // must actually be done with matrices and not the references
-    int zeroindex = Normalize(A,b);
+    /*int zeroindex = Normalize(A,b);
     if(zeroindex < 0)
         fail = true;
     else
@@ -175,7 +148,7 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
         A.conservativeResize(zeroindex, A.cols());
         b.conservativeResize(zeroindex, 1);
         fail = false;
-    }
+    }*/
     return std::make_pair(A,b);
 }
 
@@ -183,12 +156,10 @@ template<typename Derived>
 inline bool is_nan(const Eigen::MatrixBase<Derived>& x)
 {
     bool isnan = !((x.array()==x.array()).all());
-    if (isnan)
-        std::cout << "IS NAN " << std::endl;
     return isnan;
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
+ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
 {
     /*
    * solves the problem
@@ -205,30 +176,13 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX 
     VectorX ce0  = VectorX::Zero(0);
     tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
     VectorX x = initGuess;
-    VectorX ci0 = b - VectorX::Constant(b.size(),0.00001);
     tsid::solvers::EiquadprogFast_status status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
     ResultData res;
     res.success_ = status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL;
     if(res.success_)
     {
-        if(is_nan(x))
-        {
-            std::cout << " H " << H << std::endl;
-            std::cout << " x is NAN \n " << x << std::endl;
-            status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
-            std::cout << " x is NANwith non null g ? \n " << x << std::endl;
-        }
         res.x = x;
         res.cost_ = QPsolver.getObjValue();
-        VectorX deb = A*x - b;
-        for (int l = 0; l < deb.size(); ++ l)
-        {
-            if(deb(l) > 0)
-            {
-                std::cout << "inequality sanity check failed " << deb(l) << std::endl;
-                break;
-            }
-        }
     }
     return res;
 }

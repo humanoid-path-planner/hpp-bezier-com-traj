@@ -20,13 +20,6 @@ waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, co
     return w;
 }
 
-/*def w0(p0, p1, g, p0X, p1X, gX, alpha):
-    wx, ws = __init_6D()
-    wx[:3,:] = 6*alpha*identity(3);  wx[3:,:] = 6*alpha*p0X;
-    ws[:3]   = 6*alpha*(p0 - 2*p1)
-    ws[3:]   = X(-p0, 12*alpha*p1 + g )
-    return  (wx, ws)*/
-
 waypoint_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& gX, const double alpha)
 {
     waypoint_t w = initwp();
@@ -37,14 +30,6 @@ waypoint_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, const Matrix3& /*p
     return w;
 }
 
-/*def w1(p0, p1, g, p0X, p1X, gX, alpha):
-    wx, ws = __init_6D()
-    wx[:3,:] = 3*alpha*identity(3);
-    wx[3:,:] = skew(1.5 * (3*p1 - p0))*alpha
-    ws[:3]   =  1.5 *alpha* (3*p0 - 5*p1);
-    ws[3:]   = X(3*alpha*p0, -p1) + 0.25 * (gX.dot(3*p1 + p0))
-    return  (wx, ws)
-*/
 waypoint_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& gX, const double alpha)
 {
     waypoint_t w = initwp();
@@ -55,15 +40,6 @@ waypoint_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/
     return w;
 }
 
-/*
-w2(p0, p1, g, p0X, p1X, gX, alpha):
-    wx, ws = __init_6D()
-    #~ wx[:3,:] = 0;
-    wx[3:,:] = skew(0.5*g - 3*alpha* p0 + 3*alpha*p1)
-    ws[:3]   =  3*alpha*(p0 - p1);
-    ws[3:]   = 0.5 * gX.dot(p1)
-    return  (wx, ws)
-*/
 waypoint_t w3 (point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
     waypoint_t w = initwp();
@@ -74,15 +50,6 @@ waypoint_t w3 (point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*
     return w;
 }
 
-/*
-def w3(p0, p1, g, p0X, p1X, gX, alpha):
-    wx, ws = __init_6D()
-    wx[:3,:] = -3*alpha* identity(3);
-    wx[3:,:] = skew(g - 1.5 *alpha* (p1 + p0))
-    ws[:3]   = 1.5*alpha * (p1 + p0)
-    #~ ws[3:]   = 0
-    return  (wx, ws)
-*/
 waypoint_t w4 (point_t_tC /*p0*/, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
     waypoint_t w = initwp();
@@ -92,16 +59,6 @@ waypoint_t w4 (point_t_tC /*p0*/, point_t_tC p1, point_t_tC g, const Matrix3& /*
     //w.second.tail(3) = 0;
     return w;
 }
-
-/*
-def w4(p0, p1, g, p0X, p1X, gX, alpha):
-    wx, ws = __init_6D()
-    wx[:3,:] = -6*alpha *identity(3);
-    wx[3:,:] = skew(g - 6*alpha* p1)
-    ws[:3]   = 6*alpha*p1
-    #~ ws[3:]   = 0
-    return  (wx, ws)*/
-
 
 waypoint_t u0 (point_t_tC l0, const double alpha)
 {
@@ -113,16 +70,6 @@ waypoint_t u0 (point_t_tC l0, const double alpha)
     return w;
 }
 
-/*
-#angular momentum waypoints
-def u0(l0, alpha):
-    ux, us = __init_6D()
-    ux[3:] = identity(3)* 3 * alpha
-    us[3:] = -3*alpha*l0[:]
-    return  (ux, us)
-*/
-
-
 waypoint_t u1 (point_t_tC l0, const double alpha)
 {
     waypoint_t w = initwp();
@@ -132,14 +79,6 @@ waypoint_t u1 (point_t_tC l0, const double alpha)
     w.second.tail(3) = -1.5*alpha*l0;
     return w;
 }
-
-
-/*
-def u1(l0, alpha):
-    ux, us = __init_6D()
-    us[3:] = -1.5*l0*alpha
-    return  (ux, us)
-*/
 
 waypoint_t u2 (point_t_tC l0, const double alpha)
 {
@@ -151,32 +90,15 @@ waypoint_t u2 (point_t_tC l0, const double alpha)
     return w;
 }
 
-
-/*
-def u2(l0, alpha):
-    ux, us = __init_6D()
-    ux[3:] = identity(3)* (-1.5) * alpha
-    us[3:] = -l0 / 2. * alpha
-*/
-
 waypoint_t u3 (point_t_tC /*l0*/, const double alpha)
 {
     waypoint_t w = initwp();
-    //w.first.block<3,3>(0,0) = 0;
     w.first.block<3,3>(3,0) = -1.5*alpha * Matrix3::Identity();
     //w.second.head(3) = 0;
     //w.second.tail(3) = 0.;
     return w;
 }
 
-
-/*   return  (ux, us)
-
-def u3(l0, alpha):
-    ux, us = __init_6D()
-    ux[3:] = identity(3)*  (-1.5) * alpha
-    return  (ux, us)
-*/
 
 waypoint_t u4 (point_t_tC /*l0*/, const double /*alpha*/)
 {
@@ -187,12 +109,6 @@ waypoint_t u4 (point_t_tC /*l0*/, const double /*alpha*/)
     //w.second.tail(3) = 0.;
     return w;
 }
-
-
-/*
-def u4(l0, alpha):
-    ux, us = __init_6D()
-    return  (ux, us)*/
 
 
 std::vector<spline::Bern<double> > ComputeBersteinPolynoms()
@@ -290,28 +206,6 @@ std::pair<MatrixXX, VectorX> computeCostFunction(point_t_tC p0, point_t_tC l0, c
     }
     return res;
 }
-/*weight_dist_or = 1. if l0 == None else 0.
-            #weight_dist_or = 0
-            D = identity(dim_pb);
-            alpha = sqrt(12./5.)
-            for i in range(3):
-                D[i,i] = weight_dist_or
-            d = zeros(dim_pb);
-            d[:3]= self._p0 * weight_dist_or
-            if(l0 != None):
-                # minimizing integral of angular momentum
-                for i in range(3,6):
-                    D[i,i] = alpha
-                d[3:]= (9.* l0) / (5. * alpha)
-            D = (D[:]); d = (d[:]); A = (self.__Ain[:]);
-            lbA = (-100000.* ones(self.__Ain.shape[0]))[:]; ubA=(self.__Aub);
-            lb = (-100. * ones(dim_pb))[:]; ub = (100. * ones(dim_pb))[:];
-            self._qp_solver.setProblemData(D = D , d = d, A=A, lbA=lbA, ubA=ubA, lb = lb, ub = ub, x0=None)
-            (x, imode) =  self._qp_solver.solve(D = D , d = d, A=A, lbA=lbA, ubA=ubA, lb = lb, ub = ub, x0=None)
-            if l0 == None:
-                cost = norm(self._p0 - x)
-            else:
-                cost = (1./5.)*(9.*l0.dot(l0) -  9.*l0.dot(x[3:]) + 6.*x[3:].dot(x[3:]))*/
 
 void computeRealCost(const ProblemData& pData, ResultData& resData)
 {
@@ -373,25 +267,6 @@ ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double
         computeRealCost(pData, res);
         computeC_of_T (pData,Ts,res);
         computedL_of_T(pData,Ts,res);
-
-        std::vector<waypoint_t> wps;
-        centroidal_dynamics::MatrixXX Hrow; VectorX h;
-        wps = ComputeAllWaypoints(pData.c0_, pData.dc0_, pData.contacts_.front().contactPhase_->m_gravity, Ts.front(), timeStep);
-        pData.contacts_.front().contactPhase_->getPolytopeInequalities(Hrow,h);
-        MatrixXX H = -Hrow;
-        int dimH = (int)(H.rows());
-        MatrixXX mH = pData.contacts_.front().contactPhase_->m_mass * H;
-        point6_t bc = point6_t::Zero(); bc.head(3) = pData.contacts_.front().contactPhase_->m_gravity; // constant part of Aub, Aubi = mH * (bc - wsi)
-        for (std::vector<waypoint_t>::const_iterator cit = wps.begin(); cit != wps.end(); ++cit)
-        {
-            VectorX res = mH * cit->first * resQp.x.head(3) - mH *(cit->second - bc);
-            for (int j = 0; j < res.size(); ++j)
-            {
-                if (res(j) > 0.00001)
-                    std::cout << "not verifies " << std::endl;
-            }
-        }
-
     }
     return res;
 }

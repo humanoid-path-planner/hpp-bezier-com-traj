@@ -224,7 +224,7 @@ int main()
                 {
                     succCont = false;
                 }
-               /* // try discretize
+               // try discretize
                 bezier_com_traj::ResultDataCOMTraj rData0 = bezier_com_traj::solve0step(pData,Ts,DISCRETIZATION_STEP);
                 if(rData0.success_)
                 {
@@ -272,7 +272,7 @@ int main()
                     //if(succCont || succDisc ||succdLbool)
                     //    std::cout << "error: Solver discretize with angular momentum failed while a solution was found for another case" << std::endl;
                     succDiscdL = false;
-                }*/
+                }
             }
         }
     }

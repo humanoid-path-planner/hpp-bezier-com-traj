@@ -39,9 +39,9 @@ namespace bezier_com_traj
         ContactData()
             : contactPhase_(0)
             , Kin_(Eigen::Matrix3d::Zero())
-            , kin_(Vector3::Zero())
+            , kin_(VectorX::Zero(0))
             , Ang_(Eigen::Matrix3d::Zero())
-            , ang_(Vector3::Zero()) {}
+            , ang_(VectorX::Zero(0)) {}
        ~ContactData(){}
 
        centroidal_dynamics::Equilibrium* contactPhase_;
@@ -103,21 +103,6 @@ namespace bezier_com_traj
             ResultData()
           , c_of_t_(bezier_t::zero())
           , dL_of_t_(bezier_t::zero()) {}
-
-       /* ResultDataCOMTraj(const ResultDataCOMTraj& other):
-            ResultData(other.success_,other.cost_, other.x)
-          , c_of_t_ (other.c_of_t_)
-          , dL_of_t_(other.dL_of_t_) {}
-
-        ResultDataCOMTraj& operator=(const ResultDataCOMTraj& other)
-        {
-            success_= (other.success_);
-            cost_ = (other.cost_);
-            x = (other.x);
-            c_of_t_ = other.c_of_t_;
-            dL_of_t_ = other.dL_of_t_;
-            return *this;
-        }*/
 
         ~ResultDataCOMTraj(){}
 
