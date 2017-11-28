@@ -105,7 +105,7 @@ Vector6 computew(const Equilibrium* eq, const bezier_com_traj::Vector3 c, const 
     return w;
 }
 
-bool checkTrajectory(const Vector3& c0, const std::string& solver, const Equilibrium* eq, const bezier_com_traj::ResultDataCOMTraj& resData, const double T, const int num_steps = 20)
+bool checkTrajectory(const Vector3& c0, const std::string& solver, const Equilibrium* eq, const bezier_com_traj::ResultDataCOMTraj& resData, const double T, const int num_steps = 100)
 {
     // retrieve H
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
@@ -170,7 +170,7 @@ int main()
   MatrixX3 p, N;
   RVector3 com_LB, com_UB;
   Equilibrium solver_PP ("PP", mass, generatorsPerContact, SOLVER_LP_QPOASES,false,10,false);
-  int succContinuous = 0, succDiscretize = 0, succdL = 0, succDiscretizedL = 0;
+  int succContinuous = 0, succDiscretize = 0, succdL = 0, succDiscretizedL = 0 , succKin, succdLKin = 0, succdLAng = 0;
   int numSol = 0;
   for(unsigned n_test=0; n_test<N_TESTS; n_test++)
   {
@@ -207,7 +207,9 @@ int main()
             //for (int k = 0; k < 1; ++k)
             {
                 pData.useAngularMomentum_ = false;
-                bool succCont = false, succDisc = false, succdLbool= false, succDiscdL = false;
+                pData.contacts_.front().kin_ = VectorX::Zero(0);
+                bool succCont = false, succDisc = false, succdLbool= false, succDiscdL = false ,
+                        succKinBool = false, succdLKinBool = false, succdLAngBool = false;
                 T = 1. + 0.3 * k;
                 std::vector<double> Ts;
                 Ts.push_back(T);
@@ -232,7 +234,7 @@ int main()
                     succDisc = true;
                     succDiscretize += 1;
                     std::string solverName("discretize");
-                    checkTrajectory(c0, solverName, &solver_PP,rData0,int(T / DISCRETIZATION_STEP),T);
+                    checkTrajectory(c0, solverName, &solver_PP,rData0,T, int(T / DISCRETIZATION_STEP));
                 }
                 else
                 {
@@ -265,7 +267,7 @@ int main()
                     succDiscdL = true;
                     succDiscretizedL += 1;
                     std::string solverName("discretize AngularMomentum");
-                    checkTrajectory(c0, solverName, &solver_PP,rData2,int(T / DISCRETIZATION_STEP ),T);
+                    checkTrajectory(c0, solverName, &solver_PP,rData2,T, int(T / DISCRETIZATION_STEP ));
                 }
                 else
                 {
@@ -273,16 +275,58 @@ int main()
                     //    std::cout << "error: Solver discretize with angular momentum failed while a solution was found for another case" << std::endl;
                     succDiscdL = false;
                 }
+                pData.contacts_.front().Kin_ = Eigen::Matrix3d::Identity();
+                pData.contacts_.front().kin_ = Vector3::Constant(3,0.5);
+                bezier_com_traj::ResultDataCOMTraj rData3 = bezier_com_traj::solve0step(pData,Ts);
+                pData.contacts_.front().Ang_ = Eigen::Matrix3d::Identity();
+                pData.contacts_.front().ang_ = Vector3::Constant(3,0.1);
+                if(rData3.success_)
+                {
+                    assert ((rData3.c_of_t_(0.) - c0).norm() < 0.0001);
+                    succdLKinBool = true;
+                    succdLKin += 1;
+                    std::string solverName("kinematic and angular constraint");
+                    checkTrajectory(c0, solverName, &solver_PP,rData3,T);
+                }
+
+                pData.contacts_.front().kin_ = VectorX::Zero(0);
+                bezier_com_traj::ResultDataCOMTraj rData31 = bezier_com_traj::solve0step(pData,Ts);
+                if(rData31.success_)
+                {
+                    assert ((rData31.c_of_t_(0.) - c0).norm() < 0.0001);
+                    succdLAngBool = true;
+                    succdLAng += 1;
+                    std::string solverName("angular constraint");
+                    checkTrajectory(c0, solverName, &solver_PP,rData31,T);
+                }
+
+                pData.useAngularMomentum_ = false;
+                pData.contacts_.front().ang_ = VectorX::Zero(0);
+                pData.contacts_.front().kin_ = Vector3::Constant(3,0.5);
+                bezier_com_traj::ResultDataCOMTraj rData4 = bezier_com_traj::solve0step(pData,Ts);
+                if(rData4.success_)
+                {
+                    assert ((rData4.c_of_t_(0.) - c0).norm() < 0.0001);
+                    succKinBool = true;
+                    succKin += 1;
+                    std::string solverName("kinematic constraint");
+                    checkTrajectory(c0, solverName, &solver_PP,rData4,T);
+                }
             }
         }
     }
   }
 
   std::cout << "sucesses continunous" << succContinuous << std::endl;
+  std::cout << "sucesses continuous with Kinematic constraints " << succKin << std::endl;
   std::cout << "sucesses discretize " << succDiscretize << std::endl;
   std::cout << "sucesses continunous with angular momentum" << succdL << std::endl;
   std::cout << "sucesses discretize with angular momentum" << succDiscretizedL << std::endl;
+  std::cout << "sucesses continunous with angular momentum and angular constraints" << succdLAng << std::endl;
+  std::cout << "sucesses continunous with angular momentum and kinematic and angular constraints" << succdLKin << std::endl;
+  std::cout << "sucesses discretize with angular momentum" << succDiscretizedL << std::endl;
   std::cout << "eq static point found " << numSol << std::endl;
+
 
   return 0;
 }
