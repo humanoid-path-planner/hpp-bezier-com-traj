@@ -111,18 +111,18 @@ bool checkTrajectory(const std::string& solver, const Equilibrium* eq, const bez
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     eq->getPolytopeInequalities(Hrow,h);
     MatrixXX H = -Hrow;
-    const bezier_com_traj::bezier_t* c_of_t = resData.constC_of_t();
-    const bezier_com_traj::bezier_t dL_of_t = resData.DL_of_t();
-    bezier_com_traj::bezier_t ddc_of_t = c_of_t->compute_derivate(2);
+    const bezier_com_traj::bezier_t& c_of_t  = resData.c_of_t_;
+    const bezier_com_traj::bezier_t& dL_of_t = resData.dL_of_t_;
+    bezier_com_traj::bezier_t ddc_of_t = c_of_t.compute_derivate(2);
     for (int i = 0; i < num_steps; ++i)
     {
         double dt = double(i) / float(num_steps) * T;
-        Vector6 w = computew(eq,(*c_of_t)(dt),ddc_of_t(dt),dL_of_t(dt));
+        Vector6 w = computew(eq, c_of_t(dt),ddc_of_t(dt),dL_of_t(dt));
         VectorX res = H*w;
         for(long j=0; j<res.size(); j++)
           if(res(j)>0.00001)
           {
-            std::cout << "check trajectory failed for solver " << solver  << " " <<  res(j)  << "; iteration " << dt<< "; numsteps " << num_steps << " c_of_t(dt) " << (*c_of_t)(dt)  << " dL_of_t(dt) " << (*c_of_t)(dt)  << std::endl;
+            std::cout << "check trajectory failed for solver " << solver  << " " <<  res(j)  << "; iteration " << dt<< "; numsteps " << num_steps << " c_of_t(dt) " << (c_of_t)(dt)  << " dL_of_t(dt) " << (c_of_t)(dt)  << std::endl;
             return false;
           }
     }

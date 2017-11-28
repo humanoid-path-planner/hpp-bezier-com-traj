@@ -101,81 +101,26 @@ namespace bezier_com_traj
     {
         ResultDataCOMTraj():
             ResultData()
-          , c_of_t_(0)
-          , dL_of_t_(0) {}
+          , c_of_t_(bezier_t::zero())
+          , dL_of_t_(bezier_t::zero()) {}
 
         ResultDataCOMTraj(const ResultDataCOMTraj& other):
             ResultData(other.success_,other.cost_, other.x)
-        {
-            if(other.constC_of_t())
-                c_of_t_   = new bezier_t(*(other.constC_of_t()));
-            if(other.constDL_of_t())
-                dL_of_t_  = new bezier_t(*(other.constDL_of_t()));
-        }
+          , c_of_t_ (other.c_of_t_)
+          , dL_of_t_(other.dL_of_t_) {}
 
         ResultDataCOMTraj& operator=(const ResultDataCOMTraj& other)
         {
             success_= (other.success_);
             cost_ = (other.cost_);
             x = (other.x);
-            if(other.constC_of_t())
-                c_of_t_   = new bezier_t(*(other.constC_of_t()));
-            if(other.constDL_of_t())
-                dL_of_t_  = new bezier_t(*(other.constDL_of_t()));
+            c_of_t_ = other.c_of_t_;
         }
 
-        ~ResultDataCOMTraj()
-        {
-            if(c_of_t_)
-                delete c_of_t_;
-            if(dL_of_t_)
-                delete dL_of_t_;
-        }
-        /**
-         * @brief C_of_t return a copy of the trajectory curve.
-         * Only valid if c_of_t_ was initialized(success_ is true.)
-         * @return a copy of C_of_t
-         */
-        bezier_t C_of_t() const
-        {
-            assert(c_of_t_);
-            return *c_of_t_;
-        }
-        /**
-         * @brief DL_of_t return a copy of the trajectory curve.
-         * Only valid if c_of_t_ was initialized(success_ is true.)
-         * @return a copy of DL_of_t
-         */
-        bezier_t DL_of_t() const
-        {
-            assert(dL_of_t_);
-            return *dL_of_t_;
-        }
+        ~ResultDataCOMTraj(){}
 
-        const bezier_t* constC_of_t() const
-        {
-            return c_of_t_;
-        }
-
-        const bezier_t* constDL_of_t() const
-        {
-            return dL_of_t_;
-        }
-
-        void SetC_of_t(bezier_t* c_of_t)
-        {
-            c_of_t_ = c_of_t;
-        }
-
-        void SetDL_of_t(bezier_t* dL_of_t)
-        {
-            dL_of_t_ = dL_of_t;
-        }
-
-
-    private:
-        bezier_t* c_of_t_;
-        bezier_t* dL_of_t_;
+        bezier_t c_of_t_;
+        bezier_t dL_of_t_;
     };
 
 } // end namespace bezier_com_traj

@@ -51,9 +51,6 @@ ResultDataCOMTraj* zeroStepCapturabilityWithKinConstraints(centroidal_dynamics::
     return new ResultDataCOMTraj(res);
 }
 
-
-
-
 struct res_data_exception : std::exception
 {
   char const* what() const throw() { return "attributes not accessible for false resData"; }
@@ -86,20 +83,12 @@ bool get_succD(const ResultData& res)
 
 bezier_t* getC_of_t(const ResultDataCOMTraj& res)
 {
-    const bezier_t * curve = res.constC_of_t();
-    if(curve)
-        return new bezier_t(*curve);
-    std::cout << "x is not defined" << std::endl;
-    throw res_data_exception();
+    return new bezier_t(res.c_of_t_);
 }
 
 bezier_t* getDL_of_t(const ResultDataCOMTraj& res)
 {
-    const bezier_t * curve = res.constDL_of_t();
-    if(curve)
-        return new bezier_t(*curve);
-    std::cout << "x is not defined" << std::endl;
-    throw res_data_exception();
+    return new bezier_t(res.dL_of_t_);
 }
 
 VectorX get_x(const ResultDataCOMTraj& res)

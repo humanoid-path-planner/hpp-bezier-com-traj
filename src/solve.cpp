@@ -324,33 +324,28 @@ void computeRealCost(const ProblemData& pData, ResultData& resData)
         resData.cost_ = (pData.c0_ - resData.x).norm();
 }
 
-bezier_t* computeC_of_T(const ProblemData& pData, const std::vector<double>& Ts, Cref_vectorX x)
+void computeC_of_T(const ProblemData& pData, const std::vector<double>& Ts, ResultDataCOMTraj& res)
 {
     std::vector<Vector3> wps;
     wps.push_back(pData.c0_);
     wps.push_back(pData.dc0_ * Ts[0] / 3 + pData.c0_);
-    wps.push_back(x.head(3));
-    wps.push_back(x.head(3));
-    bezier_com_traj::bezier_t c_of_t (wps.begin(), wps.end(),Ts[0]);
-    bezier_com_traj::bezier_t dc_of_t = c_of_t.compute_derivate(1);
-    return new bezier_t(wps.begin(), wps.end(),Ts[0]);
+    wps.push_back(res.x.head(3));
+    wps.push_back(res.x.head(3));
+    res.c_of_t_ = bezier_t (wps.begin(), wps.end(),Ts[0]);
 }
 
-bezier_t* computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts, Cref_vectorX x)
+void computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts, ResultDataCOMTraj& res)
 {
-    std::vector<Vector3> wps;
     if(pData.useAngularMomentum_)
     {
-        wps.push_back(3*(x.tail(3)  - pData.l0_));
-        wps.push_back(3*(-x.tail(3)));
+        std::vector<Vector3> wps;
+        wps.push_back(3*(res.x.tail(3)  - pData.l0_));
+        wps.push_back(3*(-res.x.tail(3)));
         wps.push_back(Vector3::Zero());
+        res.dL_of_t_ = bezier_t(wps.begin(), wps.end(),Ts[0], 1./Ts[0]);
     }
     else
-    {
-        for (int i = 0; i < 1; ++i)
-            wps.push_back(Vector3::Zero());
-    }
-    return new bezier_t(wps.begin(), wps.end(),Ts[0], 1./Ts[0]);
+        res.dL_of_t_ = bezier_t::zero(Ts[0]);
 }
 
 // no angular momentum for now
@@ -376,8 +371,8 @@ ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double
         res.success_ = true;
         res.x = resQp.x;
         computeRealCost(pData, res);
-        res.SetC_of_t(computeC_of_T (pData,Ts,res.x));
-        res.SetDL_of_t(computedL_of_T(pData,Ts,res.x));
+        computeC_of_T (pData,Ts,res);
+        computedL_of_T(pData,Ts,res);
 
     }
     return res;
