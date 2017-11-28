@@ -95,8 +95,8 @@ bool findStaticEqCOMPos(Equilibrium * eq, const RVector3& com_LB, const RVector3
     return false;
 }
 
-Vector6 computew(const Equilibrium* eq, const bezier_com_traj::Vector3& c, const Vector3& ddc,
-                 Vector3 dL = Vector3::Zero())
+Vector6 computew(const Equilibrium* eq, const bezier_com_traj::Vector3 c, const Vector3 ddc,
+                 const Vector3 dL)
 {
     Vector6 w; Vector3 w1;
     w1 = eq->m_mass * (ddc -eq->m_gravity);
@@ -105,24 +105,38 @@ Vector6 computew(const Equilibrium* eq, const bezier_com_traj::Vector3& c, const
     return w;
 }
 
-bool checkTrajectory(const std::string& solver, const Equilibrium* eq, const bezier_com_traj::ResultDataCOMTraj& resData, const double T, const int num_steps = 100)
+bool checkTrajectory(const Vector3& c0, const std::string& solver, const Equilibrium* eq, const bezier_com_traj::ResultDataCOMTraj& resData, const double T, const int num_steps = 20)
 {
     // retrieve H
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     eq->getPolytopeInequalities(Hrow,h);
     MatrixXX H = -Hrow;
-    const bezier_com_traj::bezier_t& c_of_t  = resData.c_of_t_;
-    const bezier_com_traj::bezier_t& dL_of_t = resData.dL_of_t_;
+    H.rowwise().normalize();
+    const bezier_com_traj::bezier_t c_of_t  = resData.c_of_t_;
+    const bezier_com_traj::bezier_t dL_of_t = resData.dL_of_t_;
     bezier_com_traj::bezier_t ddc_of_t = c_of_t.compute_derivate(2);
     for (int i = 0; i < num_steps; ++i)
     {
         double dt = double(i) / float(num_steps) * T;
+        c_of_t(dt);
+        dL_of_t(dt);
         Vector6 w = computew(eq, c_of_t(dt),ddc_of_t(dt),dL_of_t(dt));
         VectorX res = H*w;
         for(long j=0; j<res.size(); j++)
-          if(res(j)>0.00001)
+          if(res(j)>0.0001)
           {
-            std::cout << "check trajectory failed for solver " << solver  << " " <<  res(j)  << "; iteration " << dt<< "; numsteps " << num_steps << " c_of_t(dt) " << (c_of_t)(dt)  << " dL_of_t(dt) " << (c_of_t)(dt)  << std::endl;
+            std::cout << "check trajectory failed for solver " << solver  << " " <<  res(j)  << "; iteration " << dt<< "; numsteps " << num_steps << " c_of_t(dt) " << (c_of_t)(dt).transpose() << " dc_of_t(dt) " << c_of_t.derivate(dt,1).transpose() << " dL_of_t(dt) " << (dL_of_t)(dt).transpose()  << std::endl;
+            std::cout << "c0 " << c0.transpose() << std::endl;
+            std::cout << "H row " << H.row(j) << std::endl;
+            std::cout << "w " << w << std::endl;
+            std::cout << "j " << j << std::endl;
+            //throw;
+            std::cout << "mult ddc " << ddc_of_t.mult_T_ << std::endl;
+            std::cout << "mult c " << c_of_t.mult_T_ << std::endl;
+            std::cout << "T c" << c_of_t.T_ << std::endl;
+            std::cout << "T " << T << std::endl;
+            std::cout << "T ddc " << ddc_of_t.T_ << std::endl;
+            std::cout << "1 / T * T " <<  1/ (T * T) << std::endl;
             return false;
           }
     }
@@ -174,7 +188,7 @@ int main()
 
     Vector3 c0;
     solver_PP.setNewContacts(p,N,mu,EQUILIBRIUM_ALGORITHM_PP);
-    const double DISCRETIZATION_STEP = 0.1;
+    const double DISCRETIZATION_STEP = 0.05;
     if(findStaticEqCOMPos(&solver_PP, com_LB, com_UB,c0))
     {
         numSol +=1;
@@ -187,37 +201,38 @@ int main()
             pData.dc0_ << fRandom(-1.,1.) , fRandom(-1.,1.) , fRandom(-1.,1.);
             //pData.dc0_ *= 1;
             pData.l0_ = Vector3(0.,0.,0.);
-            pData.contacts_.push_back(data);
-            std::vector<double> Ts;
-            bezier_com_traj::ResultDataCOMTraj rData;
+            pData.contacts_.push_back(data);            
             double T;
             for (int k = -1; k < 2; ++k)
+            //for (int k = 0; k < 1; ++k)
             {
                 pData.useAngularMomentum_ = false;
                 bool succCont = false, succDisc = false, succdLbool= false, succDiscdL = false;
                 T = 1. + 0.3 * k;
-                Ts.clear();
+                std::vector<double> Ts;
                 Ts.push_back(T);
-                rData = bezier_com_traj::solve0step(pData,Ts);
+                bezier_com_traj::ResultDataCOMTraj rData = bezier_com_traj::solve0step(pData,Ts);
                 if(rData.success_)
-                {
+                {                    
+                    assert ((rData.c_of_t_(0.) - pData.c0_).norm() < 0.0001);
                     succCont = true;
                     succContinuous += 1;
                     std::string solverName("continuous");
-                    checkTrajectory(solverName, &solver_PP,rData, T);
+                    checkTrajectory(c0, solverName, &solver_PP,rData, T);
                 }
                 else
                 {
                     succCont = false;
                 }
-                // try discretize
-                rData = bezier_com_traj::solve0step(pData,Ts,DISCRETIZATION_STEP);
-                if(rData.success_)
+               /* // try discretize
+                bezier_com_traj::ResultDataCOMTraj rData0 = bezier_com_traj::solve0step(pData,Ts,DISCRETIZATION_STEP);
+                if(rData0.success_)
                 {
+                    assert ((rData0.c_of_t_(0.) - c0).norm() < 0.0001);
                     succDisc = true;
                     succDiscretize += 1;
                     std::string solverName("discretize");
-                    checkTrajectory(solverName, &solver_PP,rData,int(T / DISCRETIZATION_STEP),T);
+                    checkTrajectory(c0, solverName, &solver_PP,rData0,int(T / DISCRETIZATION_STEP),T);
                 }
                 else
                 {
@@ -226,36 +241,38 @@ int main()
                     succDisc = false;
                 }
 
-                //pData.useAngularMomentum_ = true;
-                rData = bezier_com_traj::solve0step(pData,Ts);
-                if(rData.success_)
+                pData.useAngularMomentum_ = true;
+                bezier_com_traj::ResultDataCOMTraj rData1 = bezier_com_traj::solve0step(pData,Ts);
+                if(rData1.success_)
                 {
+                    assert ((rData1.c_of_t_(0.) - c0).norm() < 0.0001);
                     succdLbool = true;
                     succdL += 1;
                     std::string solverName("continuous AngularMomentum");
-                    checkTrajectory(solverName, &solver_PP,rData, T);
+                    checkTrajectory(c0, solverName, &solver_PP,rData1, T);
                 }
                 else
                 {
-                    if(succCont)
-                        std::cout << "error: Solver Ang momentum failed while a solution was found without angular momentum" << std::endl;
+                    //if(succCont)
+                    //    std::cout << "error: Solver Ang momentum failed while a solution was found without angular momentum" << std::endl;
                     succDisc = false;
                 }
 
-                rData = bezier_com_traj::solve0step(pData,Ts,DISCRETIZATION_STEP);
-                if(rData.success_)
+                bezier_com_traj::ResultDataCOMTraj rData2 = bezier_com_traj::solve0step(pData,Ts,DISCRETIZATION_STEP);
+                if(rData2.success_)
                 {
+                    assert ((rData2.c_of_t_(0.) - c0).norm() < 0.0001);
                     succDiscdL = true;
                     succDiscretizedL += 1;
                     std::string solverName("discretize AngularMomentum");
-                    checkTrajectory(solverName, &solver_PP,rData,int(T / DISCRETIZATION_STEP ),T);
+                    checkTrajectory(c0, solverName, &solver_PP,rData2,int(T / DISCRETIZATION_STEP ),T);
                 }
                 else
                 {
-                    if(succCont || succDisc ||succdLbool)
-                        std::cout << "error: Solver discretize with angular momentum failed while a solution was found for another case" << std::endl;
-                    succDisc = false;
-                }
+                    //if(succCont || succDisc ||succdLbool)
+                    //    std::cout << "error: Solver discretize with angular momentum failed while a solution was found for another case" << std::endl;
+                    succDiscdL = false;
+                }*/
             }
         }
     }

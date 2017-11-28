@@ -16,7 +16,7 @@ waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, co
     w.first.block<3,3>(0,0) = 6*alpha* Matrix3::Identity();
     w.first.block<3,3>(3,0) = 6*alpha*p0X;
     w.second.head(3) = 6*alpha*(p0 - 2*p1);
-    w.second.tail(3) =-p0.cross(12*alpha*p1 + g);
+    w.second.tail(3) =(-p0).cross(12*alpha*p1 + g);
     return w;
 }
 
@@ -56,7 +56,7 @@ waypoint_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/
 }
 
 /*
-def w2(p0, p1, g, p0X, p1X, gX, alpha):
+w2(p0, p1, g, p0X, p1X, gX, alpha):
     wx, ws = __init_6D()
     #~ wx[:3,:] = 0;
     wx[3:,:] = skew(0.5*g - 3*alpha* p0 + 3*alpha*p1)
@@ -353,7 +353,7 @@ ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double
 {
     assert(pData.contacts_.size() ==1);
     assert(Ts.size() == pData.contacts_.size());
-    bool fail = false;
+    bool fail = true;
     std::pair<MatrixXX, VectorX> Ab = compute6dControlPointInequalities(pData.contacts_.front(),pData.c0_, pData.dc0_, pData.l0_, pData.useAngularMomentum_, Ts.front(),timeStep, fail);
     ResultDataCOMTraj res;
     if(fail)
@@ -373,6 +373,24 @@ ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double
         computeRealCost(pData, res);
         computeC_of_T (pData,Ts,res);
         computedL_of_T(pData,Ts,res);
+
+        std::vector<waypoint_t> wps;
+        centroidal_dynamics::MatrixXX Hrow; VectorX h;
+        wps = ComputeAllWaypoints(pData.c0_, pData.dc0_, pData.contacts_.front().contactPhase_->m_gravity, Ts.front(), timeStep);
+        pData.contacts_.front().contactPhase_->getPolytopeInequalities(Hrow,h);
+        MatrixXX H = -Hrow;
+        int dimH = (int)(H.rows());
+        MatrixXX mH = pData.contacts_.front().contactPhase_->m_mass * H;
+        point6_t bc = point6_t::Zero(); bc.head(3) = pData.contacts_.front().contactPhase_->m_gravity; // constant part of Aub, Aubi = mH * (bc - wsi)
+        for (std::vector<waypoint_t>::const_iterator cit = wps.begin(); cit != wps.end(); ++cit)
+        {
+            VectorX res = mH * cit->first * resQp.x.head(3) - mH *(cit->second - bc);
+            for (int j = 0; j < res.size(); ++j)
+            {
+                if (res(j) > 0.00001)
+                    std::cout << "not verifies " << std::endl;
+            }
+        }
 
     }
     return res;

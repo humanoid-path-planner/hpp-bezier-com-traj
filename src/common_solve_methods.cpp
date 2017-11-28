@@ -101,9 +101,10 @@ int removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
     {
         if (empty(i))
         {
+            assert(A.row(i).norm() == 0);
             if(b(i) <0)
             {
-                std::cout << "empty row for A while correponding b is negative. Problem is infeasible" << b(i) << std::endl;
+                //std::cout << "empty row for A while correponding b is negative. Problem is infeasible" << b(i) << std::endl;
                 return -1;
             }
             A.row(i).swap(A.row(last));
@@ -181,10 +182,13 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
 template<typename Derived>
 inline bool is_nan(const Eigen::MatrixBase<Derived>& x)
 {
-    return !((x.array()==x.array()).all());
+    bool isnan = !((x.array()==x.array()).all());
+    if (isnan)
+        std::cout << "IS NAN " << std::endl;
+    return isnan;
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
+ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
 {
     /*
    * solves the problem
@@ -195,26 +199,33 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
    *      CI = 0; ce0 = 0
    */
 
-    assert (!(is_nan(A) || is_nan(ci0) || is_nan(initGuess)));
-
+    assert (!(is_nan(A) || is_nan(b) || is_nan(initGuess)));
     MatrixXX CI = -A;
     MatrixXX CE = MatrixXX::Zero(0,A.cols());
     VectorX ce0  = VectorX::Zero(0);
     tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
     VectorX x = initGuess;
+    VectorX ci0 = b - VectorX::Constant(b.size(),0.00001);
     tsid::solvers::EiquadprogFast_status status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
     ResultData res;
     res.success_ = status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL;
     if(res.success_)
     {
+        if(is_nan(x))
+        {
+            std::cout << " H " << H << std::endl;
+            std::cout << " x is NAN \n " << x << std::endl;
+            status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
+            std::cout << " x is NANwith non null g ? \n " << x << std::endl;
+        }
         res.x = x;
         res.cost_ = QPsolver.getObjValue();
-        VectorX deb = A*x - ci0;
+        VectorX deb = A*x - b;
         for (int l = 0; l < deb.size(); ++ l)
         {
-            if(deb(l) > 0.0001)
+            if(deb(l) > 0)
             {
-                std::cout << "inequality sanity check failed " << std::endl;
+                std::cout << "inequality sanity check failed " << deb(l) << std::endl;
                 break;
             }
         }
