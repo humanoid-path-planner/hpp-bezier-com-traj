@@ -188,13 +188,13 @@ std::pair<MatrixXX, VectorX> computeCostFunction(point_t_tC p0, point_t_tC l0, c
 {
     int dimPb = useAngMomentum ? 6 : 3;
     std::pair<MatrixXX, VectorX> res;
-    res.first  = MatrixXX(dimPb,dimPb);
-    res.second = VectorX (dimPb);
+    res.first  = MatrixXX::Zero(dimPb,dimPb);
+    res.second = VectorX::Zero(dimPb);
     Ref_matrixXX H = res.first;
     Ref_vectorX  g = res.second;
 
     //minimize distance to initial point
-    double weightDist = useAngMomentum ? 0.1 : 1.;
+    double weightDist = useAngMomentum ? 0.0001 : 1.;
     H.block<3,3>(0,0) = Matrix3::Identity() * weightDist;
     g.head(3) = - p0 * weightDist;
 

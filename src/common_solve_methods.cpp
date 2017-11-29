@@ -60,8 +60,11 @@ void addKinematic(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Kin, Cref_vectorX
 void addAngularMomentum(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Ang, Cref_vectorX ang)
 {
     int dimAng = (int)(ang.rows());
-    A.block(A.rows() - dimAng  , 3, dimAng, 3) = Ang;
-    b.tail(dimAng) = ang;
+    if(dimAng > 0)
+    {
+        A.block(A.rows() - dimAng  , 3, dimAng, 3) = Ang;
+        b.tail(dimAng) = ang;
+    }
 }
 
 int removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
@@ -170,7 +173,7 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
    *      CI = 0; ce0 = 0
    */
 
-    assert (!(is_nan(A) || is_nan(b) || is_nan(initGuess)));
+    assert (!(is_nan(A) || is_nan(ci0) || is_nan(initGuess) || is_nan(H)));
     MatrixXX CI = -A;
     MatrixXX CE = MatrixXX::Zero(0,A.cols());
     VectorX ce0  = VectorX::Zero(0);
@@ -181,6 +184,7 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
     res.success_ = status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL;
     if(res.success_)
     {
+        assert (!(is_nan(x)));
         res.x = x;
         res.cost_ = QPsolver.getObjValue();
     }
