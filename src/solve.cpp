@@ -7,12 +7,12 @@
 #include <bezier-com-traj/common_solve_methods.hh>
 
 using namespace bezier_com_traj;
-
+typedef waypoint6_t waypoint_t;
 namespace bezier_com_traj
 {
 waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
-    waypoint_t w = initwp();
+    waypoint_t w = initwp<waypoint_t>();
     w.first.block<3,3>(0,0) = 6*alpha* Matrix3::Identity();
     w.first.block<3,3>(3,0) = 6*alpha*p0X;
     w.second.head(3) = 6*alpha*(p0 - 2*p1);
@@ -22,7 +22,7 @@ waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, co
 
 waypoint_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& gX, const double alpha)
 {
-    waypoint_t w = initwp();
+    waypoint_t w = initwp<waypoint_t>();
     w.first.block<3,3>(0,0) = 3*alpha*Matrix3::Identity();
     w.first.block<3,3>(3,0) = skew(1.5 * (3*p1 - p0))*alpha;
     w.second.head(3) = 1.5 *alpha* (3*p0 - 5*p1);
@@ -32,7 +32,7 @@ waypoint_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, const Matrix3& /*p
 
 waypoint_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& gX, const double alpha)
 {
-    waypoint_t w = initwp();
+    waypoint_t w = initwp<waypoint_t>();
     // w.first.block<3,3>(0,0) = 0;
     w.first.block<3,3>(3,0) = skew(0.5*g - 3*alpha* p0 + 3*alpha*p1);
     w.second.head(3) = 3*alpha*(p0 - p1);
@@ -42,7 +42,7 @@ waypoint_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/
 
 waypoint_t w3 (point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
-    waypoint_t w = initwp();
+    waypoint_t w = initwp<waypoint_t>();
     w.first.block<3,3>(0,0) = -3*alpha*Matrix3::Identity();
     w.first.block<3,3>(3,0) = skew(g - 1.5 *alpha* (p1 + p0));
     w.second.head(3) = 1.5*alpha * (p1 + p0);
@@ -52,7 +52,7 @@ waypoint_t w3 (point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*
 
 waypoint_t w4 (point_t_tC /*p0*/, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
-    waypoint_t w = initwp();
+    waypoint_t w = initwp<waypoint_t>();
     w.first.block<3,3>(0,0) = -6*alpha * Matrix3::Identity();
     w.first.block<3,3>(3,0) = skew(g - 6*alpha* p1);
     w.second.head(3) = 6*alpha*p1;
@@ -62,7 +62,7 @@ waypoint_t w4 (point_t_tC /*p0*/, point_t_tC p1, point_t_tC g, const Matrix3& /*
 
 waypoint_t u0 (point_t_tC l0, const double alpha)
 {
-    waypoint_t w = initwp();
+    waypoint_t w = initwp<waypoint_t>();
     //w.first.block<3,3>(0,0) = 0;
     w.first.block<3,3>(3,0) = 3*alpha * Matrix3::Identity();
     //w.second.head(3) = 0;
@@ -72,7 +72,7 @@ waypoint_t u0 (point_t_tC l0, const double alpha)
 
 waypoint_t u1 (point_t_tC l0, const double alpha)
 {
-    waypoint_t w = initwp();
+    waypoint_t w = initwp<waypoint_t>();
     //w.first.block<3,3>(0,0) = 0;
     //w.first.block<3,3>(3,0) = 0;
     //w.second.head(3) = 0;
@@ -82,7 +82,7 @@ waypoint_t u1 (point_t_tC l0, const double alpha)
 
 waypoint_t u2 (point_t_tC l0, const double alpha)
 {
-    waypoint_t w = initwp();
+    waypoint_t w = initwp<waypoint_t>();
     //w.first.block<3,3>(0,0) = 0;
     w.first.block<3,3>(3,0) = -1.5*alpha * Matrix3::Identity();
     //w.second.head(3) = 0;
@@ -92,7 +92,7 @@ waypoint_t u2 (point_t_tC l0, const double alpha)
 
 waypoint_t u3 (point_t_tC /*l0*/, const double alpha)
 {
-    waypoint_t w = initwp();
+    waypoint_t w = initwp<waypoint_t>();
     w.first.block<3,3>(3,0) = -1.5*alpha * Matrix3::Identity();
     //w.second.head(3) = 0;
     //w.second.tail(3) = 0.;
@@ -102,7 +102,7 @@ waypoint_t u3 (point_t_tC /*l0*/, const double alpha)
 
 waypoint_t u4 (point_t_tC /*l0*/, const double /*alpha*/)
 {
-    waypoint_t w = initwp();
+    waypoint_t w = initwp<waypoint_t>();
     //w.first.block<3,3>(0,0) = 0;
     //w.first.block<3,3>(3,0) = 0;
     //w.second.head(3) = 0;
@@ -270,4 +270,6 @@ ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double
     }
     return res;
 }
+
+
 } // namespace bezier_com_traj

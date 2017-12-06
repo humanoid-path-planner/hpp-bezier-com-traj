@@ -16,17 +16,21 @@ namespace bezier_com_traj
 
 typedef Matrix63 matrix6_t;
 typedef Vector6 point6_t;
+typedef Matrix3 matrix3_t;
+typedef Vector3 point3_t;
 /**
  * @brief waypoint_t a waypoint is composed of a  6*3 matrix that depend
  * on the variable x, and of a 6d vector independent of x, such that
  * each control point of the target bezier curve is given by pi = wix * x + wis
  */
-typedef std::pair<matrix6_t, point6_t> waypoint_t;
+typedef std::pair<matrix6_t, point6_t> waypoint6_t;
+typedef std::pair<matrix3_t, point3_t> waypoint3_t;
 typedef const Eigen::Ref<const point_t>& point_t_tC;
 typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
 
 BEZIER_COM_TRAJ_DLLAPI Matrix3 skew(point_t_tC x);
-BEZIER_COM_TRAJ_DLLAPI waypoint_t initwp();
+template<typename T> T initwp();
+
 /**
  * @brief ComputeDiscretizedWaypoints Given the waypoints defining a bezier curve,
  * computes a discretization of the curve
@@ -35,7 +39,7 @@ BEZIER_COM_TRAJ_DLLAPI waypoint_t initwp();
  * @param numSteps desired number of wayoints
  * @return a vector of waypoint representing the discretization of the curve
  */
-BEZIER_COM_TRAJ_DLLAPI  std::vector<waypoint_t> ComputeDiscretizedWaypoints(const std::vector<waypoint_t>& wps, const std::vector<spline::Bern<double> >& bernstein, int numSteps);
+BEZIER_COM_TRAJ_DLLAPI  std::vector<waypoint6_t> ComputeDiscretizedWaypoints(const std::vector<waypoint6_t>& wps, const std::vector<spline::Bern<double> >& bernstein, int numSteps);
 
 /**
  * @brief compute6dControlPointInequalities Given linear and angular control waypoints,
@@ -47,7 +51,7 @@ BEZIER_COM_TRAJ_DLLAPI  std::vector<waypoint_t> ComputeDiscretizedWaypoints(cons
  * @param fail set to true if problem is found infeasible
  * @return
  */
-BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum, bool& fail);
+BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint6_t>& wps, const std::vector<waypoint6_t>& wpL, const bool useAngMomentum, bool& fail);
 
 
 /**

@@ -16,22 +16,30 @@ Matrix3 skew(point_t_tC x)
     return res;
 }
 
-waypoint_t initwp()
+template<> waypoint6_t initwp<waypoint6_t>()
 {
-    waypoint_t w;
+    waypoint6_t w;
     w.first  = matrix6_t::Zero();
     w.second = point6_t::Zero();
     return w;
 }
 
+template<> waypoint3_t initwp<waypoint3_t>()
+{
+    waypoint3_t w;
+    w.first  = matrix3_t::Zero();
+    w.second = point3_t::Zero();
+    return w;
+}
 
-std::vector<waypoint_t> ComputeDiscretizedWaypoints(const std::vector<waypoint_t>& wps, const std::vector<spline::Bern<double> >& berns,  int numSteps)
+
+std::vector<waypoint6_t> ComputeDiscretizedWaypoints(const std::vector<waypoint6_t>& wps, const std::vector<spline::Bern<double> >& berns,  int numSteps)
 {
     double dt = 1./double(numSteps);
-    std::vector<waypoint_t> res;
+    std::vector<waypoint6_t> res;
     for (int i =0; i < numSteps + 1; ++i)
     {
-        waypoint_t w = initwp();
+        waypoint6_t w = initwp<waypoint6_t>();
         for (int j = 0; j <5; ++j)
         {
             double b = berns[j](i*dt);
@@ -43,7 +51,7 @@ std::vector<waypoint_t> ComputeDiscretizedWaypoints(const std::vector<waypoint_t
     return res;
 }
 
-MatrixXX initMatrixA(const int dimH, const std::vector<waypoint_t>& wps, const int extraConstraintSize, const bool useAngMomentum)
+MatrixXX initMatrixA(const int dimH, const std::vector<waypoint6_t>& wps, const int extraConstraintSize, const bool useAngMomentum)
 {
     int dimPb = useAngMomentum ? 6 : 3;
     return MatrixXX::Zero(dimH * wps.size() + extraConstraintSize, dimPb);
@@ -104,7 +112,9 @@ int Normalize(Ref_matrixXX A, Ref_vectorX b)
     return zeroindex;
 }
 
-std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint_t>& wps, const std::vector<waypoint_t>& wpL, const bool useAngMomentum, bool& fail)
+
+
+std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint6_t>& wps, const std::vector<waypoint6_t>& wpL, const bool useAngMomentum, bool& fail)
 {
     MatrixXX A;
     VectorX  b;
@@ -124,8 +134,8 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     b = VectorX::Zero(A.rows());
     point6_t bc = point6_t::Zero(); bc.head(3) = g; // constant part of Aub, Aubi = mH * (bc - wsi)
     int i = 0;
-    std::vector<waypoint_t>::const_iterator wpLcit = wpL.begin();
-    for (std::vector<waypoint_t>::const_iterator wpcit = wps.begin(); wpcit != wps.end(); ++wpcit)
+    std::vector<waypoint6_t>::const_iterator wpLcit = wpL.begin();
+    for (std::vector<waypoint6_t>::const_iterator wpcit = wps.begin(); wpcit != wps.end(); ++wpcit)
     {
         A.block(i*dimH,0, dimH, 3) = mH * wpcit->first;
         b.segment(i*dimH, dimH)    = mH * (bc - wpcit->second);
