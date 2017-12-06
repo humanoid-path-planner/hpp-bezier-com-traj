@@ -23,7 +23,18 @@ namespace bezier_com_traj
       */
      BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solve0step(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep = -1);
 
-     BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveEndEffector(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep = -1);
+     /**
+     * @brief solveEndEffector Tries to produce a trajectory represented as a bezier curve
+     * that satisfy position, velocity and acceleration constraint for the initial and final point
+     * and that follow as close as possible the input trajectory
+     * @param pData problem Data.
+     * @param path the path to follow, the class Path must implement the operator (double t) , t \in [0,1]
+     * that give the position on the path for a given time
+     * @param T time lenght of the trajectory
+     * @param timeStep time that the solver has to stop
+     * @return ResultData a struct containing the resulting trajectory, if success is true.
+     */
+     template<typename Path> BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveEndEffector(const ProblemData& pData,Path path, const double T, const double timeStep);
 
 } // end namespace bezier_com_traj
 

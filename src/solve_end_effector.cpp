@@ -49,7 +49,8 @@ std::vector<waypoint_t> createEndEffectorWaypoints(double T,const ProblemData& p
     return wps;
 }
 
-ResultDataCOMTraj solveEndEffector(const ProblemData& pData, const double T, const double timeStep){
+template <typename Path>
+ResultDataCOMTraj solveEndEffector(const ProblemData& pData,Path path, const double T, const double timeStep){
     std::vector<waypoint_t> wps=createEndEffectorWaypoints(T,pData);
 
 }
