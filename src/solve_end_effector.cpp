@@ -7,7 +7,7 @@
 #include <bezier-com-traj/common_solve_methods.hh>
 using namespace bezier_com_traj;
 typedef waypoint3_t waypoint_t;
-
+const int DIM_POINT=3;
 namespace bezier_com_traj
 {
 
@@ -52,6 +52,16 @@ std::vector<waypoint_t> createEndEffectorWaypoints(double T,const ProblemData& p
 template <typename Path>
 ResultDataCOMTraj solveEndEffector(const ProblemData& pData,Path path, const double T, const double timeStep){
     std::vector<waypoint_t> wps=createEndEffectorWaypoints(T,pData);
+    // stack the constraint for each waypoint :
+    MatrixXX A = MatrixXX::Zero(DIM_POINT*wps.size(),DIM_POINT);
+    VectorX b = VectorX::Zero(DIM_POINT);
+    int i = 0;
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps.begin(); wpcit != wps.end(); ++wpcit)
+    {
+        A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
+        b.segment<DIM_POINT>(i*DIM_POINT)   = -wpcit->second;
+        ++i;
+    }
 
 }
 
