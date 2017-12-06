@@ -22,6 +22,9 @@ namespace bezier_com_traj
       * @return ResultData a struct containing the resulting trajectory, if success is true.
       */
      BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solve0step(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep = -1);
+
+     BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveEndEffector(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep = -1);
+
 } // end namespace bezier_com_traj
 
 #endif
