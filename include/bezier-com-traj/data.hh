@@ -56,11 +56,14 @@ namespace bezier_com_traj
         ProblemData()
             : c0_(Vector3::Zero())
             ,dc0_(Vector3::Zero())
+            ,ddc0_(Vector3::Zero())
+            , c1_(Vector3::Zero())
+            ,dc1_(Vector3::Zero())
+            ,ddc1_(Vector3::Zero())
             ,useAngularMomentum_(false) {}
 
         std::vector<ContactData> contacts_;
-        Vector3  c0_;
-        Vector3 dc0_;
+        Vector3  c0_,dc0_,ddc0_,c1_,dc1_,ddc1_;
         Vector3  l0_;
         bool useAngularMomentum_;
     };
