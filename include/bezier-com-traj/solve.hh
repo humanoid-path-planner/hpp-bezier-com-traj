@@ -28,7 +28,7 @@ namespace bezier_com_traj
      * that satisfy position, velocity and acceleration constraint for the initial and final point
      * and that follow as close as possible the input trajectory
      * @param pData problem Data.
-     * @param path the path to follow, the class Path must implement the operator (double t) , t \in [0,1]
+     * @param path the path to follow, the class Path must implement the operator (double t) , t \in [0,1] return a Vector3
      * that give the position on the path for a given time
      * @param T time lenght of the trajectory
      * @param timeStep time that the solver has to stop
