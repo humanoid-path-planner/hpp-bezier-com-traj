@@ -6,9 +6,9 @@
 #ifndef BEZIER_COM_TRAJ_LIB_SOLVE_H
 #define BEZIER_COM_TRAJ_LIB_SOLVE_H
 
-#include <Eigen/Dense>
 #include <bezier-com-traj/config.hh>
 #include <bezier-com-traj/data.hh>
+#include <Eigen/Dense>
 
 namespace bezier_com_traj
 {

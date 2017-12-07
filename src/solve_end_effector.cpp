@@ -20,16 +20,24 @@ coefs_t initCoefs(){
     return c;
 }
 
+void computeConstantWaypoints(const ProblemData& pData,double T,point_t& p0,point_t& p1, point_t& p2, point_t& p4, point_t& p5, point_t& p6){
+    double n = 6; // degree
+    p0 = pData.c0_;
+    p1 = pData.dc0_ * T / n +  pData.c0_;
+    p2 = pData.ddc0_*T*T/(n*(n-1)) + 2*pData.dc0_ *T / n + pData.c0_; // * T because derivation make a T appear
+    p6 = pData.c1_;
+    p5 = -pData.dc1_ * T / n + pData.c1_; // * T ?
+    p4 = pData.ddc1_ *T*T / (n*(n-1)) - 2 * pData.dc1_ *T / n + pData.c1_ ; // * T ??
+}
+
 std::vector<waypoint_t> createEndEffectorWaypoints(double T,const ProblemData& pData){
     // create the waypoint from the analytical expressions :
     std::vector<waypoint_t> wps;
-    double n = 6; // degree
-    point_t p0 = pData.c0_;
-    point_t p1 = pData.dc0_ * T / n +  pData.c0_;
-    point_t p2 = pData.ddc0_*T*T/(n*(n-1)) + 2*pData.dc0_ *T / n + pData.c0_; // * T because derivation make a T appear
-    point_t p6 = pData.c1_;
-    point_t p5 = -pData.dc1_ * T / n + pData.c1_; // * T ?
-    point_t p4 = pData.ddc1_ *T*T / (n*(n-1)) - 2 * pData.dc1_ *T / n + pData.c1_ ; // * T ??
+    point_t p0,p1,p2,p4,p5,p6;
+    computeConstantWaypoints(pData,T,p0,p1,p2,p4,p5,p6);
+    std::cout<<"Create end eff waypoints, constant waypoints = :"<<std::endl<<
+               "p0 = "<<p0<<std::endl<<"p1 = "<<p1<<std::endl<<"p2 = "<<p2<<std::endl<<
+               "p4 = "<<p4<<std::endl<<"p5 = "<<p5<<std::endl<<"p6 = "<<p6<<std::endl;
     double alpha = 1. / (T*T);
 
     waypoint_t w = initwp<waypoint_t>();
@@ -150,6 +158,21 @@ void computeCostFunction(std::vector<coefs_t>cks ,MatrixXX& H,VectorX& g,Path pa
 
 }
 
+void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
+    std::vector<Vector3> wps;
+    point_t p0,p1,p2,p4,p5,p6;
+    computeConstantWaypoints(pData,T,p0,p1,p2,p4,p5,p6);
+    wps.push_back(p0);
+    wps.push_back(p1);
+    wps.push_back(p2);
+    wps.push_back(res.x);
+    wps.push_back(p4);
+    wps.push_back(p5);
+    wps.push_back(p6);
+    res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
+}
+
+
 
 template <typename Path>
 ResultDataCOMTraj solveEndEffector(const ProblemData& pData,Path path, const double T, const double timeStep){
@@ -174,7 +197,16 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,Path path, const dou
     init = pData.c0_;
     ResultData resQp = solve(A,b,H,g, init);
 
-
+    ResultDataCOMTraj res;
+    if(resQp.success_)
+    {
+        res.success_ = true;
+        res.x = resQp.x;
+       // computeRealCost(pData, res);
+        computeC_of_T (pData,T,res);
+       // computedL_of_T(pData,Ts,res);
+    }
+    return res;
 }
 
 
