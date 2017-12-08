@@ -124,19 +124,38 @@ std::vector<waypoint_t> createEndEffectorVelocityWaypoints(double T,const Proble
 
 
 void computeConstraintsMatrix(std::vector<waypoint_t> wps_acc,std::vector<waypoint_t> wps_vel,VectorX acc_bounds,VectorX vel_bounds,MatrixXX& A,VectorX& b){
-    A = MatrixXX::Zero(DIM_POINT*(wps_acc.size()+wps_vel.size()),DIM_POINT);
+    assert(acc_bounds.length() == DIM_POINT && "Acceleration bounds should have the same dimension as the points");
+    assert(vel_bounds.length() == DIM_POINT && "Velocity bounds should have the same dimension as the points");
+
+    A = MatrixXX::Zero(2*DIM_POINT*(wps_acc.size()+wps_vel.size()),DIM_POINT); // *2 because we have to put the lower and upper bound for each one
     b = VectorX::Zero(A.rows());
     int i = 0;
+    //upper acc bounds
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
     {
         A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
         b.segment<DIM_POINT>(i*DIM_POINT)   = acc_bounds - wpcit->second;
         ++i;
     }
+    //lower acc bounds
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
+    {
+        A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
+        b.segment<DIM_POINT>(i*DIM_POINT)   = acc_bounds + wpcit->second;
+        ++i;
+    }
+    //upper velocity bounds
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
     {
         A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
         b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds - wpcit->second;
+        ++i;
+    }
+    //lower velocity bounds
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
+    {
+        A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
+        b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds + wpcit->second;
         ++i;
     }
 }
