@@ -16,7 +16,7 @@
 //
 
 #include "solver/eiquadprog-fast.hpp"
-
+#include <iostream>
 namespace tsid
 {
   namespace solvers
@@ -332,7 +332,7 @@ namespace tsid
       }
 
       c2 = m_J.trace();
-#ifdef TRACE_SOLVER
+#ifdef _SOLVER
       print_matrix("m_J", m_J, nVars);
 #endif
 

@@ -16,7 +16,6 @@ SET(${LIBRARY_NAME}_SOURCES
                 ${INCLUDE_DIR}/bezier-com-traj/common_solve_methods.hh
                 ${INCLUDE_DIR}/solver/eiquadprog-fast.hpp
                 solve.cpp
-                solve_end_effector.cpp
                 common_solve_methods.cpp
                 eiquadprog-fast.cpp
 		#~ ${INCLUDE_DIR}/centroidal-dynamics-lib/solver_LP_abstract.hh

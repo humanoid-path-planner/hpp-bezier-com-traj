@@ -6,12 +6,28 @@
 #include <bezier-com-traj/solve.hh>
 #include <bezier-com-traj/common_solve_methods.hh>
 using namespace bezier_com_traj;
+
+namespace bezier_com_traj
+{
 typedef waypoint3_t waypoint_t;
 typedef std::pair<double,point3_t> coefs_t;
 const int DIM_POINT=3;
 const int NUM_DISCRETIZATION = 11;
-namespace bezier_com_traj
-{
+
+/**
+* @brief solveEndEffector Tries to produce a trajectory represented as a bezier curve
+* that satisfy position, velocity and acceleration constraint for the initial and final point
+* and that follow as close as possible the input trajectory
+* @param pData problem Data.
+* @param path the path to follow, the class Path must implement the operator (double t) , t \in [0,1] return a Vector3
+* that give the position on the path for a given time
+* @param T time lenght of the trajectory
+* @param timeStep time that the solver has to stop
+* @return ResultData a struct containing the resulting trajectory, if success is true.
+*/
+template<typename Path>
+ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, const double T, const double timeStep);
+
 
 coefs_t initCoefs(){
     coefs_t c;
@@ -23,21 +39,21 @@ coefs_t initCoefs(){
 void computeConstantWaypoints(const ProblemData& pData,double T,point_t& p0,point_t& p1, point_t& p2, point_t& p4, point_t& p5, point_t& p6){
     double n = 6; // degree
     p0 = pData.c0_;
-    p1 = pData.dc0_ * T / n +  pData.c0_;
-    p2 = pData.ddc0_*T*T/(n*(n-1)) + 2*pData.dc0_ *T / n + pData.c0_; // * T because derivation make a T appear
+    p1 = (pData.dc0_ * T / n )+  pData.c0_;
+    p2 = (pData.ddc0_*T*T/(n*(n-1))) + (2*pData.dc0_ *T / n) + pData.c0_; // * T because derivation make a T appear
     p6 = pData.c1_;
-    p5 = -pData.dc1_ * T / n + pData.c1_; // * T ?
-    p4 = pData.ddc1_ *T*T / (n*(n-1)) - 2 * pData.dc1_ *T / n + pData.c1_ ; // * T ??
+    p5 = (-pData.dc1_ * T / n) + pData.c1_; // * T ?
+    p4 = (pData.ddc1_ *T*T / (n*(n-1))) - (2 * pData.dc1_ *T / n) + pData.c1_ ; // * T ??
 }
 
-std::vector<waypoint_t> createEndEffectorWaypoints(double T,const ProblemData& pData){
+std::vector<waypoint_t> createEndEffectorAccelerationWaypoints(double T,const ProblemData& pData){
     // create the waypoint from the analytical expressions :
     std::vector<waypoint_t> wps;
     point_t p0,p1,p2,p4,p5,p6;
     computeConstantWaypoints(pData,T,p0,p1,p2,p4,p5,p6);
     std::cout<<"Create end eff waypoints, constant waypoints = :"<<std::endl<<
-               "p0 = "<<p0<<std::endl<<"p1 = "<<p1<<std::endl<<"p2 = "<<p2<<std::endl<<
-               "p4 = "<<p4<<std::endl<<"p5 = "<<p5<<std::endl<<"p6 = "<<p6<<std::endl;
+               "p0 = "<<p0.transpose()<<std::endl<<"p1 = "<<p1.transpose()<<std::endl<<"p2 = "<<p2.transpose()<<std::endl<<
+               "p4 = "<<p4.transpose()<<std::endl<<"p5 = "<<p5.transpose()<<std::endl<<"p6 = "<<p6.transpose()<<std::endl;
     double alpha = 1. / (T*T);
 
     waypoint_t w = initwp<waypoint_t>();
@@ -66,14 +82,61 @@ std::vector<waypoint_t> createEndEffectorWaypoints(double T,const ProblemData& p
     return wps;
 }
 
-void computeConstraintsMatrix(std::vector<waypoint_t> wps,MatrixXX& A,VectorX& b){
-    A = MatrixXX::Zero(DIM_POINT*wps.size(),DIM_POINT);
-    b = VectorX::Zero(DIM_POINT);
+
+std::vector<waypoint_t> createEndEffectorVelocityWaypoints(double T,const ProblemData& pData){
+    // create the waypoint from the analytical expressions :
+    std::vector<waypoint_t> wps;
+    point_t p0,p1,p2,p4,p5,p6;
+    computeConstantWaypoints(pData,T,p0,p1,p2,p4,p5,p6);
+   /* std::cout<<"Create end eff waypoints, constant waypoints = :"<<std::endl<<
+               "p0 = "<<p0.transpose()<<std::endl<<"p1 = "<<p1.transpose()<<std::endl<<"p2 = "<<p2.transpose()<<std::endl<<
+               "p4 = "<<p4.transpose()<<std::endl<<"p5 = "<<p5.transpose()<<std::endl<<"p6 = "<<p6.transpose()<<std::endl;*/
+    double alpha = 1. / (T);
+
+    waypoint_t w = initwp<waypoint_t>();
+    // assign w0:
+    w.second= alpha*6*(-p0+p1);
+    wps.push_back(w);
+    w = initwp<waypoint_t>();
+    // assign w1:
+    w.second = alpha*6*(-p1+p2);
+    wps.push_back(w);
+    w = initwp<waypoint_t>();
+    // assign w2:
+    w.first = 6*alpha*Matrix3::Identity();
+    w.second = alpha*-6*p2;
+    wps.push_back(w);
+    w = initwp<waypoint_t>();
+    // assign w3:
+    w.first = -6*alpha*Matrix3::Identity();
+    w.second = alpha*6*p4;
+    wps.push_back(w);
+    w = initwp<waypoint_t>();
+    // assign w4:
+    w.second=alpha*6*(-p4+p5);
+    wps.push_back(w);
+    w = initwp<waypoint_t>();
+    // assign w5:
+    w.second=alpha*6*(-p5+p6);
+    wps.push_back(w);
+    return wps;
+}
+
+
+void computeConstraintsMatrix(std::vector<waypoint_t> wps_acc,std::vector<waypoint_t> wps_vel,VectorX acc_bounds,VectorX vel_bounds,MatrixXX& A,VectorX& b){
+    A = MatrixXX::Zero(DIM_POINT*(wps_acc.size()+wps_vel.size()),DIM_POINT);
+    b = VectorX::Zero(A.rows());
     int i = 0;
-    for (std::vector<waypoint_t>::const_iterator wpcit = wps.begin(); wpcit != wps.end(); ++wpcit)
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
     {
         A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
-        b.segment<DIM_POINT>(i*DIM_POINT)   = -wpcit->second;
+        b.segment<DIM_POINT>(i*DIM_POINT)   = acc_bounds - wpcit->second;
+        ++i;
+    }
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
+    {
+        A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
+        b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds - wpcit->second;
         ++i;
     }
 }
@@ -141,19 +204,20 @@ std::vector<coefs_t> createDiscretizationPoints(const ProblemData& pData){
 }
 
 template <typename Path>
-void computeCostFunction(std::vector<coefs_t>cks ,MatrixXX& H,VectorX& g,Path path){
+void computeCostFunction(const std::vector<coefs_t>& cks , const Path& path, MatrixXX& H,VectorX& g){
     H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
     g  = VectorX::Zero(DIM_POINT);
     int numPoints = cks.size();
     double step = 1./(numPoints-1);
-    std::cout<<"compute cost; step = "<<step;
+    std::cout<<"compute cost; step = "<<step<<std::endl;
     int i = 0;
     point3_t pk;
     for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
         pk=path(i*step);
-        std::cout<<"path ( "<<i*step<<" ) = "<<pk<<std::endl;
+        std::cout<<"path ( "<<i*step<<" ) = "<<pk.transpose()<<std::endl;
         H += (ckcit->first * ckcit->first * Matrix3::Identity());
         g += (ckcit->first* (2*ckcit->second - 2*pk ) );
+        i++;
     }
 
 }
@@ -170,31 +234,37 @@ void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
     wps.push_back(p5);
     wps.push_back(p6);
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
+    std::cout<<"bezier curve created, size = "<<res.c_of_t_.size_<<std::endl;
 }
 
 
 
 template <typename Path>
-ResultDataCOMTraj solveEndEffector(const ProblemData& pData,Path path, const double T, const double timeStep){
-    std::vector<waypoint_t> wps=createEndEffectorWaypoints(T,pData);
+ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, const double T, const double timeStep){
+    std::cout<<"solve end effector, T = "<<T<<std::endl;
+    std::vector<waypoint_t> wps_acc=createEndEffectorAccelerationWaypoints(T,pData);
+    std::vector<waypoint_t> wps_vel=createEndEffectorVelocityWaypoints(T,pData);
     // stack the constraint for each waypoint :
     MatrixXX A;
     VectorX b;
-    computeConstraintsMatrix(wps,A,b);
-    std::cout<<"End eff A = "<<A<<std::endl;
-    std::cout<<"End eff b = "<<b<<std::endl;
+    Vector3 acc_bounds(5,5,5);
+    Vector3 vel_bounds(3,3,3);
+    computeConstraintsMatrix(wps_acc,wps_vel,acc_bounds,vel_bounds,A,b);
+    std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
+    std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
     // compute cost function (discrete integral under the curve defined by 'path')
     std::vector<coefs_t> cks = createDiscretizationPoints(pData);
     MatrixXX H;
     VectorX g;
     computeCostFunction<Path>(cks,path,H,g);
-    std::cout<<"End eff H = "<<H<<std::endl;
-    std::cout<<"End eff g = "<<g<<std::endl;
+    std::cout<<"End eff H = "<<std::endl<<H<<std::endl;
+    std::cout<<"End eff g = "<<std::endl<<g<<std::endl;
 
 
     // call the solver
     VectorX init = VectorX(DIM_POINT);
-    init = pData.c0_;
+    init = (pData.c0_ + pData.c1_)/2.;
+    std::cout<<"Init = "<<std::endl<<init<<std::endl;
     ResultData resQp = solve(A,b,H,g, init);
 
     ResultDataCOMTraj res;
@@ -206,7 +276,8 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,Path path, const dou
         computeC_of_T (pData,T,res);
        // computedL_of_T(pData,Ts,res);
     }
-    return res;
+   std::cout<<"Solved, success = "<<res.success_<<" x = "<<res.x.transpose()<<std::endl;
+   return res;
 }
 
 

@@ -49,6 +49,7 @@ SET(${PROJECT_NAME}_HEADERS
                 include/bezier-com-traj/data.hh
                 include/bezier-com-traj/config.hh
                 include/bezier-com-traj/solve.hh
+                include/bezier-com-traj/solve_end_effector.hh
                 include/bezier-com-traj/common_solve_methods.hh
                 include/solver/eiquadprog-fast.hpp
   )
