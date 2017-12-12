@@ -5,6 +5,8 @@
 
 #include <bezier-com-traj/solve.hh>
 #include <bezier-com-traj/common_solve_methods.hh>
+#include <limits>
+
 using namespace bezier_com_traj;
 
 namespace bezier_com_traj
@@ -123,40 +125,60 @@ std::vector<waypoint_t> createEndEffectorVelocityWaypoints(double T,const Proble
 }
 
 
-void computeConstraintsMatrix(std::vector<waypoint_t> wps_acc,std::vector<waypoint_t> wps_vel,VectorX acc_bounds,VectorX vel_bounds,MatrixXX& A,VectorX& b){
+void computeConstraintsMatrix(const std::vector<waypoint_t>& wps_acc,const std::vector<waypoint_t>& wps_vel,const VectorX& acc_bounds,const VectorX& vel_bounds,MatrixXX& A,VectorX& b){
     assert(acc_bounds.length() == DIM_POINT && "Acceleration bounds should have the same dimension as the points");
     assert(vel_bounds.length() == DIM_POINT && "Velocity bounds should have the same dimension as the points");
+    int empty_acc=0;
+    int empty_vel=0;
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
+    {
+        if(wpcit->first.isZero(std::numeric_limits<double>::epsilon()))
+            empty_acc++;
+    }
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
+    {
+        if(wpcit->first.isZero(std::numeric_limits<double>::epsilon()))
+            empty_vel++;
+    }
 
-    A = MatrixXX::Zero(2*DIM_POINT*(wps_acc.size()+wps_vel.size()),DIM_POINT); // *2 because we have to put the lower and upper bound for each one
+    A = MatrixXX::Zero(2*DIM_POINT*(wps_acc.size()-empty_acc+wps_vel.size()-empty_vel),DIM_POINT); // *2 because we have to put the lower and upper bound for each one
     b = VectorX::Zero(A.rows());
     int i = 0;
     //upper acc bounds
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
     {
-        A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
-        b.segment<DIM_POINT>(i*DIM_POINT)   = acc_bounds - wpcit->second;
-        ++i;
+        if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
+            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
+            b.segment<DIM_POINT>(i*DIM_POINT)   = acc_bounds - wpcit->second;
+            ++i;
+        }
     }
     //lower acc bounds
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
     {
-        A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
-        b.segment<DIM_POINT>(i*DIM_POINT)   = acc_bounds + wpcit->second;
-        ++i;
+        if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
+            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
+            b.segment<DIM_POINT>(i*DIM_POINT)   = acc_bounds + wpcit->second;
+            ++i;
+        }
     }
     //upper velocity bounds
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
     {
-        A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
-        b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds - wpcit->second;
-        ++i;
+        if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
+            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
+            b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds - wpcit->second;
+            ++i;
+        }
     }
     //lower velocity bounds
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
     {
-        A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
-        b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds + wpcit->second;
-        ++i;
+        if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
+            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
+            b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds + wpcit->second;
+            ++i;
+        }
     }
 }
 
@@ -266,8 +288,8 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     // stack the constraint for each waypoint :
     MatrixXX A;
     VectorX b;
-    Vector3 acc_bounds(5,5,5);
-    Vector3 vel_bounds(3,3,3);
+    Vector3 acc_bounds(10,10,10);
+    Vector3 vel_bounds(5,5,5);
     computeConstraintsMatrix(wps_acc,wps_vel,acc_bounds,vel_bounds,A,b);
     std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
     std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
@@ -283,6 +305,7 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     // call the solver
     VectorX init = VectorX(DIM_POINT);
     init = (pData.c0_ + pData.c1_)/2.;
+   // init =pData.c0_;
     std::cout<<"Init = "<<std::endl<<init<<std::endl;
     ResultData resQp = solve(A,b,H,g, init);
 
