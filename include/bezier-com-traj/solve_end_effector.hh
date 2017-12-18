@@ -38,8 +38,7 @@ coefs_t initCoefs(){
     return c;
 }
 
-void computeConstantWaypoints(const ProblemData& pData,double T,point_t& p0,point_t& p1, point_t& p2, point_t& p4, point_t& p5, point_t& p6){
-    double n = 6; // degree
+void computeConstantWaypoints(const ProblemData& pData,double T,double n,point_t& p0,point_t& p1, point_t& p2, point_t& p4, point_t& p5, point_t& p6){
     p0 = pData.c0_;
     p1 = (pData.dc0_ * T / n )+  pData.c0_;
     p2 = (pData.ddc0_*T*T/(n*(n-1))) + (2*pData.dc0_ *T / n) + pData.c0_; // * T because derivation make a T appear
@@ -48,11 +47,25 @@ void computeConstantWaypoints(const ProblemData& pData,double T,point_t& p0,poin
     p4 = (pData.ddc1_ *T*T / (n*(n-1))) - (2 * pData.dc1_ *T / n) + pData.c1_ ; // * T ??
 }
 
+std::vector<bezier_t::point_t> computeConstantWaypoints(const ProblemData& pData,double T,double n){
+    point_t p0,p1,p2,p3,p4,p5;
+    computeConstantWaypoints(pData,T,n,p0,p1,p2,p3,p4,p5);
+    std::vector<bezier_t::point_t> pts;
+    pts.push_back(p0);
+    pts.push_back(p1);
+    pts.push_back(p2);
+    pts.push_back(p3);
+    pts.push_back(p4);
+    pts.push_back(p5);
+    return pts;
+}
+
+
 std::vector<waypoint_t> createEndEffectorAccelerationWaypoints(double T,const ProblemData& pData){
     // create the waypoint from the analytical expressions :
     std::vector<waypoint_t> wps;
     point_t p0,p1,p2,p4,p5,p6;
-    computeConstantWaypoints(pData,T,p0,p1,p2,p4,p5,p6);
+    computeConstantWaypoints(pData,T,6,p0,p1,p2,p4,p5,p6);
     std::cout<<"Create end eff waypoints, constant waypoints = :"<<std::endl<<
                "p0 = "<<p0.transpose()<<std::endl<<"p1 = "<<p1.transpose()<<std::endl<<"p2 = "<<p2.transpose()<<std::endl<<
                "p4 = "<<p4.transpose()<<std::endl<<"p5 = "<<p5.transpose()<<std::endl<<"p6 = "<<p6.transpose()<<std::endl;
@@ -89,7 +102,7 @@ std::vector<waypoint_t> createEndEffectorVelocityWaypoints(double T,const Proble
     // create the waypoint from the analytical expressions :
     std::vector<waypoint_t> wps;
     point_t p0,p1,p2,p4,p5,p6;
-    computeConstantWaypoints(pData,T,p0,p1,p2,p4,p5,p6);
+    computeConstantWaypoints(pData,T,6,p0,p1,p2,p4,p5,p6);
    /* std::cout<<"Create end eff waypoints, constant waypoints = :"<<std::endl<<
                "p0 = "<<p0.transpose()<<std::endl<<"p1 = "<<p1.transpose()<<std::endl<<"p2 = "<<p2.transpose()<<std::endl<<
                "p4 = "<<p4.transpose()<<std::endl<<"p5 = "<<p5.transpose()<<std::endl<<"p6 = "<<p6.transpose()<<std::endl;*/
@@ -244,29 +257,50 @@ std::vector<coefs_t> createDiscretizationPoints(const ProblemData& pData){
     return cks;
 }
 
+/**
+ * @brief evaluateAccCurve Evaluate the acceleration at a given parameter
+ * @param pData
+ * @param T
+ * @param param Normalized : between 0 and 1
+ * @return
+ */
+coefs_t evaluateAccCurve(const ProblemData& pData, double T, double param){
+    point_t p0,p1,p2,p4,p5,p6;
+    computeConstantWaypoints(pData,T,6,p0,p1,p2,p4,p5,p6);
+    coefs_t coefs;
+    double alpha = 1./(T*T);
+    //equations found with sympy
+    coefs.first= (-600.0*param*param*param*param + 1200.0*param*param*param - 720.0*param*param + 120.0*param)*alpha;
+    coefs.second=(30.0*p0 - 180.0*p1 + 450.0*p2 + 450.0*p4 - 180.0*p5 + 30.0*p6)*alpha*param*param*param*param + 1.0*(-120.0*p0 + 600.0*p1 - 1200.0*p2 - 600.0*p4 + 120.0*p5)*alpha*param*param*param + 1.0*(180.0*p0 - 720.0*p1 + 1080.0*p2 + 180.0*p4)*alpha*param*param + 1.0*(-120.0*p0 + 360.0*p1 - 360.0*p2)*alpha*param + 1.0*(30.0*p0 - 60.0*p1 + 30.0*p2)*alpha;
+    return coefs;
+}
+
 template <typename Path>
-void computeCostFunction(const std::vector<coefs_t>& cks , const Path& path, MatrixXX& H,VectorX& g){
+void computeDistanceCostFunction(const std::vector<coefs_t>& cks , const Path& path, MatrixXX& H,VectorX& g){
     H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
     g  = VectorX::Zero(DIM_POINT);
     int numPoints = cks.size();
     double step = 1./(numPoints-1);
-    std::cout<<"compute cost; step = "<<step<<std::endl;
+  //  std::cout<<"compute cost; step = "<<step<<std::endl;
     int i = 0;
     point3_t pk;
     for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
         pk=path(i*step);
-        std::cout<<"path ( "<<i*step<<" ) = "<<pk.transpose()<<std::endl;
+   //     std::cout<<"path ( "<<i*step<<" ) = "<<pk.transpose()<<std::endl;
         H += (ckcit->first * ckcit->first * Matrix3::Identity());
         g += (ckcit->first* (2*ckcit->second - 2*pk ) );
         i++;
     }
-
+    //normalize :
+   /* double norm=H(0,0); // because H is always diagonal
+    H /= norm;
+    g /= sqrt(norm);*/
 }
 
 void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
     std::vector<Vector3> wps;
     point_t p0,p1,p2,p4,p5,p6;
-    computeConstantWaypoints(pData,T,p0,p1,p2,p4,p5,p6);
+    computeConstantWaypoints(pData,T,6,p0,p1,p2,p4,p5,p6);
     wps.push_back(p0);
     wps.push_back(p1);
     wps.push_back(p2);
