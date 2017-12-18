@@ -193,6 +193,13 @@ void computeConstraintsMatrix(const std::vector<waypoint_t>& wps_acc,const std::
             ++i;
         }
     }
+
+    //TEST :
+  /*  A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = Matrix3::Identity();
+    b.segment<DIM_POINT>(i*DIM_POINT)   = Vector3(10,10,10);
+    i++;
+    A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -Matrix3::Identity();
+    b.segment<DIM_POINT>(i*DIM_POINT)   =  Vector3(10,10,10);*/
 }
 
 std::vector<coefs_t> createDiscretizationPoints(const ProblemData& pData){
@@ -353,6 +360,7 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
        // computedL_of_T(pData,Ts,res);
     }
    std::cout<<"Solved, success = "<<res.success_<<" x = "<<res.x.transpose()<<std::endl;
+   std::cout<<"Final cost : "<<resQp.cost_<<std::endl;
    return res;
 }
 

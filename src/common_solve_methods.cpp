@@ -197,6 +197,8 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
         assert (!(is_nan(x)));
         res.x = x;
         res.cost_ = QPsolver.getObjValue();
+    }else{
+        std::cout<<"No success, last solution = "<<x.transpose()<<std::endl;
     }
     return res;
 }
