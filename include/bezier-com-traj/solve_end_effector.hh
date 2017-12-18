@@ -319,11 +319,32 @@ void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
     std::cout<<"bezier curve created, size = "<<res.c_of_t_.size_<<std::endl;
 }
 
+void computeAccelerationCostFunction(int numPoints,const ProblemData& pData,double T, MatrixXX& H,VectorX& g){
+    double step = 1./(numPoints-1);
+    H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
+    g  = VectorX::Zero(DIM_POINT);
+    std::vector<coefs_t> cks;
+    for(int i = 0 ; i < numPoints ; ++i){
+        cks.push_back(evaluateAccCurve(pData,T,i*step));
+    }
+    for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
+        H+=(ckcit->first * ckcit->first * Matrix3::Identity());
+        g+=ckcit->first*ckcit->second;
+    }
+    //normalize :
+    /*double norm=H(0,0); // because H is always diagonal
+    H /= norm;
+    g /= sqrt(norm);*/
+   // H(1,1)=1e-6;
+   // g(1)=0;
+}
 
 
 template <typename Path>
-ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, const double T, const double timeStep){
+ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, const double T, const double weightDistance){
     std::cout<<"solve end effector, T = "<<T<<std::endl;
+    assert (weightDistance>=0. && weightDistance<=1. && "WeightDistance must be between 0 and 1");
+    double weightAcc = 1. - weightDistance;
     std::vector<waypoint_t> wps_acc=createEndEffectorAccelerationWaypoints(T,pData);
     std::vector<waypoint_t> wps_vel=createEndEffectorVelocityWaypoints(T,pData);
     // stack the constraint for each waypoint :
@@ -332,16 +353,26 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     Vector3 acc_bounds(10,10,10);
     Vector3 vel_bounds(5,5,5);
     computeConstraintsMatrix(wps_acc,wps_vel,acc_bounds,vel_bounds,A,b);
-    std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
-    std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
+ //   std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
+ //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
     // compute cost function (discrete integral under the curve defined by 'path')
     std::vector<coefs_t> cks = createDiscretizationPoints(pData);
-    MatrixXX H;
-    VectorX g;
-    computeCostFunction<Path>(cks,path,H,g);
+    MatrixXX H_rrt,H_acc,H;
+    VectorX g_rrt,g_acc,g;
+    computeDistanceCostFunction<Path>(cks,path,H_rrt,g_rrt);
+    computeAccelerationCostFunction(50,pData,T,H_acc,g_acc);
+  /*  std::cout<<"End eff H_rrt = "<<std::endl<<H_rrt<<std::endl;
+    std::cout<<"End eff g_rrt = "<<std::endl<<g_rrt<<std::endl;
+    std::cout<<"End eff H_acc = "<<std::endl<<H_acc<<std::endl;
+    std::cout<<"End eff g_acc = "<<std::endl<<g_acc<<std::endl;
+*/
+    // add the costs :
+    H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
+    g  = VectorX::Zero(DIM_POINT);
+    H = weightAcc*H_acc + weightDistance*H_rrt;
+    g = weightAcc*g_acc + weightDistance*g_rrt;
     std::cout<<"End eff H = "<<std::endl<<H<<std::endl;
     std::cout<<"End eff g = "<<std::endl<<g<<std::endl;
-
 
     // call the solver
     VectorX init = VectorX(DIM_POINT);
