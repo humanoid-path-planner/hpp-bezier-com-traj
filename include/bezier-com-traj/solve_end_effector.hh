@@ -299,9 +299,9 @@ void computeDistanceCostFunction(const std::vector<coefs_t>& cks , const Path& p
         i++;
     }
     //normalize :
-   /* double norm=H(0,0); // because H is always diagonal
-    H /= norm;
-    g /= sqrt(norm);*/
+    double norm=H(0,0); // because H is always diagonal
+  //  H /= norm;
+  //  g /= norm;
 }
 
 void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
@@ -332,11 +332,9 @@ void computeAccelerationCostFunction(int numPoints,const ProblemData& pData,doub
         g+=ckcit->first*ckcit->second;
     }
     //normalize :
-    /*double norm=H(0,0); // because H is always diagonal
-    H /= norm;
-    g /= sqrt(norm);*/
-   // H(1,1)=1e-6;
-   // g(1)=0;
+    double norm=H(0,0); // because H is always diagonal
+  //  H /= norm;
+  //  g /= norm;
 }
 
 
@@ -353,7 +351,7 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     Vector3 acc_bounds(10,10,10);
     Vector3 vel_bounds(5,5,5);
     computeConstraintsMatrix(wps_acc,wps_vel,acc_bounds,vel_bounds,A,b);
- //   std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
+  //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
  //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
     // compute cost function (discrete integral under the curve defined by 'path')
     std::vector<coefs_t> cks = createDiscretizationPoints(pData);
