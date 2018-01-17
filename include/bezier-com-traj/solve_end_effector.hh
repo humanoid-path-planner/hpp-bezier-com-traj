@@ -222,7 +222,7 @@ void computeConstraintsMatrix(const std::vector<waypoint_t>& wps_acc,const std::
     b.segment<DIM_POINT>(i*DIM_POINT)   =  Vector3(10,10,10);*/
 }
 
-std::vector<coefs_t> createDiscretizationPoints(const ProblemData& pData){
+/*std::vector<coefs_t> createDiscretizationPoints(const ProblemData& pData){
     // equation found with sympy (for 11 points)
     std::vector<coefs_t> cks; // one element for each discretization points :
     //.first is the term that depend on x and . second is the constant term
@@ -282,6 +282,23 @@ std::vector<coefs_t> createDiscretizationPoints(const ProblemData& pData){
     ck.second = pData.c1_ ;
     cks.push_back(ck);
     return cks;
+}*/
+
+
+/**
+ * @brief evaluateCurve Evaluate the curve at a given parameter
+ * @param pData
+ * @param T
+ * @param t Normalized : between 0 and 1
+ * @return
+ */
+coefs_t evaluateCurve(const ProblemData& pData,double T, double t){
+    point_t p0,p1,p2,p4,p5,p6;
+    computeConstantWaypoints(pData,T,6,p0,p1,p2,p4,p5,p6);
+    coefs_t coefs;
+    coefs.first = -20.0*pow(t,6) + 60.0*pow(t,5) - 60.0*pow(t,4) + 20.0*pow(t,3);
+    coefs.second = 1.0*p0*pow(t,6) - 6.0*p0*pow(t,5) + 15.0*p0*pow(t,4) - 20.0*p0*pow(t,3) + 15.0*p0*t*t - 6.0*p0*t + 1.0*p0 - 6.0*p1*pow(t,6) + 30.0*p1*pow(t,5) - 60.0*p1*pow(t,4) + 60.0*p1*pow(t,3) - 30.0*p1*t*t + 6.0*p1*t + 15.0*p2*pow(t,6 )- 60.0*p2*pow(t,5) + 90.0*p2*pow(t,4) - 60.0*p2*pow(t,3) + 15.0*p2*t*t + 15.0*p4*pow(t,6) - 30.0*p4*pow(t,5) + 15.0*p4*pow(t,4) - 6.0*p5*pow(t,6) + 6.0*p5*pow(t,5) + 1.0*p6*pow(t,6);
+    return coefs;
 }
 
 /**
@@ -303,25 +320,25 @@ coefs_t evaluateAccCurve(const ProblemData& pData, double T, double t){
 }
 
 template <typename Path>
-void computeDistanceCostFunction(const std::vector<coefs_t>& cks , const Path& path, MatrixXX& H,VectorX& g){
+void computeDistanceCostFunction(int numPoints,const ProblemData& pData, double T,const Path& path, MatrixXX& H,VectorX& g){
     H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
     g  = VectorX::Zero(DIM_POINT);
-    int numPoints = cks.size();
     double step = 1./(numPoints-1);
-  //  std::cout<<"compute cost; step = "<<step<<std::endl;
-    int i = 0;
+    std::vector<coefs_t> cks;
+    for(size_t i = 0 ; i < numPoints ; ++i){
+        cks.push_back(evaluateCurve(pData,T,i*step));
+    }
     point3_t pk;
+    size_t i = 0;
     for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
         pk=path(i*step);
-   //     std::cout<<"path ( "<<i*step<<" ) = "<<pk.transpose()<<std::endl;
+        std::cout<<"pk = "<<pk.transpose()<<std::endl;
+        std::cout<<"coef First : "<<ckcit->first<<std::endl;
+        std::cout<<"coef second : "<<ckcit->second.transpose()<<std::endl;
         H += (ckcit->first * ckcit->first * Matrix3::Identity());
-        g += (ckcit->first* (2*ckcit->second - 2*pk ) );
+        g += (ckcit->first * ckcit->second) - (pk * ckcit->first);
         i++;
     }
-    //normalize :
-    double norm=H(0,0); // because H is always diagonal
-  //  H /= norm;
-  //  g /= norm;
 }
 
 void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
@@ -370,16 +387,15 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     // stack the constraint for each waypoint :
     MatrixXX A;
     VectorX b;
-    Vector3 acc_bounds(10,10,10);
-    Vector3 vel_bounds(5,5,5);
+    Vector3 acc_bounds(50,50,50);
+    Vector3 vel_bounds(20,20,20);
     computeConstraintsMatrix(wps_acc,wps_vel,acc_bounds,vel_bounds,A,b);
   //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
  //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
     // compute cost function (discrete integral under the curve defined by 'path')
-    std::vector<coefs_t> cks = createDiscretizationPoints(pData);
     MatrixXX H_rrt,H_acc,H;
     VectorX g_rrt,g_acc,g;
-    computeDistanceCostFunction<Path>(cks,path,H_rrt,g_rrt);
+    computeDistanceCostFunction<Path>(20,pData,T,path,H_rrt,g_rrt);
     computeAccelerationCostFunction(50,pData,T,H_acc,g_acc);
   /*  std::cout<<"End eff H_rrt = "<<std::endl<<H_rrt<<std::endl;
     std::cout<<"End eff g_rrt = "<<std::endl<<g_rrt<<std::endl;
