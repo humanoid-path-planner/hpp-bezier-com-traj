@@ -158,7 +158,7 @@ std::vector<waypoint_t> createEndEffectorVelocityWaypoints(double T,const Proble
 }
 
 
-void computeConstraintsMatrix(const std::vector<waypoint_t>& wps_acc,const std::vector<waypoint_t>& wps_vel,const VectorX& acc_bounds,const VectorX& vel_bounds,MatrixXX& A,VectorX& b){
+void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoint_t>& wps_acc,const std::vector<waypoint_t>& wps_vel,const VectorX& acc_bounds,const VectorX& vel_bounds,MatrixXX& A,VectorX& b){
     assert(acc_bounds.length() == DIM_POINT && "Acceleration bounds should have the same dimension as the points");
     assert(vel_bounds.length() == DIM_POINT && "Velocity bounds should have the same dimension as the points");
     int empty_acc=0;
@@ -174,7 +174,7 @@ void computeConstraintsMatrix(const std::vector<waypoint_t>& wps_acc,const std::
             empty_vel++;
     }
 
-    A = MatrixXX::Zero(2*DIM_POINT*(wps_acc.size()-empty_acc+wps_vel.size()-empty_vel),DIM_POINT); // *2 because we have to put the lower and upper bound for each one
+    A = MatrixXX::Zero(2*DIM_POINT*(wps_acc.size()-empty_acc+wps_vel.size()-empty_vel)+DIM_POINT,DIM_POINT); // *2 because we have to put the lower and upper bound for each one, +DIM_POINT for the constraint on x[z]
     b = VectorX::Zero(A.rows());
     int i = 0;
     //upper acc bounds
@@ -213,6 +213,16 @@ void computeConstraintsMatrix(const std::vector<waypoint_t>& wps_acc,const std::
             ++i;
         }
     }
+
+    // test : constraint x[z] to be always higher than init[z] and goal[z].
+    // TODO replace z with the direction of the contact normal ... need to change the API
+    MatrixXX mxz = MatrixXX::Zero(DIM_POINT,DIM_POINT);
+    mxz(DIM_POINT-1,DIM_POINT-1) = -1;
+    VectorX nxz = VectorX::Zero(DIM_POINT);
+    nxz[2]= - std::min(pData.c0_[2],pData.c1_[2]);
+    A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = mxz;
+    b.segment<DIM_POINT>(i*DIM_POINT)   = nxz;
+
 
     //TEST :
   /*  A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = Matrix3::Identity();
@@ -389,7 +399,7 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     VectorX b;
     Vector3 acc_bounds(50,50,50);
     Vector3 vel_bounds(20,20,20);
-    computeConstraintsMatrix(wps_acc,wps_vel,acc_bounds,vel_bounds,A,b);
+    computeConstraintsMatrix(pData,wps_acc,wps_vel,acc_bounds,vel_bounds,A,b);
   //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
  //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
     // compute cost function (discrete integral under the curve defined by 'path')
