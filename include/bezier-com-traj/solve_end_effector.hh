@@ -69,7 +69,7 @@ std::vector<waypoint_t> createEndEffectorAccelerationWaypoints(double T,const Pr
     // create the waypoint from the analytical expressions :
     std::vector<waypoint_t> wps;
     point_t p0,p1,p2,p3,p5,p6,p7,p8;
-    computeConstantWaypoints(pData,T,6,p0,p1,p2,p3,p5,p6,p7,p8);
+    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
     std::cout<<"Create end eff waypoints, constant waypoints = :"<<std::endl<<
                "p0 = "<<p0.transpose()<<std::endl<<"p1 = "<<p1.transpose()<<std::endl<<"p2 = "<<p2.transpose()<<std::endl<<
                "p3 = "<<p3.transpose()<<std::endl<<"p5 = "<<p5.transpose()<<std::endl<<"p6 = "<<p6.transpose()<<std::endl<<"p7 = "<<p7.transpose()<<"p8 = "<<p8.transpose()<<std::endl;
@@ -114,7 +114,7 @@ std::vector<waypoint_t> createEndEffectorVelocityWaypoints(double T,const Proble
     // create the waypoint from the analytical expressions :
     std::vector<waypoint_t> wps;
     point_t p0,p1,p2,p3,p5,p6,p7,p8;
-    computeConstantWaypoints(pData,T,6,p0,p1,p2,p3,p5,p6,p7,p8);
+    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
    /* std::cout<<"Create end eff waypoints, constant waypoints = :"<<std::endl<<
                "p0 = "<<p0.transpose()<<std::endl<<"p1 = "<<p1.transpose()<<std::endl<<"p2 = "<<p2.transpose()<<std::endl<<
                "p4 = "<<p4.transpose()<<std::endl<<"p5 = "<<p5.transpose()<<std::endl<<"p6 = "<<p6.transpose()<<std::endl;*/
@@ -293,7 +293,7 @@ std::vector<coefs_t> createDiscretizationPoints(const ProblemData& pData){
  */
 coefs_t evaluateAccCurve(const ProblemData& pData, double T, double t){
     point_t p0,p1,p2,p3,p5,p6,p7,p8;
-    computeConstantWaypoints(pData,T,6,p0,p1,p2,p3,p5,p6,p7,p8);
+    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
     coefs_t coefs;
     double alpha = 1./(T*T);
     //equations found with sympy
@@ -327,7 +327,7 @@ void computeDistanceCostFunction(const std::vector<coefs_t>& cks , const Path& p
 void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
     std::vector<Vector3> wps;
     point_t p0,p1,p2,p3,p5,p6,p7,p8;
-    computeConstantWaypoints(pData,T,6,p0,p1,p2,p3,p5,p6,p7,p8);
+    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
     wps.push_back(p0);
     wps.push_back(p1);
     wps.push_back(p2);
