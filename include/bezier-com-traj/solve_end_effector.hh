@@ -342,9 +342,9 @@ void computeDistanceCostFunction(int numPoints,const ProblemData& pData, double 
     size_t i = 0;
     for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
         pk=path(i*step);
-        std::cout<<"pk = "<<pk.transpose()<<std::endl;
-        std::cout<<"coef First : "<<ckcit->first<<std::endl;
-        std::cout<<"coef second : "<<ckcit->second.transpose()<<std::endl;
+      //  std::cout<<"pk = "<<pk.transpose()<<std::endl;
+      //  std::cout<<"coef First : "<<ckcit->first<<std::endl;
+      //  std::cout<<"coef second : "<<ckcit->second.transpose()<<std::endl;
         H += (ckcit->first * ckcit->first * Matrix3::Identity());
         g += (ckcit->first * ckcit->second) - (pk * ckcit->first);
         i++;
