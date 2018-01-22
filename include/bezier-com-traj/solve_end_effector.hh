@@ -303,11 +303,11 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
  * @return
  */
 coefs_t evaluateCurve(const ProblemData& pData,double T, double t){
-    point_t p0,p1,p2,p4,p5,p6;
-    computeConstantWaypoints(pData,T,6,p0,p1,p2,p4,p5,p6);
+    point_t p0,p1,p2,p3,p5,p6,p7,p8;
+    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
     coefs_t coefs;
-    coefs.first = -20.0*pow(t,6) + 60.0*pow(t,5) - 60.0*pow(t,4) + 20.0*pow(t,3);
-    coefs.second = 1.0*p0*pow(t,6) - 6.0*p0*pow(t,5) + 15.0*p0*pow(t,4) - 20.0*p0*pow(t,3) + 15.0*p0*t*t - 6.0*p0*t + 1.0*p0 - 6.0*p1*pow(t,6) + 30.0*p1*pow(t,5) - 60.0*p1*pow(t,4) + 60.0*p1*pow(t,3) - 30.0*p1*t*t + 6.0*p1*t + 15.0*p2*pow(t,6 )- 60.0*p2*pow(t,5) + 90.0*p2*pow(t,4) - 60.0*p2*pow(t,3) + 15.0*p2*t*t + 15.0*p4*pow(t,6) - 30.0*p4*pow(t,5) + 15.0*p4*pow(t,4) - 6.0*p5*pow(t,6) + 6.0*p5*pow(t,5) + 1.0*p6*pow(t,6);
+    coefs.first = 70.0*pow(t,8) - 280.0*pow(t,7) + 420.0*pow(t,6) - 280.0*pow(t,5) + 70.0*pow(t,4);
+    coefs.second = 1.0*p0*pow(t,8) - 8.0*p0*pow(t,7) + 28.0*p0*pow(t,6) - 56.0*p0*pow(t,5) + 70.0*p0*pow(t,4) - 56.0*p0*pow(t,3) + 28.0*p0*pow(t,2) - 8.0*p0*t + 1.0*p0 - 8.0*p1*pow(t,8) + 56.0*p1*pow(t,7) - 168.0*p1*pow(t,6) + 280.0*p1*pow(t,5) - 280.0*p1*pow(t,4) + 168.0*p1*pow(t,3) - 56.0*p1*pow(t,2) + 8.0*p1*t + 28.0*p2*pow(t,8) - 168.0*p2*pow(t,7) + 420.0*p2*pow(t,6) - 560.0*p2*pow(t,5) + 420.0*p2*pow(t,4) - 168.0*p2*pow(t,3) + 28.0*p2*pow(t,2) - 56.0*p3*pow(t,8 )+ 280.0*p3*pow(t,7) - 560.0*p3*pow(t,6) + 560.0*p3*pow(t,5) - 280.0*p3*pow(t,4) + 56.0*p3*pow(t,3) - 56.0*p5*pow(t,8) + 168.0*p5*pow(t,7) - 168.0*p5*pow(t,6) + 56.0*p5*pow(t,5 )+ 28.0*p6*pow(t,8) - 56.0*p6*pow(t,7) + 28.0*p6*pow(t,6) - 8.0*p7*pow(t,8) + 8.0*p7*pow(t,7) + 1.0*p8*pow(t,8);
     return coefs;
 }
 
