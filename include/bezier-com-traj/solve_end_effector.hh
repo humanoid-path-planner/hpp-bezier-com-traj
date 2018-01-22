@@ -380,8 +380,11 @@ void computeAccelerationCostFunction(int numPoints,const ProblemData& pData,doub
         H+=(ckcit->first * ckcit->first * Matrix3::Identity());
         g+=ckcit->first*ckcit->second;
     }
+    //TEST : don't consider z axis for minimum acceleration cost
+    H(2,2) = 1e-6;
+    g[2] = 1e-6 ;
     //normalize :
-    double norm=H(0,0); // because H is always diagonal
+  //  double norm=H(0,0); // because H is always diagonal
   //  H /= norm;
   //  g /= norm;
 }
@@ -424,7 +427,7 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     VectorX init = VectorX(DIM_POINT);
     init = (pData.c0_ + pData.c1_)/2.;
    // init =pData.c0_;
-    std::cout<<"Init = "<<std::endl<<init<<std::endl;
+    std::cout<<"Init = "<<std::endl<<init.transpose()<<std::endl;
     ResultData resQp = solve(A,b,H,g, init);
 
     ResultDataCOMTraj res;
