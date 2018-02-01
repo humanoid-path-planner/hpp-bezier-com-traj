@@ -34,6 +34,15 @@ waypoint_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
     return wp;
 }
 
+waypoint_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double t){
+    waypoint_t wp;
+    double alpha = 1./(T*T);
+    // equation found with sympy
+    wp.first = Matrix3::Identity() *(72.0*t*t - 72.0*t + 12.0)*alpha;
+    wp.second = (12.0*pi[0]*t*t - 24.0*pi[0]*t + 12.0*pi[0] - 48.0*pi[1]*t*t + 72.0*pi[1]*t - 24.0*pi[1] - 48.0*pi[2]*t*t + 24.0*pi[2]*t + 12.0*pi[3]*t*t)*alpha;
+    return wp;
+}
+
 
 std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T){
     // equation for constraint on initial and final position and velocity (degree 4, 4 constant waypoint and one free (p2))
@@ -48,7 +57,7 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
 }
 
 std::vector<waypoint_t> computeDiscretizedWaypoints(const ProblemData& pData,double T,double timeStep){
-    int numStep = int(T / timeStep);
+    //int numStep = int(T / timeStep);
     std::vector<waypoint_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     double t = 0;
@@ -69,8 +78,12 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     double t_total = 0.;
     for(int i = 0 ; i < Ts.size() ; ++i)
         t_total+=Ts[i];
-
     // Compute all the discretized wayPoint
+    std::vector<waypoint_t> wps = computeDiscretizedWaypoints(pData,t_total,timeStep);
+    // assign the constraints (kinematics and stability for each waypoints :
+
+
+
 }
 
 
@@ -96,13 +109,13 @@ void computeBezierCurve(const ProblemData& pData, const std::vector<double>& Ts,
 }
 
 ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep){
-    assert(pData.contacts_.size() ==2);
+    assert(pData.contacts_.size() ==2 || pData.contacts_.size() ==3);
     assert(Ts.size() == pData.contacts_.size());
-    bool fail = true;
+   // bool fail = true;
     ResultDataCOMTraj res;
     std::pair<MatrixX3, VectorX> Ab = computeConstraintsOneStep(pData,Ts,timeStep);
     std::pair<MatrixX3, VectorX> Hg = computeCostFunctionOneStep(pData);
-    Vector3 midPoint = (pData.c0_ + pData.c1_)/2.;
+    Vector3 midPoint = (pData.c0_ + pData.c1_)/2.; // todo : replace it with point found by planning ??
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
     ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, midPoint);
     if(resQp.success_)
