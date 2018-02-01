@@ -272,4 +272,34 @@ ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double
 }
 
 
+std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,const std::vector<double>& Ts,const double timeStep){
+
+}
+
+
+std::pair<MatrixX3, VectorX> computeCostFunctionOneStep(const ProblemData&pData){
+
+}
+
+ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep){
+    assert(pData.contacts_.size() ==2);
+    assert(Ts.size() == pData.contacts_.size());
+    bool fail = true;
+    ResultDataCOMTraj res;
+    std::pair<MatrixX3, VectorX> Ab = computeConstraintsOneStep(pData,Ts,timeStep);
+    std::pair<MatrixX3, VectorX> Hg = computeCostFunctionOneStep(pData);
+    Vector3 midPoint = (pData.c0_ + pData.c1_)/2.;
+    // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
+    ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, midPoint);
+    if(resQp.success_)
+    {
+        res.success_ = true;
+        res.x = resQp.x;
+        computeRealCost(pData, res);
+        computeC_of_T (pData,Ts,res);
+    }
+    return res;
+}
+
+
 } // namespace bezier_com_traj

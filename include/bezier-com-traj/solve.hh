@@ -24,6 +24,34 @@ namespace bezier_com_traj
      BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solve0step(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep = -1);
 
 
+     void computeC_of_T(const ProblemData& pData, const std::vector<double>& Ts, ResultDataCOMTraj& res);
+
+
+
+     /// Methods for transition test :
+
+     /**
+      * @brief solveIntersection Solve the QP problem, that find a point inside the constraints Ab that minimise the cost Hg
+      * @param Ab s.t. Ax <= b
+      * @param Hg min  x'Hx  + g'x
+      * @param init x_init
+      * @return ResultData
+      */
+     BEZIER_COM_TRAJ_DLLAPI ResultData solveIntersection(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init);
+
+     /**
+     * @brief solveOnestep Tries to solve the one step problem :  Given two contact phases, an initial and final com position and velocity,
+     *  try to compute the CoM trajectory (as a Bezier curve) that connect them
+     * @param pData problem Data. Should contain only two contact phase.
+     * @param Ts timelength of each contact phase. Should only contain two value
+     * @param timeStep time step used by the discretization
+     * @return ResultData a struct containing the resulting trajectory, if success is true.
+     */
+    BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep = -1);
+
+
+
+
 } // end namespace bezier_com_traj
 
 #endif

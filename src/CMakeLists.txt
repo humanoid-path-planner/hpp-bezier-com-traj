@@ -18,6 +18,7 @@ SET(${LIBRARY_NAME}_SOURCES
                 solve.cpp
                 common_solve_methods.cpp
                 eiquadprog-fast.cpp
+                solve_transition.cpp
 		#~ ${INCLUDE_DIR}/centroidal-dynamics-lib/solver_LP_abstract.hh
 		#~ ${INCLUDE_DIR}/centroidal-dynamics-lib/solver_LP_qpoases.hh
 		#~ ${INCLUDE_DIR}/centroidal-dynamics-lib/solver_LP_clp.hh
