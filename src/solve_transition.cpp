@@ -63,7 +63,7 @@ std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double
     std::vector<coefs_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     double t = 0;
-    while(t<T){
+    while(t<=T){
         wps.push_back(evaluateCurveAtTime(pi,t));
         t+= timeStep;
     }
@@ -76,7 +76,7 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
     std::vector<coefs_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     double t = 0;
-    while(t<T){
+    while(t<=T){
         wps.push_back(evaluateAccelerationCurveAtTime(pi,T,t));
         t+= timeStep;
     }
@@ -97,15 +97,16 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     // Compute all the discretized wayPoint
     std::vector<coefs_t> wps = computeDiscretizedWaypoints(pData,t_total,timeStep);
     std::vector<coefs_t> acc_wps = computeDiscretizedAccelerationWaypoints(pData,t_total,timeStep);
-    int numStep = int(t_total / timeStep);
+    int numStep = wps.size();
     assert(wps.size() == acc_wps.size());
-    assert(numStep == wps.size());
+    std::cout<<"numStep = "<<numStep<<" number of discretized waypoints : "<<wps.size()<<std::endl;
     std::vector<int> stepPerPhases;
     for(int i = 0 ; i < Ts.size() ; ++i){
         if(i == 0)
             stepPerPhases.push_back(int(Ts[i] / timeStep));
         else
             stepPerPhases.push_back((int(Ts[i] / timeStep))+stepPerPhases.back());
+        std::cout<<"step to phase "<<i<<" = "<<stepPerPhases[i]<<std::endl;
 
     }
     // compute the total number of inequalities (to initialise A and b)
@@ -113,14 +114,16 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     int numStepForPhase;
     centroidal_dynamics::MatrixXX Hrow;
     VectorX h;
-    MatrixX3 H,mH;
+    MatrixXX H,mH;
     for(int i = 0 ; i < Ts.size() ; ++i){
-        if(i==0)
-            numStepForPhase = stepPerPhases[i];
-        else
-            numStepForPhase = stepPerPhases[i] -stepPerPhases[i-1];
-        num_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
         pData.contacts_[i].contactPhase_->getPolytopeInequalities(Hrow,h);
+        if(i==0){
+            numStepForPhase = stepPerPhases[i];
+        }
+        else{
+            numStepForPhase = stepPerPhases[i] - stepPerPhases[i-1] + 1;
+        }
+        num_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
         num_ineq += Hrow.rows() * numStepForPhase;
     }
     std::cout<<"total of inequalities : "<<num_ineq<<std::endl;
@@ -146,24 +149,31 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     mH = phase.contactPhase_->m_mass * H;
 
     for(int id_step = 0 ; id_step < numStep ; ++id_step , t+=timeStep){
+        std::cout<<"id_step = "<<id_step<<" ; id_phase = "<<id_phase<<std::endl;
+        std::cout<<" current id rows : "<<id_rows<<std::endl;
         // add constraints for wp id_step, on current phase :
         // add kinematics constraints :
         // constraint are of the forme A c <= b . But here c(x) = Fx + s so => AFx <= b - As
         current_size = phase.kin_.rows();
-        A.block(0,id_rows,current_size,3) = (phase.Kin_ * wps[id_step].first);
+        std::cout<<"kin constraints size : "<<current_size<<std::endl;
+        A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
         b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
         id_rows += current_size;
         // add stability constraints :
         // compute skew matrix :
+        std::cout<<"stab constraints size : "<<dimH<<std::endl;
         S_hat = skew(g*wps[id_step].first + wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first);
-        A.block(0,id_rows,dimH,3) = mH.block(0,3,dimH,3)*S_hat + mH.block(0,0,dimH,3)*acc_wps[id_step].first;
-        b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + (acc_wps[id_step].second - g).cross(wps[id_step].second);
+        A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3)*S_hat + mH.block(0,0,dimH,3)*acc_wps[id_step].first;
+        b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(acc_wps[id_step].second - g).cross(wps[id_step].second);
         id_rows += dimH ;
 
         // check if we are going to switch phases :
-        for(int i = 0 ; i < stepPerPhases.size() ; ++i){
+        for(int i = 0 ; i < (stepPerPhases.size()-1) ; ++i){
             if(id_step == stepPerPhases[i]){
                 // switch to phase i
+                id_phase=i+1;
+                std::cout<<"Sitwh to phase : "<<id_phase<<std::endl;
+                std::cout<<" current id rows : "<<id_rows<<std::endl;
                 phase = pData.contacts_[id_phase];
                 phase.contactPhase_->getPolytopeInequalities(Hrow,h);
                 H = -Hrow;
@@ -173,14 +183,16 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 // the current waypoint must have the constraints of both phases. So we add it again :
                 // TODO : filter for redunbdant constraints ...
                 current_size = phase.kin_.rows();
-                A.block(0,id_rows,current_size,3) = (phase.Kin_ * wps[id_step].first);
+                std::cout<<"kin constraints size : "<<current_size<<std::endl;
+                A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
                 b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
                 id_rows += current_size;
                 // add stability constraints :
                 // compute skew matrix :
+                std::cout<<"stab constraints size : "<<dimH<<std::endl;
                 S_hat = skew(g*wps[id_step].first + wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first);
-                A.block(0,id_rows,dimH,3) = mH.block(0,3,dimH,3)*S_hat + mH.block(0,0,dimH,3)*acc_wps[id_step].first;
-                b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + (acc_wps[id_step].second - g).cross(wps[id_step].second);
+                A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3)*S_hat + mH.block(0,0,dimH,3)*acc_wps[id_step].first;
+                b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(acc_wps[id_step].second - g).cross(wps[id_step].second);
                 id_rows += dimH ;
             }
         }
