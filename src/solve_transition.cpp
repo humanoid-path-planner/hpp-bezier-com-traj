@@ -190,8 +190,12 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
 }
 
 
-std::pair<MatrixX3, VectorX> computeCostFunctionOneStep(const ProblemData&pData){
-
+std::pair<MatrixX3, VectorX> computeCostFunctionOneStep(const ProblemData& pData){
+    Vector3 midPoint = (pData.c0_ + pData.c1_)/2.; // todo : replace it with point found by planning ??
+    //cost : min distance between x and midPoint :
+    MatrixXX H = Matrix3::Identity();
+    VectorX g = -midPoint;
+    return std::make_pair(H,g);
 }
 
 
@@ -219,6 +223,8 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<doubl
     std::pair<MatrixX3, VectorX> Ab = computeConstraintsOneStep(pData,Ts,timeStep);
     std::pair<MatrixX3, VectorX> Hg = computeCostFunctionOneStep(pData);
     Vector3 midPoint = (pData.c0_ + pData.c1_)/2.; // todo : replace it with point found by planning ??
+    std::cout<<"Init = "<<std::endl<<midPoint.transpose()<<std::endl;
+
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
     ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, midPoint);
     if(resQp.success_)
@@ -227,6 +233,8 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<doubl
         res.x = resQp.x;
         computeBezierCurve (pData,Ts,res);
     }
+    std::cout<<"Solved, success = "<<res.success_<<" x = "<<res.x.transpose()<<std::endl;
+    std::cout<<"Final cost : "<<resQp.cost_<<std::endl;
     return res;
 }
 
