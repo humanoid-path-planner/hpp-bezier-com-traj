@@ -24,9 +24,6 @@ namespace bezier_com_traj
      BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solve0step(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep = -1);
 
 
-     void computeC_of_T(const ProblemData& pData, const std::vector<double>& Ts, ResultDataCOMTraj& res);
-
-
 
      /// Methods for transition test :
 
