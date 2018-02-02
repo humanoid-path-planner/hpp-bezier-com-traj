@@ -200,6 +200,7 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
         res.cost_ = QPsolver.getObjValue();
     }else{
         std::cout<<"No success, last solution = "<<x.transpose()<<std::endl;
+        res.x = x;
     }
     return res;
 }

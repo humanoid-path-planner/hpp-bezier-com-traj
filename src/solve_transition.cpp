@@ -6,7 +6,7 @@
 #include <bezier-com-traj/solve.hh>
 #include <bezier-com-traj/common_solve_methods.hh>
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
-
+#include  <limits>
 namespace bezier_com_traj
 {
 typedef waypoint3_t waypoint_t;
@@ -17,12 +17,30 @@ ResultData solveIntersection(const std::pair<MatrixXX, VectorX>& Ab,const std::p
     return solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
 }
 
-
+void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,const std::string& fileName,bool clipZ = false){
+     std::ofstream file;
+     using std::endl;
+     std::string path("/home/pfernbac/Documents/com_ineq_test/");
+     path.append(fileName);
+     file.open(path.c_str(),std::ios::out | std::ios::trunc);
+     file<<"3 1"<<endl;
+     file<<"\t "<<intPoint[0]<<"\t"<<intPoint[1]<<"\t"<<intPoint[2]<<endl;
+     file<<"4"<<endl;
+     clipZ ? file<<Ab.first.rows()+2<<endl : file<<Ab.first.rows()<<endl;
+     for(size_t i = 0 ; i < Ab.first.rows() ; ++i){
+         file<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
+     }
+     if(clipZ){
+         file<<"\t"<<0<<"\t"<<0<<"\t"<<1.<<"\t"<<-3.<<endl;
+         file<<"\t"<<0<<"\t"<<0<<"\t"<<-1.<<"\t"<<-1.<<endl;
+     }
+     file.close();
+}
 
 /**
  * @brief evaluateCurveAtTime compute the expression of the point on the curve at t, defined by the waypoint pi and one free waypoint (x)
  * @param pi constant waypoints of the curve, assume p0 p1 x p2 p3
- * @param t param
+ * @param t param (normalized !)
  * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
  */
 coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
@@ -33,6 +51,8 @@ coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
     // equation found with sympy
     wp.first = ( 6.0*t4 - 12.0*t3 + 6.0*t2);
     wp.second = 1.0*pi[0]*t4 - 4.0*pi[0]*t3 + 6.0*pi[0]*t2 - 4.0*pi[0]*t + 1.0*pi[0] - 4.0*pi[1]*t4 + 12.0*pi[1]*t3 - 12.0*pi[1]*t2 + 4.0*pi[1]*t - 4.0*pi[2]*t4 + 4.0*pi[2]*t3 + 1.0*pi[3]*t4;
+    std::cout<<"wp at t = "<<t<<std::endl;
+    std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -42,6 +62,8 @@ coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double 
     // equation found with sympy
     wp.first = (72.0*t*t - 72.0*t + 12.0)*alpha;
     wp.second = (12.0*pi[0]*t*t - 24.0*pi[0]*t + 12.0*pi[0] - 48.0*pi[1]*t*t + 72.0*pi[1]*t - 24.0*pi[1] - 48.0*pi[2]*t*t + 24.0*pi[2]*t + 12.0*pi[3]*t*t)*alpha;
+    std::cout<<"acc_wp at t = "<<t<<std::endl;
+    std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -63,9 +85,13 @@ std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double
     std::vector<coefs_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     double t = 0;
-    while(t<=T){
+    // evaluate curve work with normalized time !
+    double normalized_step = timeStep/T;
+    while(t<=(1.+std::numeric_limits<double>::epsilon())){
+        if(t>1)
+            t=1.;
         wps.push_back(evaluateCurveAtTime(pi,t));
-        t+= timeStep;
+        t+= normalized_step;
     }
     return wps;
 }
@@ -76,16 +102,15 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
     std::vector<coefs_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     double t = 0;
-    while(t<=T){
+    double normalized_step = timeStep/T;
+    while(t<=(1.+std::numeric_limits<double>::epsilon())){
+        if(t>1)
+            t=1.;
         wps.push_back(evaluateAccelerationCurveAtTime(pi,T,t));
-        t+= timeStep;
+        t+= normalized_step;
     }
     return wps;
 }
-
-
-
-
 
 
 
@@ -100,15 +125,15 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     int numStep = wps.size();
     assert(wps.size() == acc_wps.size());
     std::cout<<"numStep = "<<numStep<<" number of discretized waypoints : "<<wps.size()<<std::endl;
-    std::vector<int> stepPerPhases;
+    std::vector<int> stepIdForPhase; // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
     for(int i = 0 ; i < Ts.size() ; ++i){
         if(i == 0)
-            stepPerPhases.push_back(int(Ts[i] / timeStep));
+            stepIdForPhase.push_back(round(Ts[i] / timeStep));
         else
-            stepPerPhases.push_back((int(Ts[i] / timeStep))+stepPerPhases.back());
-        std::cout<<"step to phase "<<i<<" = "<<stepPerPhases[i]<<std::endl;
-
+            stepIdForPhase.push_back((round(Ts[i] / timeStep))+stepIdForPhase.back());
+        std::cout<<"id step for phase "<<i<<" = "<<stepIdForPhase[i]<<std::endl;
     }
+    assert(stepIdForPhase.back() == (wps.size()-1)); // -1 because the first one is the index (start at 0) and the second is the size
     // compute the total number of inequalities (to initialise A and b)
     int num_ineq = 0;
     int numStepForPhase;
@@ -118,23 +143,24 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     for(int i = 0 ; i < Ts.size() ; ++i){
         pData.contacts_[i].contactPhase_->getPolytopeInequalities(Hrow,h);
         if(i==0){
-            numStepForPhase = stepPerPhases[i];
+            numStepForPhase = stepIdForPhase[i] + 1;
         }
         else{
-            numStepForPhase = stepPerPhases[i] - stepPerPhases[i-1] + 1;
+            numStepForPhase = stepIdForPhase[i] - stepIdForPhase[i-1] +1; // +1 because at the switch point we add the constraints of both phases
         }
+        //if(i == (Ts.size()-1))
+        //    numStepForPhase --; // we don't consider the last point, because it is independant of x
         num_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
         num_ineq += Hrow.rows() * numStepForPhase;
+        std::cout<<"constraint size : Kin = "<<pData.contacts_[i].kin_.rows()<<" ; stab : "<<Hrow.rows()<<" times "<<numStepForPhase<<" steps"<<std::endl;
     }
     std::cout<<"total of inequalities : "<<num_ineq<<std::endl;
-
-    // assign the constraints (kinematics and stability for each waypoints :
+    // init constraints matrix :
     MatrixX3 A(num_ineq,3);
     VectorX b(num_ineq);
     Matrix3 S_hat;
 
     int id_rows = 0;
-    double t = 0;
     int id_phase = 0;
     int current_size;
 
@@ -148,32 +174,39 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     int dimH = (int)(H.rows());
     mH = phase.contactPhase_->m_mass * H;
 
-    for(int id_step = 0 ; id_step < numStep ; ++id_step , t+=timeStep){
-        std::cout<<"id_step = "<<id_step<<" ; id_phase = "<<id_phase<<std::endl;
-        std::cout<<" current id rows : "<<id_rows<<std::endl;
+    // assign the constraints (kinematics and stability) for each discretized waypoints :
+    // we don't consider the first and last point, because they are independant of x.
+    for(int id_step = 0 ; id_step < numStep ; ++id_step ){
         // add constraints for wp id_step, on current phase :
         // add kinematics constraints :
-        // constraint are of the forme A c <= b . But here c(x) = Fx + s so => AFx <= b - As
+        // constraint are of the forme A c <= b . But here c(x) = Fx + s so : AFx <= b - As
+
         current_size = phase.kin_.rows();
-        std::cout<<"kin constraints size : "<<current_size<<std::endl;
         A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
         b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
         id_rows += current_size;
+
         // add stability constraints :
-        // compute skew matrix :
-        std::cout<<"stab constraints size : "<<dimH<<std::endl;
-        S_hat = skew(g*wps[id_step].first + wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first);
-        A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3)*S_hat + mH.block(0,0,dimH,3)*acc_wps[id_step].first;
-        b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(acc_wps[id_step].second - g).cross(wps[id_step].second);
+       /* if(id_step == 0 ){
+            // take planning acceleration for initial point:
+            A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3)*wps[id_step].first*skew(g - pData.ddc0_);
+            b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - pData.ddc0_) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross( g - pData.ddc0_));
+        }else if(id_step == numStep -1){
+            A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3)*wps[id_step].first*skew(g - pData.ddc1_);
+            b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - pData.ddc1_) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross( g - pData.ddc1_));
+        }else{*/
+            S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
+            A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
+            b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
+       // }
         id_rows += dimH ;
 
+
         // check if we are going to switch phases :
-        for(int i = 0 ; i < (stepPerPhases.size()-1) ; ++i){
-            if(id_step == stepPerPhases[i]){
+        for(int i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
+            if(id_step == stepIdForPhase[i]){
                 // switch to phase i
                 id_phase=i+1;
-                std::cout<<"Sitwh to phase : "<<id_phase<<std::endl;
-                std::cout<<" current id rows : "<<id_rows<<std::endl;
                 phase = pData.contacts_[id_phase];
                 phase.contactPhase_->getPolytopeInequalities(Hrow,h);
                 H = -Hrow;
@@ -183,21 +216,17 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 // the current waypoint must have the constraints of both phases. So we add it again :
                 // TODO : filter for redunbdant constraints ...
                 current_size = phase.kin_.rows();
-                std::cout<<"kin constraints size : "<<current_size<<std::endl;
                 A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
                 b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
                 id_rows += current_size;
                 // add stability constraints :
-                // compute skew matrix :
-                std::cout<<"stab constraints size : "<<dimH<<std::endl;
-                S_hat = skew(g*wps[id_step].first + wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first);
-                A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3)*S_hat + mH.block(0,0,dimH,3)*acc_wps[id_step].first;
-                b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(acc_wps[id_step].second - g).cross(wps[id_step].second);
+                S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
+                A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
+                b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
                 id_rows += dimH ;
             }
         }
     }
-
     return std::make_pair(A,b);
 }
 
@@ -227,25 +256,25 @@ void computeBezierCurve(const ProblemData& pData, const std::vector<double>& Ts,
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
 }
 
-ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep){
+ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep,const Vector3& init_guess){
     assert(pData.contacts_.size() ==2 || pData.contacts_.size() ==3);
     assert(Ts.size() == pData.contacts_.size());
    // bool fail = true;
     ResultDataCOMTraj res;
     std::pair<MatrixX3, VectorX> Ab = computeConstraintsOneStep(pData,Ts,timeStep);
     std::pair<MatrixX3, VectorX> Hg = computeCostFunctionOneStep(pData);
-    Vector3 midPoint = (pData.c0_ + pData.c1_)/2.; // todo : replace it with point found by planning ??
-    std::cout<<"Init = "<<std::endl<<midPoint.transpose()<<std::endl;
+    std::cout<<"Init = "<<std::endl<<init_guess.transpose()<<std::endl;
 
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
-    ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, midPoint);
+    ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, init_guess);
     if(resQp.success_)
     {
         res.success_ = true;
         res.x = resQp.x;
         computeBezierCurve (pData,Ts,res);
+        std::cout<<"Solved, success "<<" x = ["<<res.x[0]<<","<<res.x[1]<<","<<res.x[2]<<"]"<<std::endl;
     }
-    std::cout<<"Solved, success = "<<res.success_<<" x = "<<res.x.transpose()<<std::endl;
+    printQHullFile(Ab,resQp.x,"bezier_wp.txt");
     std::cout<<"Final cost : "<<resQp.cost_<<std::endl;
     return res;
 }

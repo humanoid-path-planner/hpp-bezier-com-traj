@@ -15,6 +15,7 @@
 // <http://www.gnu.org/licenses/>.
 //
 
+
 #include "solver/eiquadprog-fast.hpp"
 #include <iostream>
 namespace tsid
@@ -90,7 +91,7 @@ namespace tsid
     {
       int nVars = J.rows();
 #ifdef TRACE_SOLVER
-      std::cerr << "Add constraint " << iq << '/';
+      std::cout << "Add constraint " << iq << '/';
 #endif
       int j, k;
       double cc, ss, h, t1, t2, xny;
@@ -156,7 +157,7 @@ namespace tsid
    */
       R.col(iq-1).head(iq) = d.head(iq);
 #ifdef TRACE_SOLVER
-      std::cerr << iq << std::endl;
+      std::cout << iq << std::endl;
 #endif
 
       if (std::abs(d(iq - 1)) <= std::numeric_limits<double>::epsilon() * R_norm)
@@ -177,7 +178,7 @@ namespace tsid
 
       int nVars = R.rows();
 #ifdef TRACE_SOLVER
-      std::cerr << "Delete constraint " << l << ' ' << iq;
+      std::cout << "Delete constraint " << l << ' ' << iq;
 #endif
       int i, j, k;
       int qq =0;
@@ -208,7 +209,7 @@ namespace tsid
       /* constraint has been fully removed */
       iq--;
 #ifdef TRACE_SOLVER
-      std::cerr << '/' << iq << std::endl;
+      std::cout << '/' << iq << std::endl;
 #endif
 
       if (iq == 0)
@@ -253,11 +254,12 @@ namespace tsid
 
     template<class Derived>
     void print_vector(const char* name, Eigen::MatrixBase<Derived>& x, int n){
-      //  std::cerr << name << x.transpose() << std::endl;
+        if (x.size() < 10)
+            std::cout << name << x.transpose() << std::endl;
     }
     template<class Derived>
     void print_matrix(const char* name, Eigen::MatrixBase<Derived>& x, int n){
-      //  std::cerr << name << std::endl << x << std::endl;
+      //  std::cout << name << std::endl << x << std::endl;
     }
 
     EiquadprogFast_status EiquadprogFast::solve_quadprog(const MatrixXd & Hess,
@@ -362,7 +364,7 @@ namespace tsid
       /* and compute the current solution value */
       f_value = 0.5 * g0.dot(x);
 #ifdef TRACE_SOLVER
-      std::cerr << "Unconstrained solution: " << f_value << std::endl;
+      std::cout << "Unconstrained solution: " << f_value << std::endl;
       print_vector("x", x, nVars);
 #endif
       STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_1_UNCONSTR_MINIM);
@@ -448,7 +450,7 @@ namespace tsid
         if (!add_constraint(R, m_J, d, iq, R_norm))
         {
           // constraints are linearly dependent
-          std::cerr << "[WARM START] Constraints are linearly dependent\n";
+          std::cout << "[WARM START] Constraints are linearly dependent\n";
           return RT_EIQUADPROG_REDUNDANT_EQUALITIES;
         }
       }
@@ -544,7 +546,7 @@ l2: /* Step 2: check for feasibility and determine a new S-pair */
       //      DEBUG_STREAM("Add constraint "<<ip<<" to active set\n")
 
 #ifdef TRACE_SOLVER
-      std::cerr << "Trying with constraint " << ip << std::endl;
+      std::cout << "Trying with constraint " << ip << std::endl;
       print_vector("np", np, nVars);
 #endif
       STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2);
@@ -564,7 +566,7 @@ l2a:/* Step 2a: determine step direction */
       /* compute N* np (if q > 0): the negative of the step direction in the dual space */
       update_r(R, r, d, iq);
 #ifdef TRACE_SOLVER
-      std::cerr << "Step direction z" << std::endl;
+      std::cout << "Step direction z" << std::endl;
       print_vector("z", z, nVars);
       print_vector("r", r, iq + 1);
       print_vector("u", u, iq + 1);
@@ -598,7 +600,7 @@ l2a:/* Step 2a: determine step direction */
       /* the step is chosen as the minimum of t1 and t2 */
       t = std::min(t1, t2);
 #ifdef TRACE_SOLVER
-      std::cerr << "Step sizes: " << t << " (t1 = " << t1 << ", t2 = " << t2 << ") ";
+      std::cout << "Step sizes: " << t << " (t1 = " << t1 << ", t2 = " << t2 << ") ";
 #endif
       STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2B);
 
@@ -621,7 +623,7 @@ l2a:/* Step 2a: determine step direction */
         iai(l) = l;
         delete_constraint(R, m_J, A, u, nEqCon, iq, l);
 #ifdef TRACE_SOLVER
-        std::cerr << " in dual space: "<< f_value << std::endl;
+        std::cout << " in dual space: "<< f_value << std::endl;
         print_vector("x", x, nVars);
         print_vector("z", z, nVars);
         print_vector("A", A, iq + 1);
@@ -639,7 +641,7 @@ l2a:/* Step 2a: determine step direction */
       u(iq) += t;
 
 #ifdef TRACE_SOLVER
-      std::cerr << " in both spaces: "<< f_value << std::endl;
+      std::cout << " in both spaces: "<< f_value << std::endl;
       print_vector("x", x, nVars);
       print_vector("u", u, iq + 1);
       print_vector("r", r, iq + 1);
@@ -649,7 +651,7 @@ l2a:/* Step 2a: determine step direction */
       if (t == t2)
       {
 #ifdef TRACE_SOLVER
-        std::cerr << "Full step has taken " << t << std::endl;
+        std::cout << "Full step has taken " << t << std::endl;
         print_vector("x", x, nVars);
 #endif
         /* full step has taken */
@@ -690,7 +692,7 @@ l2a:/* Step 2a: determine step direction */
       s(ip) = CI.row(ip).dot(x) + ci0(ip);
 
 #ifdef TRACE_SOLVER
-      std::cerr << "Partial step has taken " << t << std::endl;
+      std::cout << "Partial step has taken " << t << std::endl;
       print_vector("x", x, nVars);
       print_matrix("R", R, nVars);
       print_vector("A", A, iq);

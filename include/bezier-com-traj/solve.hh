@@ -44,7 +44,7 @@ namespace bezier_com_traj
      * @param timeStep time step used by the discretization
      * @return ResultData a struct containing the resulting trajectory, if success is true.
      */
-    BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep = -1);
+    BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep, const Vector3& init_guess);
 
 
 
