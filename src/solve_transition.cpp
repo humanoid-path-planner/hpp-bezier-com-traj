@@ -203,9 +203,9 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         else{
             numStepForPhase = stepIdForPhase[i] - stepIdForPhase[i-1] +1; // +1 because at the switch point we add the constraints of both phases
         }
-        //if(i == (Ts.size()-1))
-        //    numStepForPhase --; // we don't consider the last point, because it is independant of x
         num_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
+        if(i==0)
+            numStepForPhase --; // position, velocity and aceleration are fixed for initial point of the curve, so we don't add stability constraints for this point.
         num_ineq += Hrow.rows() * numStepForPhase;
         std::cout<<"constraint size : Kin = "<<pData.contacts_[i].kin_.rows()<<" ; stab : "<<Hrow.rows()<<" times "<<numStepForPhase<<" steps"<<std::endl;
     }
@@ -242,19 +242,12 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         id_rows += current_size;
 
         // add stability constraints :
-       /* if(id_step == 0 ){
-            // take planning acceleration for initial point:
-            A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3)*wps[id_step].first*skew(g - pData.ddc0_);
-            b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - pData.ddc0_) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross( g - pData.ddc0_));
-        }else if(id_step == numStep -1){
-            A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3)*wps[id_step].first*skew(g - pData.ddc1_);
-            b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - pData.ddc1_) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross( g - pData.ddc1_));
-        }else{*/
+        if(id_step != 0){ // position, velocity and aceleration are fixed for initial point of the curve
             S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
             A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
             b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
-       // }
-        id_rows += dimH ;
+            id_rows += dimH ;
+        }
 
 
         // check if we are going to switch phases :
