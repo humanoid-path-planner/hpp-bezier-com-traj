@@ -198,16 +198,17 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     for(int i = 0 ; i < Ts.size() ; ++i){
         pData.contacts_[i].contactPhase_->getPolytopeInequalities(Hrow,h);
         if(i==0){
-            numStepForPhase = stepIdForPhase[i] + 1;
+            numStepForPhase = stepIdForPhase[i];
         }
         else{
             numStepForPhase = stepIdForPhase[i] - stepIdForPhase[i-1] +1; // +1 because at the switch point we add the constraints of both phases
         }
-        num_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
-        if(i==0)
-            numStepForPhase --; // position, velocity and aceleration are fixed for initial point of the curve, so we don't add stability constraints for this point.
-        num_ineq += Hrow.rows() * numStepForPhase;
         std::cout<<"constraint size : Kin = "<<pData.contacts_[i].kin_.rows()<<" ; stab : "<<Hrow.rows()<<" times "<<numStepForPhase<<" steps"<<std::endl;
+        num_ineq += Hrow.rows() * numStepForPhase;
+        if(i == Ts.size()-1)
+            numStepForPhase--; // we don't consider kinematics constraints for the last point (because it's independant of x)
+        num_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
+
     }
     std::cout<<"total of inequalities : "<<num_ineq<<std::endl;
     // init constraints matrix :
@@ -230,24 +231,26 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     mH = phase.contactPhase_->m_mass * H;
 
     // assign the constraints (kinematics and stability) for each discretized waypoints :
-    // we don't consider the first and last point, because they are independant of x.
-    for(int id_step = 0 ; id_step < numStep ; ++id_step ){
+    // we don't consider the first point, because it's independant of x.
+    for(int id_step = 1 ; id_step < numStep ; ++id_step ){
         // add constraints for wp id_step, on current phase :
         // add kinematics constraints :
         // constraint are of the forme A c <= b . But here c(x) = Fx + s so : AFx <= b - As
 
-        current_size = phase.kin_.rows();
-        A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
-        b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
-        id_rows += current_size;
+        if(id_step != numStep-1){ // we don't consider kinematics constraints for the last point (because it's independant of x)
+            current_size = phase.kin_.rows();
+            A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
+            b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
+            id_rows += current_size;
+        }
+
 
         // add stability constraints :
-        if(id_step != 0){ // position, velocity and aceleration are fixed for initial point of the curve
-            S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
-            A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
-            b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
-            id_rows += dimH ;
-        }
+        S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
+        A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
+        b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
+        id_rows += dimH ;
+
 
 
         // check if we are going to switch phases :
