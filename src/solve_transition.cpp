@@ -37,6 +37,55 @@ void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,cons
      file.close();
 }
 
+
+/// ### EQUATION FOR CONSTRAINTS ON INIT AND FINAL POSITION AND VELOCITY (DEGREE = 4)
+///**
+// * @brief evaluateCurveAtTime compute the expression of the point on the curve at t, defined by the waypoint pi and one free waypoint (x)
+// * @param pi constant waypoints of the curve, assume p0 p1 x p2 p3
+// * @param t param (normalized !)
+// * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
+// */
+//coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
+//    coefs_t wp;
+//    double t2 = t*t;
+//    double t3 = t2*t;
+//    double t4 = t3*t;
+//    // equation found with sympy
+//    wp.first = ( 6.0*t4 - 12.0*t3 + 6.0*t2);
+//    wp.second = 1.0*pi[0]*t4 - 4.0*pi[0]*t3 + 6.0*pi[0]*t2 - 4.0*pi[0]*t + 1.0*pi[0] - 4.0*pi[1]*t4 + 12.0*pi[1]*t3 - 12.0*pi[1]*t2 + 4.0*pi[1]*t - 4.0*pi[2]*t4 + 4.0*pi[2]*t3 + 1.0*pi[3]*t4;
+//    std::cout<<"wp at t = "<<t<<std::endl;
+//    std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
+//    return wp;
+//}
+
+//coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double t){
+//    coefs_t wp;
+//    double alpha = 1./(T*T);
+//    // equation found with sympy
+//    wp.first = (72.0*t*t - 72.0*t + 12.0)*alpha;
+//    wp.second = (12.0*pi[0]*t*t - 24.0*pi[0]*t + 12.0*pi[0] - 48.0*pi[1]*t*t + 72.0*pi[1]*t - 24.0*pi[1] - 48.0*pi[2]*t*t + 24.0*pi[2]*t + 12.0*pi[3]*t*t)*alpha;
+//    std::cout<<"acc_wp at t = "<<t<<std::endl;
+//    std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
+//    return wp;
+//}
+
+
+//std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T){
+//    // equation for constraint on initial and final position and velocity (degree 4, 4 constant waypoint and one free (p2))
+//    // first, compute the constant waypoints that only depend on pData :
+//    int n = 4;
+//    std::vector<point_t> pi;
+//    pi.push_back(pData.c0_); //p0
+//    pi.push_back((pData.dc0_ * T / n )+  pData.c0_); // p1
+//    pi.push_back((-pData.dc1_ * T / n) + pData.c1_); // p3
+//    pi.push_back(pData.c1_); // p4
+//    return pi;
+//}
+
+
+/// ### EQUATION FOR CONSTRAINTS ON INIT AND FINAL POSITION AND VELOCITY AND INIT ACCELERATION (DEGREE = 5)
+///
+
 /**
  * @brief evaluateCurveAtTime compute the expression of the point on the curve at t, defined by the waypoint pi and one free waypoint (x)
  * @param pi constant waypoints of the curve, assume p0 p1 x p2 p3
@@ -48,9 +97,10 @@ coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
     double t2 = t*t;
     double t3 = t2*t;
     double t4 = t3*t;
+    double t5 = t4*t;
     // equation found with sympy
-    wp.first = ( 6.0*t4 - 12.0*t3 + 6.0*t2);
-    wp.second = 1.0*pi[0]*t4 - 4.0*pi[0]*t3 + 6.0*pi[0]*t2 - 4.0*pi[0]*t + 1.0*pi[0] - 4.0*pi[1]*t4 + 12.0*pi[1]*t3 - 12.0*pi[1]*t2 + 4.0*pi[1]*t - 4.0*pi[2]*t4 + 4.0*pi[2]*t3 + 1.0*pi[3]*t4;
+    wp.first = 10.0*t5 - 20.0*t4 + 10.0*t3;
+    wp.second = -1.0*pi[0]*t5 + 5.0*pi[0]*t4 - 10.0*pi[0]*t3 + 10.0*pi[0]*t2 - 5.0*pi[0]*t + 1.0*pi[0] + 5.0*pi[1]*t5 - 20.0*pi[1]*t4 + 30.0*pi[1]*t3 - 20.0*pi[1]*t2 + 5.0*pi[1]*t - 10.0*pi[2]*t5 + 30.0*pi[2]*t4 - 30.0*pi[2]*t3 + 10.0*pi[2]*t2 - 5.0*pi[4]*t5 + 5.0*pi[4]*t4 + 1.0*pi[5]*t5;
     std::cout<<"wp at t = "<<t<<std::endl;
     std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
@@ -59,9 +109,11 @@ coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
 coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double t){
     coefs_t wp;
     double alpha = 1./(T*T);
+    double t2 = t*t;
+    double t3 = t2*t;
     // equation found with sympy
-    wp.first = (72.0*t*t - 72.0*t + 12.0)*alpha;
-    wp.second = (12.0*pi[0]*t*t - 24.0*pi[0]*t + 12.0*pi[0] - 48.0*pi[1]*t*t + 72.0*pi[1]*t - 24.0*pi[1] - 48.0*pi[2]*t*t + 24.0*pi[2]*t + 12.0*pi[3]*t*t)*alpha;
+    wp.first = (200.0*t3 - 240.0*t2 + 60.0*t)*alpha;
+    wp.second = 1.0*(-20.0*pi[0]*t3 + 60.0*pi[0]*t2 - 60.0*pi[0]*t + 20.0*pi[0] + 100.0*pi[1]*t3 - 240.0*pi[1]*t2 + 180.0*pi[1]*t - 40.0*pi[1] - 200.0*pi[2]*t3 + 360.0*pi[2]*t2 - 180.0*pi[2]*t + 20.0*pi[2] - 100.0*pi[4]*t3 + 60.0*pi[4]*t2 + 20.0*pi[5]*t3)*alpha;
     std::cout<<"acc_wp at t = "<<t<<std::endl;
     std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
@@ -71,14 +123,17 @@ coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double 
 std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T){
     // equation for constraint on initial and final position and velocity (degree 4, 4 constant waypoint and one free (p2))
     // first, compute the constant waypoints that only depend on pData :
-    int n = 4;
+    int n = 5;
     std::vector<point_t> pi;
     pi.push_back(pData.c0_); //p0
     pi.push_back((pData.dc0_ * T / n )+  pData.c0_); // p1
-    pi.push_back((-pData.dc1_ * T / n) + pData.c1_); // p3
-    pi.push_back(pData.c1_); // p4
+    pi.push_back((pData.ddc0_*T*T/(n*(n-1))) + (2*pData.dc0_ *T / n) + pData.c0_); // p2
+    pi.push_back(point_t()); // x
+    pi.push_back((-pData.dc1_ * T / n) + pData.c1_); // p4
+    pi.push_back(pData.c1_); // p5
     return pi;
 }
+
 
 std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double T,double timeStep){
     //int numStep = int(T / timeStep);
