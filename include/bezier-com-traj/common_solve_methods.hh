@@ -30,6 +30,8 @@ typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
 
 BEZIER_COM_TRAJ_DLLAPI Matrix3 skew(point_t_tC x);
 template<typename T> T initwp();
+int Normalize(Ref_matrixXX A, Ref_vectorX b);
+
 
 /**
  * @brief ComputeDiscretizedWaypoints Given the waypoints defining a bezier curve,
