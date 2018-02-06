@@ -121,16 +121,20 @@ coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double 
 
 
 std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T){
-    // equation for constraint on initial and final position and velocity (degree 4, 4 constant waypoint and one free (p2))
+    // equation for constraint on initial and final position and velocity and initial acceleration(degree 5, 5 constant waypoint and one free (p3))
     // first, compute the constant waypoints that only depend on pData :
-    int n = 5;
+    double n = 5.;
     std::vector<point_t> pi;
     pi.push_back(pData.c0_); //p0
     pi.push_back((pData.dc0_ * T / n )+  pData.c0_); // p1
-    pi.push_back((pData.ddc0_*T*T/(n*(n-1))) + (2*pData.dc0_ *T / n) + pData.c0_); // p2
+    pi.push_back((pData.ddc0_*T*T/(n*(n-1))) + (2.*pData.dc0_ *T / n) + pData.c0_); // p2
     pi.push_back(point_t()); // x
     pi.push_back((-pData.dc1_ * T / n) + pData.c1_); // p4
     pi.push_back(pData.c1_); // p5
+    std::cout<<"fixed waypoints : "<<std::endl;
+    for(std::vector<point_t>::const_iterator pit = pi.begin() ; pit != pi.end() ; ++pit){
+        std::cout<<" pi = "<<*pit<<std::endl;
+    }
     return pi;
 }
 
@@ -175,6 +179,7 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     for(int i = 0 ; i < Ts.size() ; ++i)
         t_total+=Ts[i];
     // Compute all the discretized wayPoint
+    std::cout<<"total time : "<<t_total<<std::endl;
     std::vector<coefs_t> wps = computeDiscretizedWaypoints(pData,t_total,timeStep);
     std::vector<coefs_t> acc_wps = computeDiscretizedAccelerationWaypoints(pData,t_total,timeStep);
     int numStep = wps.size();
@@ -223,6 +228,8 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     ContactData phase = pData.contacts_[id_phase];
     // compute some constant matrice for the current phase :
     const Vector3& g = phase.contactPhase_->m_gravity;
+    std::cout<<"g = "<<g.transpose()<<std::endl;
+    std::cout<<"mass = "<<phase.contactPhase_->m_mass<<std::endl;
     //const Matrix3 gSkew = bezier_com_traj::skew(g);
     phase.contactPhase_->getPolytopeInequalities(Hrow,h);
     H = -Hrow;
@@ -232,10 +239,11 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
 
     // assign the constraints (kinematics and stability) for each discretized waypoints :
     // we don't consider the first point, because it's independant of x.
-    for(int id_step = 1 ; id_step < numStep ; ++id_step ){
+    for(int id_step = 1 ; id_step <  numStep ; ++id_step ){
         // add constraints for wp id_step, on current phase :
         // add kinematics constraints :
         // constraint are of the forme A c <= b . But here c(x) = Fx + s so : AFx <= b - As
+
 
         if(id_step != numStep-1){ // we don't consider kinematics constraints for the last point (because it's independant of x)
             current_size = phase.kin_.rows();
@@ -251,8 +259,12 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
         id_rows += dimH ;
 
-
-
+        // stability constraints in quasi-static :
+        /*
+        A.block(id_rows,0,dimH,3) =mH.block(0,3,dimH,3) * wps[id_step].first * skew(g);
+        b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*g - mH.block(0,3,dimH,3)*g.cross(wps[id_step].second);
+        id_rows += dimH ;
+        */
         // check if we are going to switch phases :
         for(int i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
             if(id_step == stepIdForPhase[i]){
