@@ -297,6 +297,8 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     VectorX b(num_ineq);
     Matrix3 S_hat;
 
+    MatrixX3 A_stab;
+    VectorX b_stab;
     int id_rows = 0;
     int id_phase = 0;
     int current_size;
@@ -318,8 +320,7 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     for(int id_step = 1 ; id_step <  numStep ; ++id_step ){
         // add constraints for wp id_step, on current phase :
         // add kinematics constraints :
-        // constraint are of the forme A c <= b . But here c(x) = Fx + s so : AFx <= b - As
-
+        // constraint are of the shape A c <= b . But here c(x) = Fx + s so : AFx <= b - As
 
         if(id_step != numStep-1){ // we don't consider kinematics constraints for the last point (because it's independant of x)
             current_size = phase.kin_.rows();
@@ -331,12 +332,15 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
 
         // add stability constraints :
         S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
-        A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
-        b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
+        A_stab = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
+        b_stab = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
+        Normalize(A_stab,b_stab);
+        A.block(id_rows,0,dimH,3) = A_stab;
+        b.segment(id_rows,dimH) = b_stab;
         id_rows += dimH ;
 
-        // stability constraints in quasi-static :
         /*
+        // stability constraints in quasi-static :
         A.block(id_rows,0,dimH,3) =mH.block(0,3,dimH,3) * wps[id_step].first * skew(g);
         b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*g - mH.block(0,3,dimH,3)*g.cross(wps[id_step].second);
         id_rows += dimH ;
@@ -360,12 +364,19 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
                 id_rows += current_size;
 
+
                 // add stability constraints :
                 S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
                 A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
                 b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
                 id_rows += dimH ;
 
+                /*
+                // stability constraints in quasi-static :
+                A.block(id_rows,0,dimH,3) =mH.block(0,3,dimH,3) * wps[id_step].first * skew(g);
+                b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*g - mH.block(0,3,dimH,3)*g.cross(wps[id_step].second);
+                id_rows += dimH ;
+                */
             }
         }
     }
