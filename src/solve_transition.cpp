@@ -278,18 +278,23 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 mH = phase.contactPhase_->m_mass * H;
                 // the current waypoint must have the constraints of both phases. So we add it again :
                 // TODO : filter for redunbdant constraints ...
+
                 current_size = phase.kin_.rows();
                 A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
                 b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
                 id_rows += current_size;
+
                 // add stability constraints :
                 S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
                 A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
                 b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
                 id_rows += dimH ;
+
             }
         }
     }
+    std::cout<<"id rows : "<<id_rows<<" ; total rows : "<<A.rows()<<std::endl;
+    assert(id_rows == (A.rows()) && "The constraints matrices were not fully filled.");
     return std::make_pair(A,b);
 }
 
