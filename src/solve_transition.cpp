@@ -318,9 +318,10 @@ void computeBezierCurve(const ProblemData& pData, const std::vector<double>& Ts,
     std::vector<Vector3> pi = computeConstantWaypoints(pData,T);
     wps.push_back(pi[0]);
     wps.push_back(pi[1]);
-    wps.push_back(res.x);
     wps.push_back(pi[2]);
-    wps.push_back(pi[3]);
+    wps.push_back(res.x);
+    wps.push_back(pi[4]);
+    wps.push_back(pi[5]);
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
 }
 
