@@ -373,12 +373,19 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     return std::make_pair(A,b);
 }
 
-
-std::pair<MatrixX3, VectorX> computeCostFunctionOneStep(const ProblemData& pData){
+//cost : min distance between x and midPoint :
+std::pair<MatrixX3, VectorX> computeCostMidPoint(const ProblemData& pData){
     Vector3 midPoint = (pData.c0_ + pData.c1_)/2.; // todo : replace it with point found by planning ??
-    //cost : min distance between x and midPoint :
-    MatrixXX H = Matrix3::Identity();
-    VectorX g = -midPoint;
+    Matrix3 H = Matrix3::Identity();
+    Vector3 g = -midPoint;
+    return std::make_pair(H,g);
+}
+
+//cost : min distance between end velocity and the one computed by planning
+std::pair<MatrixX3, VectorX> computeCostEndVelocity(const ProblemData& pData,const double T){
+    coefs_t v = computeFinalVelocityPoint(pData,T);
+    Matrix3 H = Matrix3::Identity() * v.first * v.first;
+    Vector3 g = v.first*(v.second - pData.dc1_);
     return std::make_pair(H,g);
 }
 
@@ -399,19 +406,20 @@ void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMT
 ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep,const Vector3& init_guess){
     assert(pData.contacts_.size() ==2 || pData.contacts_.size() ==3);
     assert(Ts.size() == pData.contacts_.size());
+    double T = 0;
+    for(int i = 0 ; i < Ts.size() ; ++i)
+        T+=Ts[i];
    // bool fail = true;
     ResultDataCOMTraj res;
     std::pair<MatrixX3, VectorX> Ab = computeConstraintsOneStep(pData,Ts,timeStep);
-    std::pair<MatrixX3, VectorX> Hg = computeCostFunctionOneStep(pData);
+    std::pair<MatrixX3, VectorX> Hg = computeCostEndVelocity(pData,T);
     std::cout<<"Init = "<<std::endl<<init_guess.transpose()<<std::endl;
 
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
     ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, init_guess);
     if(resQp.success_)
     {
-        double T = 0;
-        for(int i = 0 ; i < Ts.size() ; ++i)
-            T+=Ts[i];
+
 
         res.success_ = true;
         res.x = resQp.x;
