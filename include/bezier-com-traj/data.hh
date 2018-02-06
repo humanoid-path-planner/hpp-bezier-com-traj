@@ -105,12 +105,16 @@ namespace bezier_com_traj
         ResultDataCOMTraj():
             ResultData()
           , c_of_t_(bezier_t::zero())
-          , dL_of_t_(bezier_t::zero()) {}
+          , dL_of_t_(bezier_t::zero())
+          , dc1_(point_t::Zero())
+          , ddc1_(point_t::Zero()) {}
 
         ~ResultDataCOMTraj(){}
 
         bezier_t c_of_t_;
         bezier_t dL_of_t_;
+        point_t dc1_;
+        point_t ddc1_;
     };
 
 } // end namespace bezier_com_traj
