@@ -189,6 +189,14 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
     return pi;
 }
 
+coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
+     coefs_t v4;
+     // equation found with sympy
+     v4.first = -4./T;
+     v4.second = 4.* pData.c1_ / T;
+     return v4;
+}
+
 
 std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double T,double timeStep){
     //int numStep = int(T / timeStep);
