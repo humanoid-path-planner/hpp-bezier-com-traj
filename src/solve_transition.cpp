@@ -222,11 +222,11 @@ std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double
     double t = 0;
     // evaluate curve work with normalized time !
     double normalized_step = timeStep/T;
-    while(t<=(1.+std::numeric_limits<double>::epsilon())){
+    int numStep = round(T/timeStep);
+    for (int i = 0 ; i<=numStep ; ++i , t+=normalized_step){
         if(t>1)
             t=1.;
         wps.push_back(evaluateCurveAtTime(pi,t));
-        t+= normalized_step;
     }
     return wps;
 }
@@ -238,11 +238,11 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     double t = 0;
     double normalized_step = timeStep/T;
-    while(t<=(1.+std::numeric_limits<double>::epsilon())){
+    int numStep = round(T/timeStep);
+    for (int i = 0 ; i<=numStep ; ++i , t+=normalized_step){
         if(t>1)
             t=1.;
         wps.push_back(evaluateAccelerationCurveAtTime(pi,T,t));
-        t+= normalized_step;
     }
     return wps;
 }
