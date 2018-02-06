@@ -197,6 +197,22 @@ coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
      return v4;
 }
 
+void computeFinalVelocity(const ProblemData& pData,double T,ResultDataCOMTraj& res){
+    coefs_t v = computeFinalVelocityPoint(pData,T);
+    res.dc1_ = v.first*res.x + v.second;
+}
+
+
+void computeFinalAcceleration(const ProblemData& pData,double T,ResultDataCOMTraj& res){
+    point_t p2,p4;
+    p2 = (pData.ddc0_*T*T/(4*(3))) + (2.*pData.dc0_ *T / 4) + pData.c0_;
+    p4 = pData.c1_;
+    coefs_t a;
+    a.first = -24/(T*T);
+    a.second = 12*(p2 + p4)/(T*T);
+
+    res.ddc1_ = a.first * res.x + a.second;
+}
 
 std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double T,double timeStep){
     //int numStep = int(T / timeStep);
@@ -367,12 +383,9 @@ std::pair<MatrixX3, VectorX> computeCostFunctionOneStep(const ProblemData& pData
 }
 
 
-void computeBezierCurve(const ProblemData& pData, const std::vector<double>& Ts, ResultDataCOMTraj& res)
+void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMTraj& res)
 {
     std::vector<Vector3> wps;
-    double T = 0;
-    for(int i = 0 ; i < Ts.size() ; ++i)
-        T+=Ts[i];
 
     std::vector<Vector3> pi = computeConstantWaypoints(pData,T);
     wps.push_back(pi[0]);
@@ -396,9 +409,15 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<doubl
     ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, init_guess);
     if(resQp.success_)
     {
+        double T = 0;
+        for(int i = 0 ; i < Ts.size() ; ++i)
+            T+=Ts[i];
+
         res.success_ = true;
         res.x = resQp.x;
-        computeBezierCurve (pData,Ts,res);
+        computeBezierCurve (pData,T,res);
+        computeFinalVelocity(pData,T,res);
+        computeFinalAcceleration(pData,T,res);
         std::cout<<"Solved, success "<<" x = ["<<res.x[0]<<","<<res.x[1]<<","<<res.x[2]<<"]"<<std::endl;
     }
     printQHullFile(Ab,resQp.x,"bezier_wp.txt");
