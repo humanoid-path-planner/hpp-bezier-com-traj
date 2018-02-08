@@ -101,8 +101,8 @@ coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
     // equation found with sympy
     wp.first = 10.0*t5 - 20.0*t4 + 10.0*t3;
     wp.second = -1.0*pi[0]*t5 + 5.0*pi[0]*t4 - 10.0*pi[0]*t3 + 10.0*pi[0]*t2 - 5.0*pi[0]*t + 1.0*pi[0] + 5.0*pi[1]*t5 - 20.0*pi[1]*t4 + 30.0*pi[1]*t3 - 20.0*pi[1]*t2 + 5.0*pi[1]*t - 10.0*pi[2]*t5 + 30.0*pi[2]*t4 - 30.0*pi[2]*t3 + 10.0*pi[2]*t2 - 5.0*pi[4]*t5 + 5.0*pi[4]*t4 + 1.0*pi[5]*t5;
-    std::cout<<"wp at t = "<<t<<std::endl;
-    std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
+   // std::cout<<"wp at t = "<<t<<std::endl;
+   // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -114,8 +114,8 @@ coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double 
     // equation found with sympy
     wp.first = (200.0*t3 - 240.0*t2 + 60.0*t)*alpha;
     wp.second = 1.0*(-20.0*pi[0]*t3 + 60.0*pi[0]*t2 - 60.0*pi[0]*t + 20.0*pi[0] + 100.0*pi[1]*t3 - 240.0*pi[1]*t2 + 180.0*pi[1]*t - 40.0*pi[1] - 200.0*pi[2]*t3 + 360.0*pi[2]*t2 - 180.0*pi[2]*t + 20.0*pi[2] - 100.0*pi[4]*t3 + 60.0*pi[4]*t2 + 20.0*pi[5]*t3)*alpha;
-    std::cout<<"acc_wp at t = "<<t<<std::endl;
-    std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
+   // std::cout<<"acc_wp at t = "<<t<<std::endl;
+   // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -131,10 +131,10 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
     pi.push_back(point_t::Zero()); // x
     pi.push_back((-pData.dc1_ * T / n) + pData.c1_); // p4
     pi.push_back(pData.c1_); // p5
-    std::cout<<"fixed waypoints : "<<std::endl;
+    /*std::cout<<"fixed waypoints : "<<std::endl;
     for(std::vector<point_t>::const_iterator pit = pi.begin() ; pit != pi.end() ; ++pit){
         std::cout<<" pi = "<<*pit<<std::endl;
-    }
+    }*/
     return pi;
 }
 
@@ -306,8 +306,8 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     ContactData phase = pData.contacts_[id_phase];
     // compute some constant matrice for the current phase :
     const Vector3& g = phase.contactPhase_->m_gravity;
-    std::cout<<"g = "<<g.transpose()<<std::endl;
-    std::cout<<"mass = "<<phase.contactPhase_->m_mass<<std::endl;
+    //std::cout<<"g = "<<g.transpose()<<std::endl;
+    //std::cout<<"mass = "<<phase.contactPhase_->m_mass<<std::endl;
     //const Matrix3 gSkew = bezier_com_traj::skew(g);
     phase.contactPhase_->getPolytopeInequalities(Hrow,h);
     H = -Hrow;
