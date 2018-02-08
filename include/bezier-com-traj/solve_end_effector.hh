@@ -159,8 +159,8 @@ std::vector<waypoint_t> createEndEffectorVelocityWaypoints(double T,const Proble
 
 
 void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoint_t>& wps_acc,const std::vector<waypoint_t>& wps_vel,const VectorX& acc_bounds,const VectorX& vel_bounds,MatrixXX& A,VectorX& b){
-    assert(acc_bounds.length() == DIM_POINT && "Acceleration bounds should have the same dimension as the points");
-    assert(vel_bounds.length() == DIM_POINT && "Velocity bounds should have the same dimension as the points");
+    assert(acc_bounds.size() == DIM_POINT && "Acceleration bounds should have the same dimension as the points");
+    assert(vel_bounds.size() == DIM_POINT && "Velocity bounds should have the same dimension as the points");
     int empty_acc=0;
     int empty_vel=0;
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
