@@ -7,6 +7,13 @@
 #include <bezier-com-traj/common_solve_methods.hh>
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 #include  <limits>
+
+
+#ifndef QHULL
+#define QHULL 0
+#endif
+
+
 namespace bezier_com_traj
 {
 typedef waypoint3_t waypoint_t;
@@ -441,7 +448,9 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, cons
 //        computeFinalAcceleration(pData,T,res);
         std::cout<<"Solved, success "<<" x = ["<<res.x[0]<<","<<res.x[1]<<","<<res.x[2]<<"]"<<std::endl;
     }
+    #if QHULL
     printQHullFile(Ab,resQp.x,"bezier_wp.txt");
+    #endif
     std::cout<<"Final cost : "<<resQp.cost_<<std::endl;
     return res;
 }
