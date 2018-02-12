@@ -249,7 +249,7 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
 
 
 
-std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,const std::vector<double>& Ts,const double timeStep){
+std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const double timeStep){
     // compute the list of discretized waypoint :
     double t_total = 0.;
     for(int i = 0 ; i < Ts.size() ; ++i)
@@ -416,7 +416,7 @@ void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMT
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
 }
 
-ResultDataCOMTraj solveOnestep(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep,const Vector3& init_guess){
+ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, const double timeStep,const Vector3& init_guess){
     assert(pData.contacts_.size() ==2 || pData.contacts_.size() ==3);
     assert(Ts.size() == pData.contacts_.size());
     double T = 0;
