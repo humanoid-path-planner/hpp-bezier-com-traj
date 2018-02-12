@@ -256,7 +256,7 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
 
 
 
-std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const double timeStep){
+std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const double timeStep,VectorX& constraints_equivalence){
     // compute the list of discretized waypoint :
     double t_total = 0.;
     for(int i = 0 ; i < Ts.size() ; ++i)
@@ -279,6 +279,8 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     assert(stepIdForPhase.back() == (wps.size()-1)); // -1 because the first one is the index (start at 0) and the second is the size
     // compute the total number of inequalities (to initialise A and b)
     int num_ineq = 0;
+    int num_stab_ineq = 0;
+    int num_kin_ineq = 0;
     int numStepForPhase;
     centroidal_dynamics::MatrixXX Hrow;
     VectorX h;
@@ -292,24 +294,27 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
             numStepForPhase = stepIdForPhase[i] - stepIdForPhase[i-1] +1; // +1 because at the switch point we add the constraints of both phases
         }
         std::cout<<"constraint size : Kin = "<<pData.contacts_[i].kin_.rows()<<" ; stab : "<<Hrow.rows()<<" times "<<numStepForPhase<<" steps"<<std::endl;
-        num_ineq += Hrow.rows() * numStepForPhase;
+        num_stab_ineq += Hrow.rows() * numStepForPhase;
         if(i == Ts.size()-1)
             numStepForPhase--; // we don't consider kinematics constraints for the last point (because it's independant of x)
-        num_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
+        num_kin_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
 
     }
+    num_ineq = num_stab_ineq + num_kin_ineq;
     std::cout<<"total of inequalities : "<<num_ineq<<std::endl;
     // init constraints matrix :
-    MatrixX3 A(num_ineq,3);
+    MatrixXX A = MatrixXX::Zero(num_ineq,3+num_stab_ineq); // +num_stab_ineq because of the slack constraints
+    MatrixXX identity = MatrixXX::Identity(num_stab_ineq,num_stab_ineq);
+    constraints_equivalence = VectorX(num_stab_ineq);
     VectorX b(num_ineq);
     Matrix3 S_hat;
 
     MatrixX3 A_stab;
     VectorX b_stab;
     int id_rows = 0;
-    int id_phase = 0;
     int current_size;
 
+    int id_phase = 0;
     ContactData phase = pData.contacts_[id_phase];
     // compute some constant matrice for the current phase :
     const Vector3& g = phase.contactPhase_->m_gravity;
@@ -322,28 +327,23 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     int dimH = (int)(H.rows());
     mH = phase.contactPhase_->m_mass * H;
 
-    // assign the constraints (kinematics and stability) for each discretized waypoints :
+
+    // assign the Stability constraints  for each discretized waypoints :
     // we don't consider the first point, because it's independant of x.
     for(int id_step = 1 ; id_step <  numStep ; ++id_step ){
-        // add constraints for wp id_step, on current phase :
-        // add kinematics constraints :
-        // constraint are of the shape A c <= b . But here c(x) = Fx + s so : AFx <= b - As
-
-        if(id_step != numStep-1){ // we don't consider kinematics constraints for the last point (because it's independant of x)
-            current_size = phase.kin_.rows();
-            A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
-            b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
-            id_rows += current_size;
-        }
-
-
         // add stability constraints :
+
         S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
         A_stab = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
         b_stab = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
         Normalize(A_stab,b_stab);
         A.block(id_rows,0,dimH,3) = A_stab;
         b.segment(id_rows,dimH) = b_stab;
+        // assign correspondance vector :
+        constraints_equivalence.segment(id_rows,dimH) = VectorX::Ones(dimH)*id_step;
+        // add part of the identity for the slack variable :
+        A.block(id_rows,3,dimH,num_stab_ineq) = identity.block(id_rows,0,dimH,num_stab_ineq);
+
         id_rows += dimH ;
 
         /*
@@ -352,6 +352,7 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*g - mH.block(0,3,dimH,3)*g.cross(wps[id_step].second);
         id_rows += dimH ;
         */
+
         // check if we are going to switch phases :
         for(int i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
             if(id_step == stepIdForPhase[i]){
@@ -365,17 +366,15 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 mH = phase.contactPhase_->m_mass * H;
                 // the current waypoint must have the constraints of both phases. So we add it again :
                 // TODO : filter for redunbdant constraints ...
-
-                current_size = phase.kin_.rows();
-                A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
-                b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
-                id_rows += current_size;
-
-
                 // add stability constraints :
+
                 S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
                 A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
                 b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
+                // assign correspondance vector :
+                constraints_equivalence.segment(id_rows,dimH) = VectorX::Ones(dimH)*(id_step+0.5);
+                // add part of the identity for the slack variable :
+                A.block(id_rows,3,dimH,num_stab_ineq) = identity.block(id_rows,0,dimH,num_stab_ineq);
                 id_rows += dimH ;
 
                 /*
@@ -386,17 +385,52 @@ std::pair<MatrixX3, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 */
             }
         }
+
     }
+
+    id_phase = 0;
+    phase = pData.contacts_[id_phase];
+    // assign the Kinematics constraints  for each discretized waypoints :
+    // we don't consider the first point, because it's independant of x.
+    for(int id_step = 1 ; id_step <  numStep ; ++id_step ){
+        // add constraints for wp id_step, on current phase :
+        // add kinematics constraints :
+        // constraint are of the shape A c <= b . But here c(x) = Fx + s so : AFx <= b - As
+        if(id_step != numStep-1){ // we don't consider kinematics constraints for the last point (because it's independant of x)
+            current_size = phase.kin_.rows();
+            A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
+            b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
+            id_rows += current_size;
+        }
+
+        // check if we are going to switch phases :
+        for(int i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
+            if(id_step == stepIdForPhase[i]){
+                // switch to phase i
+                id_phase=i+1;
+                phase = pData.contacts_[id_phase];
+                // the current waypoint must have the constraints of both phases. So we add it again :
+                // TODO : filter for redunbdant constraints ...
+                current_size = phase.kin_.rows();
+                A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
+                b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
+                id_rows += current_size;
+            }
+        }
+    }
+
+
     std::cout<<"id rows : "<<id_rows<<" ; total rows : "<<A.rows()<<std::endl;
     assert(id_rows == (A.rows()) && "The constraints matrices were not fully filled.");
     return std::make_pair(A,b);
 }
 
 //cost : min distance between x and midPoint :
-std::pair<MatrixX3, VectorX> computeCostMidPoint(const ProblemData& pData){
+std::pair<MatrixXX, VectorX> computeCostMidPoint(const ProblemData& pData, size_t size){
     Vector3 midPoint = (pData.c0_ + pData.c1_)/2.; // todo : replace it with point found by planning ??
-    Matrix3 H = Matrix3::Identity();
-    Vector3 g = -midPoint;
+    MatrixXX H = MatrixXX::Identity(size,size);
+    VectorX g = VectorX::Zero(size);
+    g.head<3>() = -midPoint;
     return std::make_pair(H,g);
 }
 
@@ -423,6 +457,12 @@ void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMT
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
 }
 
+double analyseSlack(const VectorX& slack){
+    //TODO
+    std::cout<<"slack : "<<slack.transpose()<<std::endl;
+    return slack.squaredNorm();
+}
+
 ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, const double timeStep,const Vector3& init_guess){
     assert(pData.contacts_.size() ==2 || pData.contacts_.size() ==3);
     assert(Ts.size() == pData.contacts_.size());
@@ -431,18 +471,23 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, cons
         T+=Ts[i];
    // bool fail = true;
     ResultDataCOMTraj res;
-    std::pair<MatrixX3, VectorX> Ab = computeConstraintsOneStep(pData,Ts,timeStep);
+    VectorX constraint_equivalence;
+    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,timeStep,constraint_equivalence);
    // std::pair<MatrixX3, VectorX> Hg = computeCostEndVelocity(pData,T);
-    std::pair<MatrixX3, VectorX> Hg = computeCostMidPoint(pData);
+    std::pair<MatrixXX, VectorX> Hg = computeCostMidPoint(pData,constraint_equivalence.size()+3);
 
     std::cout<<"Init = "<<std::endl<<init_guess.transpose()<<std::endl;
+    VectorX x = VectorX::Zero(3 + constraint_equivalence.size());
+    x.head<3>() = init_guess;
 
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
-    ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, init_guess);
+    ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, x);
+    double feasability = analyseSlack(resQp.x.tail(constraint_equivalence.size()));
+    std::cout<<"feasability : "<<feasability<<std::endl;
     if(resQp.success_)
     {
         res.success_ = true;
-        res.x = resQp.x;
+        res.x = resQp.x.head<3>();
         computeBezierCurve (pData,T,res);
 //        computeFinalVelocity(pData,T,res);
 //        computeFinalAcceleration(pData,T,res);
