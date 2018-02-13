@@ -222,15 +222,33 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
 //    res.ddc1_ = a.first * res.x + a.second;
 //}
 
-std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double T,double timeStep){
+/**
+ * @brief computeDiscretizedTime build an array of discretized points in time, such that there is the same number of point in each phase. Doesn't contain t=0, is of size pointsPerPhase*phaseTimings.size()
+ * @param phaseTimings
+ * @param pointsPerPhase
+ * @return
+ */
+std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,const int pointsPerPhase = 3 ){
+    std::vector<double> timeArray;
+    double t = 0;
+    for(int i = 0 ; i < phaseTimings.size() ; ++i){
+        double step = (double) phaseTimings[i] / pointsPerPhase;
+        for(int j = 0 ; j < pointsPerPhase ; ++j){
+            t += step;
+            timeArray.push_back(t);
+        }
+    }
+    return timeArray;
+}
+
+std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double T,const std::vector<double>& timeArray){
     //int numStep = int(T / timeStep);
     std::vector<coefs_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    double t = 0;
     // evaluate curve work with normalized time !
-    double normalized_step = timeStep/T;
-    int numStep = round(T/timeStep);
-    for (int i = 0 ; i<=numStep ; ++i , t+=normalized_step){
+    double t;
+    for (int i = 0 ; i<timeArray.size() ; ++i ){
+        t = timeArray[i] / T;
         if(t>1)
             t=1.;
         wps.push_back(evaluateCurveAtTime(pi,t));
@@ -239,14 +257,13 @@ std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double
 }
 
 
-std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& pData,double T,double timeStep){
+std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& pData,double T,const std::vector<double>& timeArray){
     //int numStep = int(T / timeStep);
     std::vector<coefs_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    double t = 0;
-    double normalized_step = timeStep/T;
-    int numStep = round(T/timeStep);
-    for (int i = 0 ; i<=numStep ; ++i , t+=normalized_step){
+    double t;
+    for (int i = 0 ; i<timeArray.size() ; ++i ){
+        t = timeArray[i] / T;
         if(t>1)
             t=1.;
         wps.push_back(evaluateAccelerationCurveAtTime(pi,T,t));
@@ -256,26 +273,23 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
 
 
 
-std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const double timeStep,VectorX& constraints_equivalence){
+std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const double /*timeStep*/,VectorX& constraints_equivalence){
     // compute the list of discretized waypoint :
     double t_total = 0.;
     for(int i = 0 ; i < Ts.size() ; ++i)
         t_total+=Ts[i];
     // Compute all the discretized wayPoint
     std::cout<<"total time : "<<t_total<<std::endl;
-    std::vector<coefs_t> wps = computeDiscretizedWaypoints(pData,t_total,timeStep);
-    std::vector<coefs_t> acc_wps = computeDiscretizedAccelerationWaypoints(pData,t_total,timeStep);
-    int numStep = wps.size();
+    int pointsPerPhase = 3;
+    std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
+    std::vector<coefs_t> wps = computeDiscretizedWaypoints(pData,t_total,timeArray);
+    std::vector<coefs_t> acc_wps = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
     assert(wps.size() == acc_wps.size());
-    std::cout<<"numStep = "<<numStep<<" number of discretized waypoints : "<<wps.size()<<std::endl;
+    std::cout<<" number of discretized waypoints : "<<wps.size()<<std::endl;
     std::vector<int> stepIdForPhase; // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
-    for(int i = 0 ; i < Ts.size() ; ++i){
-        if(i == 0)
-            stepIdForPhase.push_back(round(Ts[i] / timeStep));
-        else
-            stepIdForPhase.push_back((round(Ts[i] / timeStep))+stepIdForPhase.back());
-        std::cout<<"id step for phase "<<i<<" = "<<stepIdForPhase[i]<<std::endl;
-    }
+    for(int i = 0 ; i < Ts.size() ; ++i)
+        stepIdForPhase.push_back(pointsPerPhase*(i+1)-1);
+
     assert(stepIdForPhase.back() == (wps.size()-1)); // -1 because the first one is the index (start at 0) and the second is the size
     // compute the total number of inequalities (to initialise A and b)
     int num_ineq = 0;
@@ -287,18 +301,14 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     MatrixXX H,mH;
     for(int i = 0 ; i < Ts.size() ; ++i){
         pData.contacts_[i].contactPhase_->getPolytopeInequalities(Hrow,h);
-        if(i==0){
-            numStepForPhase = stepIdForPhase[i];
-        }
-        else{
-            numStepForPhase = stepIdForPhase[i] - stepIdForPhase[i-1] +1; // +1 because at the switch point we add the constraints of both phases
-        }
+        numStepForPhase = pointsPerPhase;
+        if(i > 0 )
+            ++numStepForPhase; // because at the switch point between phases we add the constraints of both phases.
         std::cout<<"constraint size : Kin = "<<pData.contacts_[i].kin_.rows()<<" ; stab : "<<Hrow.rows()<<" times "<<numStepForPhase<<" steps"<<std::endl;
         num_stab_ineq += Hrow.rows() * numStepForPhase;
         if(i == Ts.size()-1)
-            numStepForPhase--; // we don't consider kinematics constraints for the last point (because it's independant of x)
+            --numStepForPhase; // we don't consider kinematics constraints for the last point (because it's independant of x)
         num_kin_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
-
     }
     num_ineq = num_stab_ineq + num_kin_ineq;
     std::cout<<"total of inequalities : "<<num_ineq<<std::endl;
@@ -327,10 +337,9 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     int dimH = (int)(H.rows());
     mH = phase.contactPhase_->m_mass * H;
 
-
     // assign the Stability constraints  for each discretized waypoints :
     // we don't consider the first point, because it's independant of x.
-    for(int id_step = 1 ; id_step <  numStep ; ++id_step ){
+    for(int id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
         // add stability constraints :
 
         S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
@@ -392,11 +401,11 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     phase = pData.contacts_[id_phase];
     // assign the Kinematics constraints  for each discretized waypoints :
     // we don't consider the first point, because it's independant of x.
-    for(int id_step = 1 ; id_step <  numStep ; ++id_step ){
+    for(int id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
         // add constraints for wp id_step, on current phase :
         // add kinematics constraints :
         // constraint are of the shape A c <= b . But here c(x) = Fx + s so : AFx <= b - As
-        if(id_step != numStep-1){ // we don't consider kinematics constraints for the last point (because it's independant of x)
+        if(id_step != timeArray.size()-1){ // we don't consider kinematics constraints for the last point (because it's independant of x)
             current_size = phase.kin_.rows();
             A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
             b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
