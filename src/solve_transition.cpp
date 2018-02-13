@@ -228,7 +228,7 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
  * @param pointsPerPhase
  * @return
  */
-std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,const int pointsPerPhase = 3 ){
+std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,const int pointsPerPhase ){
     std::vector<double> timeArray;
     double t = 0;
     for(int i = 0 ; i < phaseTimings.size() ; ++i){
@@ -273,14 +273,13 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
 
 
 
-std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const double /*timeStep*/,VectorX& constraints_equivalence){
+std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const int pointsPerPhase,VectorX& constraints_equivalence){
     // compute the list of discretized waypoint :
     double t_total = 0.;
     for(int i = 0 ; i < Ts.size() ; ++i)
         t_total+=Ts[i];
     // Compute all the discretized wayPoint
     std::cout<<"total time : "<<t_total<<std::endl;
-    int pointsPerPhase = 3;
     std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
     std::vector<coefs_t> wps = computeDiscretizedWaypoints(pData,t_total,timeArray);
     std::vector<coefs_t> acc_wps = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
@@ -484,7 +483,7 @@ double analyseSlack(const VectorX& slack,const VectorX& constraint_equivalence )
     return slack.lpNorm<Eigen::Infinity>();
 }
 
-ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, const double timeStep,const Vector3& init_guess,const double feasability_treshold){
+ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,const int pointsPerPhase, const double feasability_treshold){
     assert(pData.contacts_.size() ==2 || pData.contacts_.size() ==3);
     assert(Ts.size() == pData.contacts_.size());
     double T = 0;
@@ -493,7 +492,7 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, cons
    // bool fail = true;
     ResultDataCOMTraj res;
     VectorX constraint_equivalence;
-    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,timeStep,constraint_equivalence);
+    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase,constraint_equivalence);
    // std::pair<MatrixX3, VectorX> Hg = computeCostEndVelocity(pData,T);
     std::pair<MatrixXX, VectorX> Hg = computeCostMidPoint(pData,constraint_equivalence.size()+3);
 
