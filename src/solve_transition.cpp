@@ -457,13 +457,25 @@ void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMT
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
 }
 
-double analyseSlack(const VectorX& slack){
+double analyseSlack(const VectorX& slack,const VectorX& constraint_equivalence ){
     //TODO
-    std::cout<<"slack : "<<slack.transpose()<<std::endl;
-    return slack.squaredNorm();
+    assert(slack.size() == constraint_equivalence.size() && "slack variables and constraints equivalence should have the same size." );
+    //std::cout<<"slack : "<<slack<<std::endl;
+    std::cout<<"list of violated constraints : "<<std::endl;
+    double previous_id = -1;
+    for(size_t i = 0 ; i < slack.size() ; ++i){
+        if((slack[i]*slack[i]) > std::numeric_limits<double>::epsilon()){
+            if(constraint_equivalence[i] != previous_id){
+                std::cout<<"step "<<constraint_equivalence[i]<<std::endl;
+                previous_id = constraint_equivalence[i];
+            }
+        }
+    }
+    //return (slack.squaredNorm())/(slack.size());
+    return slack.lpNorm<Eigen::Infinity>();
 }
 
-ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, const double timeStep,const Vector3& init_guess){
+ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, const double timeStep,const Vector3& init_guess,const double feasability_treshold){
     assert(pData.contacts_.size() ==2 || pData.contacts_.size() ==3);
     assert(Ts.size() == pData.contacts_.size());
     double T = 0;
@@ -482,9 +494,12 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, cons
 
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
     ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, x);
-    double feasability = analyseSlack(resQp.x.tail(constraint_equivalence.size()));
+
+
+    double feasability = analyseSlack(resQp.x.tail(constraint_equivalence.size()),constraint_equivalence);
     std::cout<<"feasability : "<<feasability<<std::endl;
-    if(resQp.success_)
+
+    if(feasability<=feasability_treshold)
     {
         res.success_ = true;
         res.x = resQp.x.head<3>();
