@@ -324,6 +324,7 @@ std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,d
         }
         res.push_back(w);
     }
+    return res;
 }
 
 
@@ -342,6 +343,44 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
     return wps;
 }
 
+ std::pair<MatrixXX,VectorX> dynamicStabilityConstraints_cross(const MatrixXX& mH,const VectorX& h,const Vector3& g,const coefs_t& c,const coefs_t& ddc){
+     Matrix3 S_hat;
+     int dimH = (int)(mH.rows());
+     MatrixXX A(dimH,4);
+     VectorX b(dimH);
+     S_hat = skew(c.second*ddc.first - ddc.second*c.first + g*c.first);
+     A.block(0,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * ddc.first;
+     b = h + mH.block(0,0,dimH,3)*(g - ddc.second) + mH.block(0,3,dimH,3)*(c.second.cross(g) - c.second.cross(ddc.second));
+    // Normalize(A,b);
+     // add 1 for the slack variable :
+     A.block(0,3,dimH,1) = VectorX::Ones(dimH);
+     return std::make_pair<MatrixXX,VectorX>(A,b);
+}
+
+std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const VectorX& h,const Vector3& g,const waypoint6_t& w){
+    int dimH = (int)(mH.rows());
+    MatrixXX A(dimH,4);
+    VectorX b(dimH);
+    VectorX g_(6);
+    g_.head<3>() = g;
+    A.block(0,0,dimH,3) = mH*w.first;
+    b = h + mH*(g_ - w.second);
+    //Normalize(A,b);
+    A.block(0,3,dimH,1) = VectorX::Ones(dimH);
+    return std::make_pair<MatrixXX,VectorX>(A,b);
+}
+
+std::pair<MatrixXX,VectorX> staticStabilityConstraints(const MatrixXX& mH,const VectorX& h, const Vector3& g,const coefs_t& c){
+     int dimH = (int)(mH.rows());
+     MatrixXX A(dimH,4);
+     VectorX b(dimH);
+     A.block(0,0,dimH,3) = mH.block(0,3,dimH,3) * c.first * skew(g);
+     b = h + mH.block(0,0,dimH,3)*g - mH.block(0,3,dimH,3)*g.cross(c.second);
+     // add 1 for the slack variable :
+     A.block(0,3,dimH,1) = VectorX::Ones(dimH);
+    // Normalize(A,b);
+     return std::make_pair<MatrixXX,VectorX>(A,b);
+}
 
 
 std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const int pointsPerPhase,VectorX& constraints_equivalence){
@@ -352,15 +391,16 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     // Compute all the discretized wayPoint
     std::cout<<"total time : "<<t_total<<std::endl;
     std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
-    std::vector<coefs_t> wps = computeDiscretizedWaypoints(pData,t_total,timeArray);
-    std::vector<coefs_t> acc_wps = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
-    assert(wps.size() == acc_wps.size());
-    std::cout<<" number of discretized waypoints : "<<wps.size()<<std::endl;
+    std::vector<coefs_t> wps_c = computeDiscretizedWaypoints(pData,t_total,timeArray);
+    std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
+    std::vector<waypoint6_t> wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
+    assert(wps_c.size() == wps_ddc.size());
+    std::cout<<" number of discretized waypoints : "<<wps_c.size()<<std::endl;
     std::vector<int> stepIdForPhase; // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
     for(int i = 0 ; i < Ts.size() ; ++i)
         stepIdForPhase.push_back(pointsPerPhase*(i+1)-1);
 
-    assert(stepIdForPhase.back() == (wps.size()-1)); // -1 because the first one is the index (start at 0) and the second is the size
+    assert(stepIdForPhase.back() == (wps_c.size()-1)); // -1 because the first one is the index (start at 0) and the second is the size
     // compute the total number of inequalities (to initialise A and b)
     int num_ineq = 0;
     int num_stab_ineq = 0;
@@ -383,14 +423,11 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     num_ineq = num_stab_ineq + num_kin_ineq;
     std::cout<<"total of inequalities : "<<num_ineq<<std::endl;
     // init constraints matrix :
-    MatrixXX A = MatrixXX::Zero(num_ineq,3+num_stab_ineq); // +num_stab_ineq because of the slack constraints
-    MatrixXX identity = MatrixXX::Identity(num_stab_ineq,num_stab_ineq);
-    constraints_equivalence = VectorX(num_stab_ineq);
+    MatrixXX A = MatrixXX::Zero(num_ineq,4); // 3 + 1 :  because of the slack constraints
     VectorX b(num_ineq);
-    Matrix3 S_hat;
+    std::pair<MatrixXX,VectorX> Ab_stab;
+    std::pair<MatrixXX,VectorX> Ab_kin;
 
-    MatrixX3 A_stab;
-    VectorX b_stab;
     int id_rows = 0;
     int current_size;
 
@@ -412,25 +449,10 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     for(int id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
         // add stability constraints :
 
-        S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
-        A_stab = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
-        b_stab = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
-        Normalize(A_stab,b_stab);
-        A.block(id_rows,0,dimH,3) = A_stab;
-        b.segment(id_rows,dimH) = b_stab;
-        // assign correspondance vector :
-        constraints_equivalence.segment(id_rows,dimH) = VectorX::Ones(dimH)*id_step;
-        // add part of the identity for the slack variable :
-        A.block(id_rows,3,dimH,num_stab_ineq) = identity.block(id_rows,0,dimH,num_stab_ineq);
-
+        Ab_stab = dynamicStabilityConstraints_cross(mH,h,g,wps_c[id_step],wps_ddc[id_step]);
+        A.block(id_rows,0,dimH,4) = Ab_stab.first;
+        b.segment(id_rows,dimH) = Ab_stab.second;
         id_rows += dimH ;
-
-        /*
-        // stability constraints in quasi-static :
-        A.block(id_rows,0,dimH,3) =mH.block(0,3,dimH,3) * wps[id_step].first * skew(g);
-        b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*g - mH.block(0,3,dimH,3)*g.cross(wps[id_step].second);
-        id_rows += dimH ;
-        */
 
         // check if we are going to switch phases :
         for(int i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
@@ -446,25 +468,12 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 // the current waypoint must have the constraints of both phases. So we add it again :
                 // TODO : filter for redunbdant constraints ...
                 // add stability constraints :
-
-                S_hat = skew(wps[id_step].second*acc_wps[id_step].first - acc_wps[id_step].second*wps[id_step].first + g*wps[id_step].first);
-                A.block(id_rows,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * acc_wps[id_step].first;
-                b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*(g - acc_wps[id_step].second) + mH.block(0,3,dimH,3)*(wps[id_step].second.cross(g) - wps[id_step].second.cross(acc_wps[id_step].second));
-                // assign correspondance vector :
-                constraints_equivalence.segment(id_rows,dimH) = VectorX::Ones(dimH)*(id_step+0.5);
-                // add part of the identity for the slack variable :
-                A.block(id_rows,3,dimH,num_stab_ineq) = identity.block(id_rows,0,dimH,num_stab_ineq);
+                Ab_stab = dynamicStabilityConstraints_cross(mH,h,g,wps_c[id_step],wps_ddc[id_step]);
+                A.block(id_rows,0,dimH,4) = Ab_stab.first;
+                b.segment(id_rows,dimH) = Ab_stab.second;
                 id_rows += dimH ;
-
-                /*
-                // stability constraints in quasi-static :
-                A.block(id_rows,0,dimH,3) =mH.block(0,3,dimH,3) * wps[id_step].first * skew(g);
-                b.segment(id_rows,dimH) = h + mH.block(0,0,dimH,3)*g - mH.block(0,3,dimH,3)*g.cross(wps[id_step].second);
-                id_rows += dimH ;
-                */
             }
         }
-
     }
 
     id_phase = 0;
@@ -477,8 +486,8 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         // constraint are of the shape A c <= b . But here c(x) = Fx + s so : AFx <= b - As
         if(id_step != timeArray.size()-1){ // we don't consider kinematics constraints for the last point (because it's independant of x)
             current_size = phase.kin_.rows();
-            A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
-            b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
+            A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps_c[id_step].first);
+            b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps_c[id_step].second);
             id_rows += current_size;
         }
 
@@ -491,8 +500,8 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 // the current waypoint must have the constraints of both phases. So we add it again :
                 // TODO : filter for redunbdant constraints ...
                 current_size = phase.kin_.rows();
-                A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps[id_step].first);
-                b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps[id_step].second);
+                A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps_c[id_step].first);
+                b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps_c[id_step].second);
                 id_rows += current_size;
             }
         }
