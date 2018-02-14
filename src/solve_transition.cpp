@@ -603,17 +603,18 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     VectorX constraint_equivalence;
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase,constraint_equivalence);
    // std::pair<MatrixX3, VectorX> Hg = computeCostEndVelocity(pData,T);
-    std::pair<MatrixXX, VectorX> Hg = computeCostMidPoint(pData,constraint_equivalence.size()+3);
+    std::pair<MatrixXX, VectorX> Hg = computeCostMidPoint(pData,4);
 
     std::cout<<"Init = "<<std::endl<<init_guess.transpose()<<std::endl;
-    VectorX x = VectorX::Zero(3 + constraint_equivalence.size());
+    VectorX x = VectorX::Zero(4); // 3 + slack
     x.head<3>() = init_guess;
 
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
     ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, x);
 
 
-    double feasability = analyseSlack(resQp.x.tail(constraint_equivalence.size()),constraint_equivalence);
+    //double feasability = analyseSlack(resQp.x.tail(constraint_equivalence.size()),constraint_equivalence);
+    double feasability = x[3];
     std::cout<<"feasability : "<<feasability<<std::endl;
 
     if(feasability<=feasability_treshold)
