@@ -59,8 +59,8 @@ coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
     // equation found with sympy
     wp.first = ( 6.0*t4 - 12.0*t3 + 6.0*t2);
     wp.second = 1.0*pi[0]*t4 - 4.0*pi[0]*t3 + 6.0*pi[0]*t2 - 4.0*pi[0]*t + 1.0*pi[0] - 4.0*pi[1]*t4 + 12.0*pi[1]*t3 - 12.0*pi[1]*t2 + 4.0*pi[1]*t - 4.0*pi[3]*t4 + 4.0*pi[3]*t3 + 1.0*pi[4]*t4;
-    std::cout<<"wp at t = "<<t<<std::endl;
-    std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
+   // std::cout<<"wp at t = "<<t<<std::endl;
+   // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -70,8 +70,8 @@ coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double 
     // equation found with sympy
     wp.first = (72.0*t*t - 72.0*t + 12.0)*alpha;
     wp.second = (12.0*pi[0]*t*t - 24.0*pi[0]*t + 12.0*pi[0] - 48.0*pi[1]*t*t + 72.0*pi[1]*t - 24.0*pi[1] - 48.0*pi[3]*t*t + 24.0*pi[3]*t + 12.0*pi[4]*t*t)*alpha;
-    std::cout<<"acc_wp at t = "<<t<<std::endl;
-    std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
+   // std::cout<<"acc_wp at t = "<<t<<std::endl;
+   // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -394,8 +394,9 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     std::vector<coefs_t> wps_c = computeDiscretizedWaypoints(pData,t_total,timeArray);
     std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
     std::vector<waypoint6_t> wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
-    assert(wps_c.size() == wps_ddc.size());
-    std::cout<<" number of discretized waypoints : "<<wps_c.size()<<std::endl;
+    std::cout<<" number of discretized waypoints c: "<<wps_c.size()<<std::endl;
+    std::cout<<" number of discretized waypoints w: "<<wps_w.size()<<std::endl;
+    assert(/*wps_c.size() == wps_ddc.size() &&*/  wps_w.size() == wps_c.size());
     std::vector<int> stepIdForPhase; // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
     for(int i = 0 ; i < Ts.size() ; ++i)
         stepIdForPhase.push_back(pointsPerPhase*(i+1)-1);
