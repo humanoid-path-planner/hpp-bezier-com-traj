@@ -419,7 +419,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     std::cout<<"total time : "<<t_total<<std::endl;
     std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
     std::vector<coefs_t> wps_c = computeDiscretizedWaypoints(pData,t_total,timeArray);
-    std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
+    //std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
     std::vector<waypoint6_t> wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
     std::cout<<" number of discretized waypoints c: "<<wps_c.size()<<std::endl;
     std::cout<<" number of discretized waypoints w: "<<wps_w.size()<<std::endl;
@@ -454,7 +454,6 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     MatrixXX A = MatrixXX::Zero(num_ineq,4); // 3 + 1 :  because of the slack constraints
     VectorX b(num_ineq);
     std::pair<MatrixXX,VectorX> Ab_stab;
-    std::pair<MatrixXX,VectorX> Ab_kin;
 
     int id_rows = 0;
     int current_size;
@@ -477,7 +476,8 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     for(int id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
         // add stability constraints :
 
-        Ab_stab = dynamicStabilityConstraints_cross(mH,h,g,wps_c[id_step],wps_ddc[id_step]);
+        Ab_stab = dynamicStabilityConstraints(mH,h,g,wps_w[id_step]);
+        //compareStabilityMethods(mH,h,g,wps_c[id_step],wps_ddc[id_step],wps_w[id_step]);
         A.block(id_rows,0,dimH,4) = Ab_stab.first;
         b.segment(id_rows,dimH) = Ab_stab.second;
         id_rows += dimH ;
@@ -496,7 +496,8 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 // the current waypoint must have the constraints of both phases. So we add it again :
                 // TODO : filter for redunbdant constraints ...
                 // add stability constraints :
-                Ab_stab = dynamicStabilityConstraints_cross(mH,h,g,wps_c[id_step],wps_ddc[id_step]);
+                Ab_stab = dynamicStabilityConstraints(mH,h,g,wps_w[id_step]);
+                //compareStabilityMethods(mH,h,g,wps_c[id_step],wps_ddc[id_step],wps_w[id_step]);
                 A.block(id_rows,0,dimH,4) = Ab_stab.first;
                 b.segment(id_rows,dimH) = Ab_stab.second;
                 id_rows += dimH ;
