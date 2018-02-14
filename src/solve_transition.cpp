@@ -102,37 +102,37 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
     const double alpha = 1/(T2);
 
     // equation of waypoints for curve w found with sympy
-    waypoint6_t w0;
+    waypoint6_t w0 = initwp<waypoint6_t>();
     w0.first.block<3,3>(0,0) = 12.*alpha*Matrix3::Identity();
     w0.first.block<3,3>(3,0) = 12.*alpha*Cpi[0];
     w0.second.head<3>() = (12.*pi[0] - 24.*pi[1])*alpha;
     w0.second.tail<3>() = 1.0*Cg*pi[0] - (24.0*Cpi[0]*pi[1])*alpha;
     wps.push_back(w0);
-    waypoint6_t w1;
+    waypoint6_t w1 = initwp<waypoint6_t>();
     w1.first.block<3,3>(0,0) =  -2.4*alpha*Matrix3::Identity();
     w1.first.block<3,3>(3,0) =(-12.0*Cpi[0] + 9.6*Cpi[1])*alpha;
     w1.second.head<3>() = (7.2*pi[0] - 9.6*pi[1] + 4.8*pi[3])*alpha;
     w1.second.tail<3>() = (0.2*Cg*T2*pi[0] + 0.8*Cg*T2*pi[1] + 4.8*Cpi[0]*pi[3])*alpha;
     wps.push_back(w1);
-    waypoint6_t w2;
+    waypoint6_t w2 = initwp<waypoint6_t>();
     w2.first.block<3,3>(0,0) =  -9.6*alpha*Matrix3::Identity();
     w2.first.block<3,3>(3,0) = (0.6*Cg*T2 - 9.6*Cpi[1])*alpha;
     w2.second.head<3>() = (3.6*pi[0]  + 4.8*pi[3] + 1.2*pi[4])*alpha;
     w2.second.tail<3>() = (0.4*Cg*T2*pi[1] - 4.8*Cpi[0]*pi[3] + 1.2*Cpi[0]*pi[4] + 9.6*Cpi[1]*pi[3])*alpha;
     wps.push_back(w2);
-    waypoint6_t w3;
+    waypoint6_t w3 = initwp<waypoint6_t>();
     w3.first.block<3,3>(0,0) = -9.6*alpha*Matrix3::Identity();
     w3.first.block<3,3>(3,0) = (0.6*Cg*T2  - 9.6*Cpi[3])*alpha;
     w3.second.head<3>() = (1.2*pi[0] + 4.8*pi[1]  + 3.6*pi[4])*alpha;
     w3.second.tail<3>() = (0.4*Cg*T2*pi[3]  - 1.2*Cpi[0]*pi[4] - 9.6*Cpi[1]*pi[3] + 4.8*Cpi[1]*pi[4])*alpha;
     wps.push_back(w3);
-    waypoint6_t w4;
+    waypoint6_t w4 = initwp<waypoint6_t>();
     w4.first.block<3,3>(0,0) = -2.4*alpha*Matrix3::Identity();
     w4.first.block<3,3>(3,0) =(9.6*Cpi[3] - 12.0*Cpi[4])*alpha;
     w4.second.head<3>() = (4.8*pi[1] - 9.6*pi[3] + 7.2*pi[4])*alpha;
     w4.second.tail<3>() = (0.8*Cg*T2*pi[3] + 0.2*Cg*T2*pi[4] - 4.8*Cpi[1]*pi[4])*alpha;
     wps.push_back(w4);
-    waypoint6_t w5;
+    waypoint6_t w5 = initwp<waypoint6_t>();
     w5.first.block<3,3>(0,0) =12*alpha*Matrix3::Identity();
     w5.first.block<3,3>(3,0) =12.0*Cpi[4]*alpha;
     w5.second.head<3>() = (-24*pi[3] + 12*pi[4])*alpha;
@@ -140,6 +140,7 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
     wps.push_back(w5);
     return wps;
 }
+
 
 
 /// ### EQUATION FOR CONSTRAINTS ON INIT AND FINAL POSITION AND VELOCITY AND INIT ACCELERATION (DEGREE = 5)
@@ -307,6 +308,24 @@ std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double
     }
     return wps;
 }
+
+
+std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,double T,const std::vector<double>& timeArray){
+    std::vector<waypoint6_t> wps = computeWwaypoints(pData,T);
+    std::vector<waypoint6_t> res;
+    std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms(wps.size()-1);
+
+    for(int i = 0 ; i < timeArray.size() ; ++i){
+        waypoint6_t w = initwp<waypoint6_t>();
+        for (int j = 0 ; j < wps.size() ; ++j){
+            double b = berns[j](timeArray[i]);
+            w.first +=b*(wps[j].first );
+            w.second+=b*(wps[j].second);
+        }
+        res.push_back(w);
+    }
+}
+
 
 
 std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& pData,double T,const std::vector<double>& timeArray){
