@@ -382,6 +382,33 @@ std::pair<MatrixXX,VectorX> staticStabilityConstraints(const MatrixXX& mH,const 
      return std::make_pair<MatrixXX,VectorX>(A,b);
 }
 
+void compareStabilityMethods(const MatrixXX& mH,const VectorX& h,const Vector3& g,const coefs_t& c,const coefs_t& ddc,const waypoint6_t& w){
+    std::pair<MatrixXX,VectorX> Ab_cross,Ab_w;
+    /*
+    Vector3 wd;
+    wd = c.cross(ddc) + g.cross(c);
+    std::cout<<"wu cross : "<<ddc.first<<std::endl;
+    std::cout<<"wu       : "<<w.first.block<3,3>(0,0)<<std::endl;
+    error_wu = ddc.first - w.first(0,0);
+    */
+
+    Ab_cross = dynamicStabilityConstraints_cross(mH,h,g,c,ddc);
+    Ab_w = dynamicStabilityConstraints(mH,h,g,w);
+    Normalize(Ab_cross.first,Ab_cross.second);
+    Normalize(Ab_w.first,Ab_w.second);
+
+
+    MatrixXX A_error = Ab_cross.first - Ab_w.first;
+    VectorX b_error = Ab_cross.second - Ab_w.second;
+    double A_error_norm = A_error.lpNorm<Eigen::Infinity>();
+    double b_error_norm = b_error.lpNorm<Eigen::Infinity>();
+    std::cout<<" max a error : "<<A_error_norm<<" ; b : "<<b_error_norm<<std::endl;
+    std::cout<<"A error : "<<std::endl<<A_error<<std::endl;
+    std::cout<<"b error : "<<std::endl<<b_error<<std::endl;
+
+    assert(A_error_norm < 1e-4 && b_error_norm < 1e-4 && "Both method didn't find the same results.");
+}
+
 
 std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const int pointsPerPhase,VectorX& constraints_equivalence){
     // compute the list of discretized waypoint :
