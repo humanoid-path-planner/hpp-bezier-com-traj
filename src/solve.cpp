@@ -111,11 +111,11 @@ waypoint_t u4 (point_t_tC /*l0*/, const double /*alpha*/)
 }
 
 
-std::vector<spline::Bern<double> > ComputeBersteinPolynoms()
+std::vector<spline::Bern<double> > ComputeBersteinPolynoms(int degree)
 {
     std::vector<spline::Bern<double> > res;
-    for (unsigned int i =0; i <5; ++i)
-        res.push_back(spline::Bern<double>(4,i));
+    for (unsigned int i =0; i <= degree; ++i)
+        res.push_back(spline::Bern<double>(degree,i));
     return res;
 }
 
@@ -141,7 +141,7 @@ std::vector<waypoint_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, point
     wps.push_back(w4(p0, p1, g, p0X, p1X, gX, alpha));
     if (numSteps > 0)
     {
-        std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms();
+        std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms(4);
         wps = ComputeDiscretizedWaypoints(wps, berns, numSteps);
     }
     return wps;
@@ -159,7 +159,7 @@ std::vector<waypoint_t> ComputeAllWaypointsAngularMomentum(point_t_tC l0, const 
     wps.push_back(u4(l0, alpha));
     if (numSteps > 0)
     {
-        std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms();
+        std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms(4);
         wps = ComputeDiscretizedWaypoints(wps, berns, numSteps);
     }
     return wps;
