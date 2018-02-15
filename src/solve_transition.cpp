@@ -488,7 +488,7 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
      S_hat = skew(c.second*ddc.first - ddc.second*c.first + g*c.first);
      A.block(0,0,dimH,3) = mH.block(0,3,dimH,3) * S_hat + mH.block(0,0,dimH,3) * ddc.first;
      b = h + mH.block(0,0,dimH,3)*(g - ddc.second) + mH.block(0,3,dimH,3)*(c.second.cross(g) - c.second.cross(ddc.second));
-    // Normalize(A,b);
+     Normalize(A,b);
      // add 1 for the slack variable :
      A.block(0,3,dimH,1) = VectorX::Ones(dimH);
      return std::make_pair<MatrixXX,VectorX>(A,b);
