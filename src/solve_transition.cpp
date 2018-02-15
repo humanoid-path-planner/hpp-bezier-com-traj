@@ -96,6 +96,9 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
     pi.push_back(point_t::Zero()); // p2 = x
     pi.push_back((-pData.dc1_ * T / n) + pData.c1_); // p3
     pi.push_back(pData.c1_); // p4
+   /* for(int i = 0 ; i < pi.size() ; ++i){
+        std::cout<<" p"<<i<<" = "<<pi[i].transpose()<<std::endl;
+    }*/
     return pi;
 }
 
@@ -110,7 +113,6 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
     const Matrix3  Cg = skew( g);
     const double T2 = T*T;
     const double alpha = 1/(T2);
-
     // equation of waypoints for curve w found with sympy
     waypoint6_t w0 = initwp<waypoint6_t>();
     w0.first.block<3,3>(0,0) = 12.*alpha*Matrix3::Identity();
