@@ -384,22 +384,27 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
 //     return v4;
 //}
 
-//void computeFinalVelocity(const ProblemData& pData,double T,ResultDataCOMTraj& res){
-//    coefs_t v = computeFinalVelocityPoint(pData,T);
-//    res.dc1_ = v.first*res.x + v.second;
-//}
+void computeFinalVelocity(const ProblemData& pData,double T,ResultDataCOMTraj& res){
+    /*
+    coefs_t v = computeFinalVelocityPoint(pData,T);
+    res.dc1_ = v.first*res.x + v.second;
+    */
+    res.dc1_ = pData.dc1_;
+}
 
 
-//void computeFinalAcceleration(const ProblemData& pData,double T,ResultDataCOMTraj& res){
-//    point_t p2,p4;
-//    p2 = (pData.ddc0_*T*T/(4*(3))) + (2.*pData.dc0_ *T / 4) + pData.c0_;
-//    p4 = pData.c1_;
-//    coefs_t a;
-//    a.first = -24/(T*T);
-//    a.second = 12*(p2 + p4)/(T*T);
-
-//    res.ddc1_ = a.first * res.x + a.second;
-//}
+void computeFinalAcceleration(const ProblemData& pData,double T,ResultDataCOMTraj& res){
+    /*
+    point_t p2,p4;
+    p2 = (pData.ddc0_*T*T/(4*(3))) + (2.*pData.dc0_ *T / 4) + pData.c0_;
+    p4 = pData.c1_;
+    coefs_t a;
+    a.first = -24/(T*T);
+    a.second = 12*(p2 + p4)/(T*T);
+    res.ddc1_ = a.first * res.x + a.second;
+    */
+    res.ddc1_ = pData.ddc1_;
+}
 
 /**
  * @brief computeDiscretizedTime build an array of discretized points in time, such that there is the same number of point in each phase. Doesn't contain t=0, is of size pointsPerPhase*phaseTimings.size()
@@ -793,8 +798,8 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
         res.success_ = true;
         res.x = resQp.x.head<3>();
         computeBezierCurve (pData,T,res);
-//        computeFinalVelocity(pData,T,res);
-//        computeFinalAcceleration(pData,T,res);
+        computeFinalVelocity(pData,T,res);
+        computeFinalAcceleration(pData,T,res);
         std::cout<<"Solved, success "<<" x = ["<<res.x[0]<<","<<res.x[1]<<","<<res.x[2]<<"]"<<std::endl;
     }else{
         std::cout<<"Over treshold,  x = ["<<resQp.x[0]<<","<<resQp.x[1]<<","<<resQp.x[2]<<"]"<<std::endl;
