@@ -485,14 +485,22 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
 
 std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const VectorX& h,const Vector3& g,const waypoint6_t& w){
     int dimH = (int)(mH.rows());
-    MatrixXX A(dimH,4);
+    int numCol;
+    #if USE_SLACK
+    numCol = 4;
+    #else
+    numCol = 3;
+    #endif
+    MatrixXX A(dimH,numCol);
     VectorX b(dimH);
-    VectorX g_(6);
+    VectorX g_= VectorX::Zero(6);
     g_.head<3>() = g;
     A.block(0,0,dimH,3) = mH*w.first;
     b = h + mH*(g_ - w.second);
-    //Normalize(A,b);
-    A.block(0,3,dimH,1) = VectorX::Ones(dimH);
+    Normalize(A,b);
+    #if USE_SLACK
+    A.block(0,3,dimH,1) = VectorX::Ones(dimH); // slack variable, after normalization !!
+    #endif
     return std::make_pair<MatrixXX,VectorX>(A,b);
 }
 
@@ -556,6 +564,12 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
 
     assert(stepIdForPhase.back() == (wps_c.size()-1)); // -1 because the first one is the index (start at 0) and the second is the size
     // compute the total number of inequalities (to initialise A and b)
+    int numCol;
+    #if USE_SLACK
+    numCol = 4;
+    #else
+    numCol = 3;
+    #endif
     int num_ineq = 0;
     int num_stab_ineq = 0;
     int num_kin_ineq = 0;
@@ -577,7 +591,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     num_ineq = num_stab_ineq + num_kin_ineq;
     std::cout<<"total of inequalities : "<<num_ineq<<std::endl;
     // init constraints matrix :
-    MatrixXX A = MatrixXX::Zero(num_ineq,4); // 3 + 1 :  because of the slack constraints
+    MatrixXX A = MatrixXX::Zero(num_ineq,numCol); // 3 + 1 :  because of the slack constraints
     VectorX b(num_ineq);
     std::pair<MatrixXX,VectorX> Ab_stab;
 
@@ -604,7 +618,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
 
         Ab_stab = dynamicStabilityConstraints(mH,h,g,wps_w[id_step]);
         //compareStabilityMethods(mH,h,g,wps_c[id_step],wps_ddc[id_step],wps_w[id_step]);
-        A.block(id_rows,0,dimH,4) = Ab_stab.first;
+        A.block(id_rows,0,dimH,numCol) = Ab_stab.first;
         b.segment(id_rows,dimH) = Ab_stab.second;
         id_rows += dimH ;
 
@@ -624,7 +638,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 // add stability constraints :
                 Ab_stab = dynamicStabilityConstraints(mH,h,g,wps_w[id_step]);
                 //compareStabilityMethods(mH,h,g,wps_c[id_step],wps_ddc[id_step],wps_w[id_step]);
-                A.block(id_rows,0,dimH,4) = Ab_stab.first;
+                A.block(id_rows,0,dimH,numCol) = Ab_stab.first;
                 b.segment(id_rows,dimH) = Ab_stab.second;
                 id_rows += dimH ;
             }
@@ -669,9 +683,19 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
 }
 
 //cost : min distance between x and midPoint :
-std::pair<MatrixXX, VectorX> computeCostMidPoint(const ProblemData& pData, size_t size){
+std::pair<MatrixXX, VectorX> computeCostMidPoint(const ProblemData& pData){
+    int size;
+    #if USE_SLACK
+    size = 4;
+    #else
+    size = 3;
+    #endif
+    // cost : x' H x + 2 x g'
     Vector3 midPoint = (pData.c0_ + pData.c1_)/2.; // todo : replace it with point found by planning ??
     MatrixXX H = MatrixXX::Identity(size,size);
+    #if USE_SLACK
+    H(3,3) = 1e9; // weight for the slack
+    #endif
     VectorX g = VectorX::Zero(size);
     g.head<3>() = -midPoint;
     return std::make_pair(H,g);
@@ -741,21 +765,30 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     VectorX constraint_equivalence;
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase,constraint_equivalence);
    // std::pair<MatrixX3, VectorX> Hg = computeCostEndVelocity(pData,T);
-    std::pair<MatrixXX, VectorX> Hg = computeCostMidPoint(pData,4);
+    std::pair<MatrixXX, VectorX> Hg = computeCostMidPoint(pData);
 
     std::cout<<"Init = "<<std::endl<<init_guess.transpose()<<std::endl;
-    VectorX x = VectorX::Zero(4); // 3 + slack
+    int sizeX;
+    #if USE_SLACK
+    sizeX = 4;
+    #else
+    sizeX = 3;
+    #endif
+    VectorX x = VectorX::Zero(sizeX); // 3 + slack
     x.head<3>() = init_guess;
 
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
     ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, x);
+    bool success;
+     #if USE_SLACK
+    double feasability = fabs(resQp.x[3]);
+    std::cout<<"feasability : "<<feasability<<"     treshold = "<<feasability_treshold<<std::endl;
+    success = feasability<=feasability_treshold;
+    #else
+    success = resQp.success_;
+    #endif
 
-
-    //double feasability = analyseSlack(resQp.x.tail(constraint_equivalence.size()),constraint_equivalence);
-    double feasability = x[3];
-    std::cout<<"feasability : "<<feasability<<std::endl;
-
-    if(feasability<=feasability_treshold)
+    if(success)
     {
         res.success_ = true;
         res.x = resQp.x.head<3>();
@@ -763,6 +796,8 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
 //        computeFinalVelocity(pData,T,res);
 //        computeFinalAcceleration(pData,T,res);
         std::cout<<"Solved, success "<<" x = ["<<res.x[0]<<","<<res.x[1]<<","<<res.x[2]<<"]"<<std::endl;
+    }else{
+        std::cout<<"Over treshold,  x = ["<<resQp.x[0]<<","<<resQp.x[1]<<","<<resQp.x[2]<<"]"<<std::endl;
     }
     #if QHULL
     printQHullFile(Ab,resQp.x,"bezier_wp.txt");
