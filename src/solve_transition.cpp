@@ -10,9 +10,17 @@
 
 
 #ifndef QHULL
-#define QHULL 0
+#define QHULL 1
 #endif
-
+#ifndef DDC0_CONSTRAINT
+#define DDC0_CONSTRAINT 0
+#endif
+#ifndef DC1_CONSTRAINT
+#define DC1_CONSTRAINT 1
+#endif
+#ifndef USE_SLACK
+#define USE_SLACK 1
+#endif
 
 namespace bezier_com_traj
 {
@@ -44,6 +52,8 @@ void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,cons
      file.close();
 }
 
+
+#if (!DDC0_CONSTRAINT && DC1_CONSTRAINT)
 
 /// ### EQUATION FOR CONSTRAINTS ON INIT AND FINAL POSITION AND VELOCITY (DEGREE = 4)
 /** @brief evaluateCurveAtTime compute the expression of the point on the curve at t, defined by the waypoint pi and one free waypoint (x)
@@ -567,10 +577,22 @@ void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMT
     std::vector<Vector3> pi = computeConstantWaypoints(pData,T);
     wps.push_back(pi[0]);
     wps.push_back(pi[1]);
-    //wps.push_back(pi[2]);
+    #if DDC0_CONSTRAINT
+        wps.push_back(pi[2]);
+    #endif
     wps.push_back(res.x);
-    wps.push_back(pi[3]);
-    wps.push_back(pi[4]);
+    #if DDC0_CONSTRAINT
+        wps.push_back(pi[4]);
+        #if DC1_CONSTRAINT
+            wps.push_back(pi[5]);
+        #endif
+    #else
+        wps.push_back(pi[3]);
+        #if DC1_CONSTRAINT
+            wps.push_back(pi[4]);
+        #endif
+    #endif
+
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
 }
 
