@@ -183,7 +183,11 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
    *      CI = 0; ce0 = 0
    */
 
-    assert (!(is_nan(A) || is_nan(ci0) || is_nan(initGuess) || is_nan(H)));
+    assert (!(is_nan(A)));
+    assert (!(is_nan(ci0)));
+    assert (!(is_nan(initGuess)));
+    assert (!(is_nan(H)));
+
     MatrixXX CI = -A;
     MatrixXX CE = MatrixXX::Zero(0,A.cols());
     VectorX ce0  = VectorX::Zero(0);
