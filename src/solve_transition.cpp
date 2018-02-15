@@ -445,11 +445,15 @@ std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,d
     std::vector<waypoint6_t> wps = computeWwaypoints(pData,T);
     std::vector<waypoint6_t> res;
     std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms(wps.size()-1);
-
+    double t;
+    double b;
     for(int i = 0 ; i < timeArray.size() ; ++i){
         waypoint6_t w = initwp<waypoint6_t>();
         for (int j = 0 ; j < wps.size() ; ++j){
-            double b = berns[j](timeArray[i]);
+            t = timeArray[i]/T;
+            if(t>1.)
+                t=1.;
+            b = berns[j](t);
             w.first +=b*(wps[j].first );
             w.second+=b*(wps[j].second);
         }
