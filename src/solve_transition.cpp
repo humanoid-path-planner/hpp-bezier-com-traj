@@ -782,32 +782,25 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     return std::make_pair(A,b);
 }
 
+void addSlackInCost( MatrixXX& H, VectorX& g){
+    H(3,3) = 1e9;
+    g[3] = 0;
+}
+
 //cost : min distance between x and midPoint :
-std::pair<MatrixXX, VectorX> computeCostMidPoint(const ProblemData& pData){
-    int size;
-    #if USE_SLACK
-    size = 4;
-    #else
-    size = 3;
-    #endif
+void computeCostMidPoint(const ProblemData& pData, MatrixXX& H, VectorX& g){
     // cost : x' H x + 2 x g'
     Vector3 midPoint = (pData.c0_ + pData.c1_)/2.; // todo : replace it with point found by planning ??
-    MatrixXX H = MatrixXX::Identity(size,size);
-    #if USE_SLACK
-    H(3,3) = 1e9; // weight for the slack
-    #endif
-    VectorX g = VectorX::Zero(size);
+    H.block<3,3>(0,0) = Matrix3::Identity();
     g.head<3>() = -midPoint;
-    return std::make_pair(H,g);
 }
 
 //cost : min distance between end velocity and the one computed by planning
-//std::pair<MatrixX3, VectorX> computeCostEndVelocity(const ProblemData& pData,const double T){
-//    coefs_t v = computeFinalVelocityPoint(pData,T);
-//    Matrix3 H = Matrix3::Identity() * v.first * v.first;
-//    Vector3 g = v.first*(v.second - pData.dc1_);
-//    return std::make_pair(H,g);
-//}
+void computeCostEndVelocity(const ProblemData& pData,const double T, MatrixXX& H, VectorX& g){
+    coefs_t v = computeFinalVelocityPoint(pData,T);
+    H.block<3,3>(0,0) = Matrix3::Identity() * v.first * v.first;
+    g.head<3> () = v.first*(v.second - pData.dc1_);
+}
 
 
 void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMTraj& res)
@@ -832,7 +825,6 @@ void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMT
             wps.push_back(pi[4]);
         #endif
     #endif
-
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
 }
 
@@ -861,24 +853,30 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     for(int i = 0 ; i < Ts.size() ; ++i)
         T+=Ts[i];
    // bool fail = true;
-    ResultDataCOMTraj res;
-    VectorX constraint_equivalence;
-    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase,constraint_equivalence);
-   // std::pair<MatrixX3, VectorX> Hg = computeCostEndVelocity(pData,T);
-    std::pair<MatrixXX, VectorX> Hg = computeCostMidPoint(pData);
-
-    //std::cout<<"Init = "<<std::endl<<init_guess.transpose()<<std::endl;
     int sizeX;
     #if USE_SLACK
     sizeX = 4;
     #else
     sizeX = 3;
     #endif
+    MatrixXX H(sizeX,sizeX);
+    VectorX g(sizeX);
+    ResultDataCOMTraj res;
+    VectorX constraint_equivalence;
+    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase,constraint_equivalence);
+   // std::pair<MatrixX3, VectorX> Hg = computeCostEndVelocity(pData,T);
+    computeCostMidPoint(pData,H,g);
+    #if USE_SLACK
+    addSlackInCost(H,g);
+    #endif
+
+    //std::cout<<"Init = "<<std::endl<<init_guess.transpose()<<std::endl;
+
     VectorX x = VectorX::Zero(sizeX); // 3 + slack
     x.head<3>() = init_guess;
 
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
-    ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, x);
+    ResultData resQp = solve(Ab.first,Ab.second,H,g, x);
     bool success;
      #if USE_SLACK
     double feasability = fabs(resQp.x[3]);
