@@ -10,7 +10,7 @@
 
 
 #ifndef QHULL
-#define QHULL 1
+#define QHULL 0
 #endif
 #ifndef DDC0_CONSTRAINT
 #define DDC0_CONSTRAINT 0
@@ -19,7 +19,7 @@
 #define DC1_CONSTRAINT 1
 #endif
 #ifndef USE_SLACK
-#define USE_SLACK 1
+#define USE_SLACK 0
 #endif
 
 namespace bezier_com_traj
@@ -292,8 +292,8 @@ coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
     // equation found with sympy
     wp.first = -4.0*t4 + 4.0*t3;
     wp.second =1.0*pi[0]*t4 - 4.0*pi[0]*t3 + 6.0*pi[0]*t2 - 4.0*pi[0]*t + 1.0*pi[0] - 4.0*pi[1]*t4 + 12.0*pi[1]*t3 - 12.0*pi[1]*t2 + 4.0*pi[1]*t + 6.0*pi[2]*t4 - 12.0*pi[2]*t3 + 6.0*pi[2]*t2 + 1.0*pi[4]*t4;
-    std::cout<<"wp at t = "<<t<<std::endl;
-    std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
+    //std::cout<<"wp at t = "<<t<<std::endl;
+    //std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -304,8 +304,8 @@ coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double 
     // equation found with sympy
     wp.first = (-48.0*t2 + 24.0*t)*alpha;
     wp.second = (12.0*pi[0]*t2 - 24.0*pi[0]*t + 12.0*pi[0] - 48.0*pi[1]*t2 + 72.0*pi[1]*t - 24.0*pi[1] + 72.0*pi[2]*t2 - 72.0*pi[2]*t + 12.0*pi[2] + 12.0*pi[4]*t2)*alpha;
-    std::cout<<"acc_wp at t = "<<t<<std::endl;
-    std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
+    //std::cout<<"acc_wp at t = "<<t<<std::endl;
+    //std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -320,10 +320,10 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
     pi.push_back((pData.ddc0_*T*T/(n*(n-1))) + (2.*pData.dc0_ *T / n) + pData.c0_); // p2
     pi.push_back(point_t::Zero()); // x
     pi.push_back(pData.c1_); // p4
-    std::cout<<"fixed waypoints : "<<std::endl;
+    /*std::cout<<"fixed waypoints : "<<std::endl;
     for(std::vector<point_t>::const_iterator pit = pi.begin() ; pit != pi.end() ; ++pit){
         std::cout<<" pi = "<<*pit<<std::endl;
-    }
+    }*/
     return pi;
 }
 
@@ -561,13 +561,13 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     for(int i = 0 ; i < Ts.size() ; ++i)
         t_total+=Ts[i];
     // Compute all the discretized wayPoint
-    std::cout<<"total time : "<<t_total<<std::endl;
+    //std::cout<<"total time : "<<t_total<<std::endl;
     std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
     std::vector<coefs_t> wps_c = computeDiscretizedWaypoints(pData,t_total,timeArray);
     //std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
     std::vector<waypoint6_t> wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
-    std::cout<<" number of discretized waypoints c: "<<wps_c.size()<<std::endl;
-    std::cout<<" number of discretized waypoints w: "<<wps_w.size()<<std::endl;
+    //std::cout<<" number of discretized waypoints c: "<<wps_c.size()<<std::endl;
+    //std::cout<<" number of discretized waypoints w: "<<wps_w.size()<<std::endl;
     assert(/*wps_c.size() == wps_ddc.size() &&*/  wps_w.size() == wps_c.size());
     std::vector<int> stepIdForPhase; // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
     for(int i = 0 ; i < Ts.size() ; ++i)
@@ -593,14 +593,14 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         numStepForPhase = pointsPerPhase;
         if(i > 0 )
             ++numStepForPhase; // because at the switch point between phases we add the constraints of both phases.
-        std::cout<<"constraint size : Kin = "<<pData.contacts_[i].kin_.rows()<<" ; stab : "<<Hrow.rows()<<" times "<<numStepForPhase<<" steps"<<std::endl;
+        //std::cout<<"constraint size : Kin = "<<pData.contacts_[i].kin_.rows()<<" ; stab : "<<Hrow.rows()<<" times "<<numStepForPhase<<" steps"<<std::endl;
         num_stab_ineq += Hrow.rows() * numStepForPhase;
         if(i == Ts.size()-1)
             --numStepForPhase; // we don't consider kinematics constraints for the last point (because it's independant of x)
         num_kin_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
     }
     num_ineq = num_stab_ineq + num_kin_ineq;
-    std::cout<<"total of inequalities : "<<num_ineq<<std::endl;
+    //std::cout<<"total of inequalities : "<<num_ineq<<std::endl;
     // init constraints matrix :
     MatrixXX A = MatrixXX::Zero(num_ineq,numCol); // 3 + 1 :  because of the slack constraints
     VectorX b(num_ineq);
@@ -688,7 +688,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     }
 
 
-    std::cout<<"id rows : "<<id_rows<<" ; total rows : "<<A.rows()<<std::endl;
+    //std::cout<<"id rows : "<<id_rows<<" ; total rows : "<<A.rows()<<std::endl;
     assert(id_rows == (A.rows()) && "The constraints matrices were not fully filled.");
     return std::make_pair(A,b);
 }
@@ -778,7 +778,7 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
    // std::pair<MatrixX3, VectorX> Hg = computeCostEndVelocity(pData,T);
     std::pair<MatrixXX, VectorX> Hg = computeCostMidPoint(pData);
 
-    std::cout<<"Init = "<<std::endl<<init_guess.transpose()<<std::endl;
+    //std::cout<<"Init = "<<std::endl<<init_guess.transpose()<<std::endl;
     int sizeX;
     #if USE_SLACK
     sizeX = 4;
@@ -793,7 +793,7 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     bool success;
      #if USE_SLACK
     double feasability = fabs(resQp.x[3]);
-    std::cout<<"feasability : "<<feasability<<"     treshold = "<<feasability_treshold<<std::endl;
+    //std::cout<<"feasability : "<<feasability<<"     treshold = "<<feasability_treshold<<std::endl;
     success = feasability<=feasability_treshold;
     #else
     success = resQp.success_;
@@ -806,14 +806,14 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
         computeBezierCurve (pData,T,res);
         computeFinalVelocity(pData,T,res);
         computeFinalAcceleration(pData,T,res);
-        std::cout<<"Solved, success "<<" x = ["<<res.x[0]<<","<<res.x[1]<<","<<res.x[2]<<"]"<<std::endl;
+        //std::cout<<"Solved, success "<<" x = ["<<res.x[0]<<","<<res.x[1]<<","<<res.x[2]<<"]"<<std::endl;
     }else{
-        std::cout<<"Over treshold,  x = ["<<resQp.x[0]<<","<<resQp.x[1]<<","<<resQp.x[2]<<"]"<<std::endl;
+        //std::cout<<"Over treshold,  x = ["<<resQp.x[0]<<","<<resQp.x[1]<<","<<resQp.x[2]<<"]"<<std::endl;
     }
     #if QHULL
     printQHullFile(Ab,resQp.x,"bezier_wp.txt");
     #endif
-    std::cout<<"Final cost : "<<resQp.cost_<<std::endl;
+    //std::cout<<"Final cost : "<<resQp.cost_<<std::endl;
     return res;
 }
 
