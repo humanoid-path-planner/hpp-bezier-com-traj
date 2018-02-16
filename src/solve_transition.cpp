@@ -135,6 +135,17 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
     wps.push_back(w3);
     return wps;
 }
+
+
+coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
+     coefs_t v;
+     // equation found with sympy
+     v.first = -3./T;
+     v.second = 3.* pData.c1_ / T;
+     return v;
+}
+
+
 #endif // degree 3 : c0 dc0 x c1
 
 #if (!DDC0_CONSTRAINT && DC1_CONSTRAINT)
@@ -462,13 +473,7 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
 #endif // constraints on c0 dc0 ddc0 x c1
 
 
-//coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
-//     coefs_t v4;
-//     // equation found with sympy
-//     v4.first = -4./T;
-//     v4.second = 4.* pData.c1_ / T;
-//     return v4;
-//}
+
 
 void computeFinalVelocity(const ProblemData& pData,double T,ResultDataCOMTraj& res){
     /*
