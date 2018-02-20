@@ -196,14 +196,14 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
     tsid::solvers::EiquadprogFast_status status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
     ResultData res;
     res.success_ = (status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL );
-    std::cout<<"quad_prog status : "<<status<<std::endl;
+    //std::cout<<"quad_prog status : "<<status<<std::endl;
     if(res.success_)
     {
         assert (!(is_nan(x)));
         res.x = x;
         res.cost_ = QPsolver.getObjValue();
     }else{
-        std::cout<<"No success, last solution = "<<x.transpose()<<std::endl;
+        //std::cout<<"No success, last solution = "<<x.transpose()<<std::endl;
         res.x = x;
     }
     return res;
