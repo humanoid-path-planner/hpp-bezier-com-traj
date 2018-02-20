@@ -16,7 +16,7 @@
 #define DDC0_CONSTRAINT 0
 #endif
 #ifndef DC1_CONSTRAINT
-#define DC1_CONSTRAINT 0
+#define DC1_CONSTRAINT 1
 #endif
 #ifndef USE_SLACK
 #define USE_SLACK 0
@@ -55,7 +55,7 @@ void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,cons
 
 #if (!DDC0_CONSTRAINT && !DC1_CONSTRAINT)
 
-/// ### EQUATION FOR CONSTRAINTS ON INIT AND FINAL POSITION AND VELOCITY (DEGREE = 4)
+/// ### EQUATION FOR CONSTRAINTS ON INIT AND FINAL POSITION AND final position (DEGREE = 3)
 /** @brief evaluateCurveAtTime compute the expression of the point on the curve at t, defined by the waypoint pi and one free waypoint (x)
  * @param pi constant waypoints of the curve, assume p0 p1 x p2 p3
  * @param t param (normalized !)
@@ -247,6 +247,16 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
     wps.push_back(w5);
     return wps;
 }
+
+coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
+     coefs_t v;
+     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
+     // equation found with sympy
+      v.first = 0.;
+     v.second = (-4.0*pi[3] + 4.0*pi[4])/ T;
+     return v;
+}
+
 #endif // deg 4 : constraints on c0 dc0 x dc1 c1
 
 
@@ -476,11 +486,12 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
 
 
 void computeFinalVelocity(const ProblemData& pData,double T,ResultDataCOMTraj& res){
-    /*
+    #if DC1_CONSTRAINT
+    res.dc1_ = pData.dc1_;
+    #else
     coefs_t v = computeFinalVelocityPoint(pData,T);
     res.dc1_ = v.first*res.x + v.second;
-    */
-    res.dc1_ = pData.dc1_;
+    #endif
 }
 
 
@@ -864,8 +875,12 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     ResultDataCOMTraj res;
     VectorX constraint_equivalence;
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase,constraint_equivalence);
-   // std::pair<MatrixX3, VectorX> Hg = computeCostEndVelocity(pData,T);
+    #if DC1_CONSTRAINT
     computeCostMidPoint(pData,H,g);
+    #else
+    computeCostEndVelocity(pData,T,H,g);
+    #endif
+
     #if USE_SLACK
     addSlackInCost(H,g);
     #endif
