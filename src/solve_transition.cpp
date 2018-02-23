@@ -13,7 +13,7 @@
 #define QHULL 0
 #endif
 #ifndef DDC0_CONSTRAINT
-#define DDC0_CONSTRAINT 0
+#define DDC0_CONSTRAINT 1
 #endif
 #ifndef DC1_CONSTRAINT
 #define DC1_CONSTRAINT 1
@@ -378,6 +378,25 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
     return wps;
 }
 
+coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
+     coefs_t v;
+     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
+     // equation found with sympy
+      v.first = 0.;
+     v.second = (-5.0*pi[4] + 5.0*pi[5])/ T;
+     return v;
+}
+
+coefs_t computeFinalAccelerationPoint(const ProblemData& pData,double T){
+     coefs_t v;
+     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
+     // equation found with sympy
+      v.first = 20./(T*T);
+     v.second = (-40.0*pi[4] + 20.*pi[5])/ (T*T);
+     return v;
+}
+
+
 #endif // deg 5 : constraints on c0 dc0 ddc0 x dc1 c1
 
 
@@ -505,7 +524,12 @@ void computeFinalAcceleration(const ProblemData& pData,double T,ResultDataCOMTra
     a.second = 12*(p2 + p4)/(T*T);
     res.ddc1_ = a.first * res.x + a.second;
     */
+    #if DDC0_CONSTRAINT
+    coefs_t a = computeFinalAccelerationPoint(pData,T);
+    res.ddc1_ = a.first*res.x + a.second;
+    #else
     res.ddc1_ = pData.ddc1_;
+    #endif
 }
 
 /**
