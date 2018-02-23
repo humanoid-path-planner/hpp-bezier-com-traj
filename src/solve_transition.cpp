@@ -22,6 +22,14 @@
 #define USE_SLACK 0
 #endif
 
+#ifndef CONSTRAINT_ACC
+#define CONSTRAINT_ACC 1
+#endif
+
+#ifndef MAX_ACC
+#define MAX_ACC 3
+#endif
+
 namespace bezier_com_traj
 {
 typedef waypoint3_t waypoint_t;
@@ -688,7 +696,10 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     //std::cout<<"total time : "<<t_total<<std::endl;
     std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
     std::vector<coefs_t> wps_c = computeDiscretizedWaypoints(pData,t_total,timeArray);
-    //std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
+    #if CONSTRAINT_ACC
+    std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
+    Vector3 acc_bounds = Vector3::Ones()*MAX_ACC;
+    #endif
     std::vector<waypoint6_t> wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
     //std::cout<<" number of discretized waypoints c: "<<wps_c.size()<<std::endl;
     //std::cout<<" number of discretized waypoints w: "<<wps_w.size()<<std::endl;
@@ -724,6 +735,9 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         num_kin_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
     }
     num_ineq = num_stab_ineq + num_kin_ineq;
+    #if CONSTRAINT_ACC
+    num_ineq += 2*3 *(wps_c.size()) ; // upper and lower bound on acceleration for each discretized waypoint (exept the first one)
+    #endif
     //std::cout<<"total of inequalities : "<<num_ineq<<std::endl;
     // init constraints matrix :
     MatrixXX A = MatrixXX::Zero(num_ineq,numCol); // 3 + 1 :  because of the slack constraints
@@ -811,6 +825,16 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         }
     }
 
+    #if CONSTRAINT_ACC
+    // assign the acceleration constraints  for each discretized waypoints :
+    for(int id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
+        A.block(id_rows,0,3,3) = Matrix3::Identity() * wps_ddc[id_step].first; // upper
+        b.segment(id_rows,3) = acc_bounds - wps_ddc[id_step].second;
+        A.block(id_rows+3,0,3,3) = -Matrix3::Identity() * wps_ddc[id_step].first; // lower
+        b.segment(id_rows+3,3) = acc_bounds + wps_ddc[id_step].second;
+        id_rows += 6;
+    }
+    #endif
 
     //std::cout<<"id rows : "<<id_rows<<" ; total rows : "<<A.rows()<<std::endl;
     assert(id_rows == (A.rows()) && "The constraints matrices were not fully filled.");
