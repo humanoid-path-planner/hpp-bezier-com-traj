@@ -13,11 +13,11 @@
 #define QHULL 0
 #endif
 #ifndef DDC0_CONSTRAINT
-#define DDC0_CONSTRAINT 0
+#define DDC0_CONSTRAINT 1
 #endif
 
 #ifndef DDC1_CONSTRAINT
-#define DDC1_CONSTRAINT 0
+#define DDC1_CONSTRAINT 1
 #endif
 
 #ifndef DC1_CONSTRAINT
@@ -28,13 +28,13 @@
 #endif
 
 #ifndef CONSTRAINT_ACC
-#define CONSTRAINT_ACC 0
+#define CONSTRAINT_ACC 1
 #endif
 
 
 
 #ifndef MAX_ACC
-#define MAX_ACC 3
+#define MAX_ACC 1
 #endif
 
 namespace bezier_com_traj
