@@ -400,15 +400,16 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     // stack the constraint for each waypoint :
     MatrixXX A;
     VectorX b;
-    Vector3 acc_bounds(100,100,100);
-    Vector3 vel_bounds(50,50,50);
+    Vector3 acc_bounds(1000,1000,1000);
+    Vector3 vel_bounds(500,500,500);
     computeConstraintsMatrix(pData,wps_acc,wps_vel,acc_bounds,vel_bounds,A,b);
   //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
  //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
     // compute cost function (discrete integral under the curve defined by 'path')
-    MatrixXX H_rrt,H_acc,H;
-    VectorX g_rrt,g_acc,g;
-    computeDistanceCostFunction<Path>(20,pData,T,path,H_rrt,g_rrt);
+    MatrixXX H_rrt=MatrixXX::Zero(DIM_POINT,DIM_POINT),H_acc,H;
+    VectorX g_rrt=VectorX::Zero(DIM_POINT),g_acc,g;
+    if(weightDistance>0)
+        computeDistanceCostFunction<Path>(20,pData,T,path,H_rrt,g_rrt);
     computeAccelerationCostFunction(50,pData,T,H_acc,g_acc);
   /*  std::cout<<"End eff H_rrt = "<<std::endl<<H_rrt<<std::endl;
     std::cout<<"End eff g_rrt = "<<std::endl<<g_rrt<<std::endl;
