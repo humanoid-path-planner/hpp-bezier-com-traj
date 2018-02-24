@@ -10,7 +10,7 @@
 
 
 #ifndef QHULL
-#define QHULL 0
+#define QHULL 1
 #endif
 #ifndef DDC0_CONSTRAINT
 #define DDC0_CONSTRAINT 1
@@ -32,9 +32,13 @@
 #endif
 
 
-
 #ifndef MAX_ACC
 #define MAX_ACC 1
+#endif
+
+
+#ifndef REDUCE_h
+#define REDUCE_h 1e-3
 #endif
 
 namespace bezier_com_traj
@@ -50,7 +54,7 @@ ResultData solveIntersection(const std::pair<MatrixXX, VectorX>& Ab,const std::p
 void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,const std::string& fileName,bool clipZ = false){
      std::ofstream file;
      using std::endl;
-     std::string path("/home/pfernbac/Documents/com_ineq_test/");
+     std::string path("/local/fernbac/bench_iros18/constraints_obj/");
      path.append(fileName);
      file.open(path.c_str(),std::ios::out | std::ios::trunc);
      file<<"3 1"<<endl;
@@ -917,6 +921,8 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     H.rowwise().normalize();
     int dimH = (int)(H.rows());
     mH = phase.contactPhase_->m_mass * H;
+    if(REDUCE_h > 0)
+        h -= VectorX::Ones(h.rows())*REDUCE_h;
 
     // assign the Stability constraints  for each discretized waypoints :
     // we don't consider the first point, because it's independant of x.
@@ -940,6 +946,8 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 H.rowwise().normalize();
                 dimH = (int)(H.rows());
                 mH = phase.contactPhase_->m_mass * H;
+                if(REDUCE_h > 0)
+                    h -= VectorX::Ones(h.rows())*REDUCE_h;
                 // the current waypoint must have the constraints of both phases. So we add it again :
                 // TODO : filter for redunbdant constraints ...
                 // add stability constraints :
