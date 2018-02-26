@@ -10,14 +10,14 @@
 
 
 #ifndef QHULL
-#define QHULL 1
+#define QHULL 0
 #endif
 #ifndef DDC0_CONSTRAINT
 #define DDC0_CONSTRAINT 1
 #endif
 
 #ifndef DDC1_CONSTRAINT
-#define DDC1_CONSTRAINT 1
+#define DDC1_CONSTRAINT 0
 #endif
 
 #ifndef DC1_CONSTRAINT
@@ -28,7 +28,7 @@
 #endif
 
 #ifndef CONSTRAINT_ACC
-#define CONSTRAINT_ACC 1
+#define CONSTRAINT_ACC 0
 #endif
 
 
