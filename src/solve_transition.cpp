@@ -10,10 +10,10 @@
 
 
 #ifndef QHULL
-#define QHULL 0
+#define QHULL 1
 #endif
 #ifndef DDC0_CONSTRAINT
-#define DDC0_CONSTRAINT 1
+#define DDC0_CONSTRAINT 0
 #endif
 
 #ifndef DDC1_CONSTRAINT
@@ -38,7 +38,8 @@
 
 
 #ifndef REDUCE_h
-#define REDUCE_h 1e-3
+//#define REDUCE_h 1e-3
+#define REDUCE_h 0.
 #endif
 
 namespace bezier_com_traj
