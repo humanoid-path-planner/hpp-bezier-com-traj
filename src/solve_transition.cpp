@@ -1141,12 +1141,13 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
         computeFinalVelocity(pData,T,res);
         computeFinalAcceleration(pData,T,res);
         //std::cout<<"Solved, success "<<" x = ["<<res.x[0]<<","<<res.x[1]<<","<<res.x[2]<<"]"<<std::endl;
+        #if QHULL
+        printQHullFile(Ab,resQp.x,"bezier_wp.txt");
+        #endif
     }else{
         //std::cout<<"Over treshold,  x = ["<<resQp.x[0]<<","<<resQp.x[1]<<","<<resQp.x[2]<<"]"<<std::endl;
     }
-    #if QHULL
-    printQHullFile(Ab,resQp.x,"bezier_wp.txt");
-    #endif
+
     //std::cout<<"Final cost : "<<resQp.cost_<<std::endl;
     return res;
 }
