@@ -10,7 +10,7 @@
 
 
 #ifndef QHULL
-#define QHULL 1
+#define QHULL 0
 #endif
 #ifndef DDC0_CONSTRAINT
 #define DDC0_CONSTRAINT 0
@@ -38,7 +38,7 @@
 
 
 #ifndef REDUCE_h
-//#define REDUCE_h 1e-3
+//#define REDUCE_h 1e-4
 #define REDUCE_h 0.
 #endif
 
