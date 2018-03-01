@@ -33,13 +33,13 @@
 
 
 #ifndef MAX_ACC
-#define MAX_ACC 1
+#define MAX_ACC 5
 #endif
 
 
 #ifndef REDUCE_h
 //#define REDUCE_h 1e-4
-#define REDUCE_h 0.
+#define REDUCE_h 1e-4
 #endif
 
 namespace bezier_com_traj
