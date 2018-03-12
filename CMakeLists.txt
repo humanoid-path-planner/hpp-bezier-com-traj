@@ -10,8 +10,6 @@ SET(PROJECT_DESCRIPTION
 SET(PROJECT_URL "")
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/;${PROJECT_SOURCE_DIR}/cmake2/")
-set(LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/lib/")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/")
 
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
 set(INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
@@ -21,6 +19,11 @@ set(EXTERNAL_LIBRARY_DIR "${PROJECT_SOURCE_DIR}/external/lib")
 if ( MSVC )  
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX")
 endif()
+
+
+# Where to compile shared objects
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+
 
 SETUP_PROJECT()
 
@@ -66,8 +69,8 @@ endif()
 #SEARCH_FOR_QPOASES()
 ADD_REQUIRED_DEPENDENCY("qpOASES")
 
-add_subdirectory (src)
-add_subdirectory (test)
+add_subdirectory(src)
+add_subdirectory(tests)
 IF(BUILD_PYTHON_INTERFACE)
         add_subdirectory (python)
 ENDIF(BUILD_PYTHON_INTERFACE)
