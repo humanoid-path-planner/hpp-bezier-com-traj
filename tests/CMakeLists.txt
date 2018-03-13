@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/tests)
 include_directories("${INCLUDE_DIR}")
 include_directories("${EIGEN3_INCLUDE_DIR}")
 
@@ -34,6 +35,7 @@ MACRO(ADD_TESTCASE NAME GENERATED)
 ENDMACRO(ADD_TESTCASE)
 
 ADD_TESTCASE (test-transition-quasiStatic False)
+ADD_TESTCASE (test-transition False)
 
 
 
