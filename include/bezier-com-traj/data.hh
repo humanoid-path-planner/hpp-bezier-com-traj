@@ -93,6 +93,7 @@ namespace bezier_com_traj
             success_= (other.success_);
             cost_ = (other.cost_);
             x = (other.x);
+            return *this;
         }
 
         bool success_;
