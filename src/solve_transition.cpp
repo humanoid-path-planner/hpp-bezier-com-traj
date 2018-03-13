@@ -10,35 +10,27 @@
 
 
 #ifndef QHULL
-#define QHULL 0
+#define QHULL 1
 #endif
 #ifndef DDC0_CONSTRAINT
-#define DDC0_CONSTRAINT 0
+#define DDC0_CONSTRAINT 1
 #endif
-
 #ifndef DDC1_CONSTRAINT
 #define DDC1_CONSTRAINT 0
 #endif
-
 #ifndef DC1_CONSTRAINT
 #define DC1_CONSTRAINT 1
 #endif
 #ifndef USE_SLACK
 #define USE_SLACK 0
 #endif
-
 #ifndef CONSTRAINT_ACC
 #define CONSTRAINT_ACC 0
 #endif
-
-
 #ifndef MAX_ACC
 #define MAX_ACC 5
 #endif
-
-
 #ifndef REDUCE_h
-//#define REDUCE_h 1e-4
 #define REDUCE_h 1e-4
 #endif
 
