@@ -13,7 +13,7 @@
 #define QHULL 1
 #endif
 #ifndef DDC0_CONSTRAINT
-#define DDC0_CONSTRAINT 1
+#define DDC0_CONSTRAINT 0
 #endif
 #ifndef DDC1_CONSTRAINT
 #define DDC1_CONSTRAINT 0
@@ -44,7 +44,7 @@ ResultData solveIntersection(const std::pair<MatrixXX, VectorX>& Ab,const std::p
     return solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
 }
 
-void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,const std::string& fileName,bool clipZ = false){
+void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,const std::string& fileName,bool clipZ){
      std::ofstream file;
      using std::endl;
      std::string path("/local/fernbac/bench_iros18/constraints_obj/");
@@ -704,6 +704,10 @@ void computeFinalAcceleration(const ProblemData& pData,double T,ResultDataCOMTra
 std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,const int pointsPerPhase ){
     std::vector<double> timeArray;
     double t = 0;
+    double t_total = 0;
+    for(size_t i = 0 ; i < phaseTimings.size() ; ++i)
+        t_total += phaseTimings[i];
+
     for(int i = 0 ; i < phaseTimings.size() ; ++i){
         double step = (double) phaseTimings[i] / pointsPerPhase;
         for(int j = 0 ; j < pointsPerPhase ; ++j){
@@ -711,6 +715,8 @@ std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,const int
             timeArray.push_back(t);
         }
     }
+    timeArray.pop_back();
+    timeArray.push_back(t_total); // avoid numerical errors
     return timeArray;
 }
 

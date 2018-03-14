@@ -15,10 +15,12 @@ using bezier_com_traj::Vector3;
 #define MU 0.5
 #define LX 0.2172        // contact surface size in x direction
 #define LY 0.138         // contact surface size in y direction
-#define KIN_X_MIN -0.3
-#define KIN_X_MAX  1
-#define KIN_Y_MIN -0.5
-#define KIN_Y_MAX  0.5
+#define KIN_X_MIN -0.7
+#define KIN_X_MAX  0.7
+#define KIN_Y_MIN -0.4
+#define KIN_Y_MAX  0.4
+#define KIN_Z_MIN  0
+#define KIN_Z_MAX  0.9
 
 typedef std::pair<MatrixX3,VectorX> ConstraintsPair;
 
@@ -37,9 +39,9 @@ std::pair<MatrixX3, MatrixX3> generateKinematicsConstraints(){
     N.block<1,3>(3,0) = Vector3(0,-1,0);
     V.block<1,3>(3,0) = Vector3(KIN_X_MAX,KIN_Y_MIN,0);
     N.block<1,3>(4,0) = Vector3(0,0,-1);
-    V.block<1,3>(4,0) = Vector3(0,0,0);
+    V.block<1,3>(4,0) = Vector3(0,0,KIN_Z_MIN);
     N.block<1,3>(5,0) = Vector3(0,0,1);
-    V.block<1,3>(5,0) = Vector3(0,0,0.8);
+    V.block<1,3>(5,0) = Vector3(0,0,KIN_Z_MAX);
 
     return std::make_pair(N,V);
 }
@@ -161,5 +163,56 @@ ConstraintsPair stackConstraints(const ConstraintsPair& Ab,const ConstraintsPair
     n.segment(Ab.first.rows(),Cd.first.rows()) = Cd.second;
     return std::make_pair(M,n);
 }
+
+
+bool verifyKinematicConstraints(const ConstraintsPair& Ab, const Vector3 &point){
+    for(size_t i = 0 ; i < Ab.second.size() ; ++i){
+        if(Ab.first.block<1,3>(i,0).dot(point) > Ab.second[i] ){
+            return false;
+        }
+    }
+    return true;
+}
+
+bool verifyStabilityConstraintsDLP(centroidal_dynamics::Equilibrium contactPhase,Vector3 c,Vector3 /*dc*/, Vector3 ddc){
+    bool success(false);
+    double res;
+    centroidal_dynamics::Equilibrium contactPhaseDLP(contactPhase);
+    contactPhaseDLP.setAlgorithm(centroidal_dynamics::EQUILIBRIUM_ALGORITHM_DLP);
+    centroidal_dynamics::LP_status status = contactPhaseDLP.computeEquilibriumRobustness(c,ddc,res);
+    success = (status == centroidal_dynamics::LP_STATUS_OPTIMAL || status == centroidal_dynamics::LP_STATUS_UNBOUNDED);
+    if(success)
+        success = res>=0.;
+    return success;
+}
+
+bool verifyStabilityConstraintsPP(centroidal_dynamics::Equilibrium contactPhase,Vector3 c,Vector3 /*dc*/, Vector3 acc){
+    // compute inequalities :
+    const Vector3& g = contactPhase.m_gravity;
+    const Matrix3 gSkew = bezier_com_traj::skew(g);
+    const Matrix3 accSkew = bezier_com_traj::skew(acc);
+    // compute GIWC
+    centroidal_dynamics::MatrixXX Hrow;
+    VectorX h;
+    contactPhase.getPolytopeInequalities(Hrow,h);
+    MatrixXX H = -Hrow;
+    H.rowwise().normalize();
+    int dimH = (int)(H.rows());
+    MatrixXX mH = contactPhase.m_mass * H;
+    // constraints : mH[:,3:6] g^  x <= h + mH[:,0:3]g
+    // A = mH g^
+    // b = h + mHg
+    MatrixX3 A = mH.block(0,3,dimH,3) * (gSkew - accSkew);
+    VectorX b = h+mH.block(0,0,dimH,3)*(g - acc);
+
+    // verify inequalities with c :
+    for(size_t i = 0 ; i < b.size() ; ++i){
+        if(A.block<1,3>(i,0).dot(c) > b[i] ){
+            return false;
+        }
+    }
+    return true;
+}
+
 
 #endif // TEST_HELPER_HH
