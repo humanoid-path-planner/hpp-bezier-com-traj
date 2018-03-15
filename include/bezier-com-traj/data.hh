@@ -34,6 +34,20 @@ namespace bezier_com_traj
     typedef const Eigen::Ref<const MatrixXX>    & Cref_matrixXX;
     typedef const Eigen::Ref<const MatrixX3>    & Cref_matrixX3;
 
+
+    typedef Matrix63 matrix6_t;
+    typedef Vector6 point6_t;
+    typedef Matrix3 matrix3_t;
+    typedef Vector3 point3_t;
+    /**
+    * @brief waypoint_t a waypoint is composed of a  6*3 matrix that depend
+    * on the variable x, and of a 6d vector independent of x, such that
+    * each control point of the target bezier curve is given by pi = wix * x + wis
+    */
+    typedef std::pair<matrix6_t, point6_t> waypoint6_t;
+    typedef std::pair<matrix3_t, point3_t> waypoint3_t;
+
+
     struct BEZIER_COM_TRAJ_DLLAPI ContactData
     {
         ContactData()
@@ -51,6 +65,56 @@ namespace bezier_com_traj
        VectorX ang_;
     };
 
+    struct BEZIER_COM_TRAJ_DLLAPI Constraints
+    {
+
+        Constraints()
+            : c0_(true)
+            , dc0_(true)
+            , ddc0_(false)
+            , ddc1_(false)
+            , dc1_(true)
+            , c1_(true)
+            , constraintAcceleration_(true)
+            , maxAcceleration_(5.)
+            ,reduce_h_(1e-4) {}
+
+        Constraints(bool c0,bool dc0,bool ddc0,bool ddc1,bool dc1,bool c1)
+            : c0_(c0)
+            , dc0_(dc0)
+            , ddc0_(ddc0)
+            , ddc1_(ddc1)
+            , dc1_(dc1)
+            , c1_(c1)
+            , constraintAcceleration_(true)
+            , maxAcceleration_(5.)
+            ,reduce_h_(1e-4)
+        {
+            if(dc0_)
+                assert(c0_ && "You cannot constraint init velocity if init position is not constrained.");
+            if(ddc0_)
+                assert(dc0_ && "You cannot constraint init acceleration if init velocity is not constrained.");
+            if(dc1_)
+                assert(c1_ && "You cannot constraint final velocity if final position is not constrained.");
+            if(ddc1_)
+                assert(dc1_ && "You cannot constraint final acceleration if final velocity is not constrained.");
+        }
+
+        ~Constraints(){}
+
+        bool c0_;
+        bool dc0_;
+        bool ddc0_;
+        bool ddc1_;
+        bool dc1_;
+        bool c1_;
+        bool constraintAcceleration_;
+        double maxAcceleration_;
+        double reduce_h_;
+
+    };
+
+
     struct BEZIER_COM_TRAJ_DLLAPI ProblemData
     {
         ProblemData()
@@ -66,10 +130,13 @@ namespace bezier_com_traj
         Vector3  c0_,dc0_,ddc0_,c1_,dc1_,ddc1_;
         Vector3  l0_;
         bool useAngularMomentum_;
+        Constraints constraints_;
     };
 
     typedef Eigen::Vector3d point_t;
+    typedef const Eigen::Ref<const point_t>& point_t_tC;
     typedef spline::bezier_curve  <double, double, 3, true, point_t > bezier_t;
+    typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
     struct BEZIER_COM_TRAJ_DLLAPI ResultData
     {
         ResultData():

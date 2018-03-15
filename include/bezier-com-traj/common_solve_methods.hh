@@ -14,19 +14,6 @@
 namespace bezier_com_traj
 {
 
-typedef Matrix63 matrix6_t;
-typedef Vector6 point6_t;
-typedef Matrix3 matrix3_t;
-typedef Vector3 point3_t;
-/**
- * @brief waypoint_t a waypoint is composed of a  6*3 matrix that depend
- * on the variable x, and of a 6d vector independent of x, such that
- * each control point of the target bezier curve is given by pi = wix * x + wis
- */
-typedef std::pair<matrix6_t, point6_t> waypoint6_t;
-typedef std::pair<matrix3_t, point3_t> waypoint3_t;
-typedef const Eigen::Ref<const point_t>& point_t_tC;
-typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
 
 BEZIER_COM_TRAJ_DLLAPI Matrix3 skew(point_t_tC x);
 template<typename T> T initwp();
