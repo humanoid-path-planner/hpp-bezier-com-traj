@@ -55,7 +55,7 @@ bool check_constraints(const bezier_com_traj::ContactData& contactPhase, Vector3
 }
 
 
-void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts){
+void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shouldFail=false){
     BOOST_CHECK_EQUAL(pData.contacts_.size(),Ts.size());
 
     double t_total = 0;
@@ -67,6 +67,11 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts){
 
     // check if transition is feasible (should be)
     bezier_com_traj::ResultDataCOMTraj res = bezier_com_traj::solveOnestep(pData,Ts,init,pointsPerPhase);
+    if(shouldFail){
+        BOOST_CHECK(!res.success_);
+        return;
+    }
+
     BOOST_CHECK(res.success_);
 
     if(res.success_){
@@ -224,6 +229,159 @@ BOOST_AUTO_TEST_CASE(transition){
     check_transition(pData,Ts);
 }
 
+
+BOOST_AUTO_TEST_CASE(transition_noDc1){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.dc1_ = false;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+BOOST_AUTO_TEST_CASE(transition_ddc0){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.ddc0_ = true;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.ddc0_ = true;
+    pData.constraints_.ddc1_ = true;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+BOOST_AUTO_TEST_CASE(transition_noAcc){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.constraintAcceleration_ = false;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+BOOST_AUTO_TEST_CASE(transition_noDc1_noAcc){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.dc1_ = false;
+    pData.constraints_.constraintAcceleration_ = false;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+BOOST_AUTO_TEST_CASE(transition_ddc0_noAcc){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.ddc0_ = true;
+    pData.constraints_.constraintAcceleration_ = false;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1_noAcc){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.ddc0_ = true;
+    pData.constraints_.ddc1_ = true;
+    pData.constraints_.constraintAcceleration_ = false;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+
+BOOST_AUTO_TEST_CASE(transition_Acc1){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.maxAcceleration_=1.;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+BOOST_AUTO_TEST_CASE(transition_noDc1_Acc1){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.dc1_ = false;
+    pData.constraints_.maxAcceleration_=1.;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+BOOST_AUTO_TEST_CASE(transition_ddc0_Acc2){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.ddc0_ = true;
+    pData.constraints_.maxAcceleration_=2.;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1_Acc2){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.ddc0_ = true;
+    pData.constraints_.ddc1_ = true;
+    pData.constraints_.maxAcceleration_=2.;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1_Acc05){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.ddc0_ = true;
+    pData.constraints_.ddc1_ = true;
+    pData.constraints_.maxAcceleration_=0.5;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+BOOST_AUTO_TEST_CASE(transition_Acc05){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.maxAcceleration_=0.5;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
+}
+
+// constraints that should fails :
+
+BOOST_AUTO_TEST_CASE(transition_Acc02){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.maxAcceleration_=0.2;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts,true);
+}
+
+BOOST_AUTO_TEST_CASE(transition_noDc1_Acc05){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.dc1_ = false;
+    pData.constraints_.maxAcceleration_=0.5;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts,true);
+}
+
+
+BOOST_AUTO_TEST_CASE(transition_ddc0_Acc1){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.ddc0_ = true;
+    pData.constraints_.maxAcceleration_=1.;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts,true);
+}
+
+BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1_Acc02){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.ddc0_ = true;
+    pData.constraints_.ddc1_ = true;
+    pData.constraints_.maxAcceleration_=0.2;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts,true);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
