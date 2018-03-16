@@ -55,6 +55,15 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_ma
 
 
 /**
+ * @brief solveIntersection Solve the QP problem, that find a point inside the constraints Ab that minimise the cost Hg
+ * @param Ab s.t. Ax <= b
+ * @param Hg min  x'Hx  + g'x
+ * @param init x_init
+ * @return ResultData
+ */
+BEZIER_COM_TRAJ_DLLAPI ResultData solveIntersection(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init);
+
+/**
  * @brief Compute the Bernstein polynoms for a given degree
  * @param degree required degree
  * @return
