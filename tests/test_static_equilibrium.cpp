@@ -172,7 +172,7 @@ int main()
   MatrixX3 p, N;
   RVector3 com_LB, com_UB;
   Equilibrium solver_PP ("PP", mass, generatorsPerContact, SOLVER_LP_QPOASES,false,10,false);
-  int succContinuous = 0, succDiscretize = 0, succdL = 0, succDiscretizedL = 0 , succKin, succdLKin = 0, succdLAng = 0;
+  int succContinuous = 0, succDiscretize = 0, succdL = 0, succDiscretizedL = 0 , succKin = 0, succdLKin = 0, succdLAng = 0;
   int numSol = 0;
   for(unsigned n_test=0; n_test<N_TESTS; n_test++)
   {
