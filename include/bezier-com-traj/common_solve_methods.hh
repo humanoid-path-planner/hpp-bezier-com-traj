@@ -55,11 +55,10 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_ma
 
 
 /**
- * @brief solveIntersection Solve the QP problem, that find a point inside the constraints Ab that minimise the cost Hg
- * @param Ab s.t. Ax <= b
- * @param Hg min  x'Hx  + g'x
- * @param init x_init
- * @return ResultData
+ * @brief solve x' h x + 2 g' x, subject to A*x <= b using quadprog, with x of fixed dimension 3
+ * @param Ab Inequality matrix and vector
+ * @param Hg Cost matrix and vector
+ * @return
  */
 BEZIER_COM_TRAJ_DLLAPI ResultData solveIntersection(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init);
 
