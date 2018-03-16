@@ -14,10 +14,10 @@ SET(${LIBRARY_NAME}_SOURCES
     ${INCLUDE_DIR}/bezier-com-traj/solve.hh
     ${INCLUDE_DIR}/bezier-com-traj/common_solve_methods.hh
     ${INCLUDE_DIR}/solver/eiquadprog-fast.hpp
-    solve.cpp
     common_solve_methods.cpp
     eiquadprog-fast.cpp
     solve_transition.cpp
+    solve_0_step.cpp
 )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)

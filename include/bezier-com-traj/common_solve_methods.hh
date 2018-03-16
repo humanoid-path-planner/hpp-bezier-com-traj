@@ -54,6 +54,13 @@ BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequa
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess);
 
 
+/**
+ * @brief Compute the Bernstein polynoms for a given degree
+ * @param degree required degree
+ * @return
+ */
+std::vector<spline::Bern<double> > ComputeBersteinPolynoms(int degree);
+
 } // end namespace bezier_com_traj
 
 #endif

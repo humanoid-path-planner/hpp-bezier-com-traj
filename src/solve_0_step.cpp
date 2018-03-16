@@ -111,14 +111,6 @@ waypoint_t u4 (point_t_tC /*l0*/, const double /*alpha*/)
 }
 
 
-std::vector<spline::Bern<double> > ComputeBersteinPolynoms(int degree)
-{
-    std::vector<spline::Bern<double> > res;
-    for (unsigned int i =0; i <= degree; ++i)
-        res.push_back(spline::Bern<double>(degree,i));
-    return res;
-}
-
 int computeNumSteps(const double T, const double timeStep)
 {
     return timeStep > 0. ? int(T / timeStep) : -1;
