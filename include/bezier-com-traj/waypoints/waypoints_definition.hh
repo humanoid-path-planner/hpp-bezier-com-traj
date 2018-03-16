@@ -3,6 +3,8 @@
  * Author: Pierre Fernbach
  */
 
+
+#include <bezier-com-traj/data.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh>
@@ -13,8 +15,6 @@
 
 
 namespace bezier_com_traj{
-
-
 /**
   * This file is used to choose the correct expressions of the curves waypoints, depending on the options set in ProblemData.constraints
   */
@@ -31,12 +31,12 @@ static const T_evalCurveAtTime evalCurveAtTimes = boost::assign::map_list_of
         (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::evaluateCurveAtTime)
         (c0_dc0_ddc0_ddc1_dc1_c1::flag  , c0_dc0_ddc0_ddc1_dc1_c1::evaluateCurveAtTime);
 
-
 /** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t, defined by the waypoint pi and one free waypoint (x)
-     * @param pi constant waypoints of the curve
-     * @param t param (normalized !)
-     * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
-     */
+ * @param pi constant waypoints of the curve
+ * @param t param (normalized !)
+ * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
+ */
+// TODOin C++ 10, all these methods could be just one function :)
 coefs_t evaluateCurveAtTime(const ProblemData& pData, std::vector<point_t> pi,double t)
 {
     CIT_evalCurveAtTime cit = evalCurveAtTimes.find(pData.constraints_.flag_);
@@ -48,8 +48,6 @@ coefs_t evaluateCurveAtTime(const ProblemData& pData, std::vector<point_t> pi,do
         throw std::runtime_error("Current constraints set are not implemented");
     }
 }
-
-
 
 typedef coefs_t (*evalAccCurveAtTime) (std::vector<point_t> pi,double T,double t);
 typedef std::map<ConstraintFlag,evalAccCurveAtTime > T_evalAccCurveAtTime;
@@ -78,8 +76,6 @@ coefs_t evaluateAccelerationCurveAtTime(const ProblemData& pData, std::vector<po
     }
 }
 
-
-
 typedef std::vector<point_t> (*compConsWp) (const ProblemData& pData,double T);
 typedef std::map<ConstraintFlag,compConsWp > T_compConsWp;
 typedef T_compConsWp::const_iterator         CIT_compConsWp;
@@ -106,7 +102,6 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
         throw std::runtime_error("Current constraints set are not implemented");
     }
 }
-
 
 typedef std::vector<waypoint6_t> (*compWp) (const ProblemData& pData,double T);
 typedef std::map<ConstraintFlag,compWp > T_compWp;
@@ -158,35 +153,6 @@ coefs_t computeFinalAccelerationPoint(const ProblemData& pData,double T)
     }
 }
 
-
-
-/*coefs_t computeFinalAccelerationPoint(const ProblemData& pData,double T){
-    if(c0_dc0_c1::useThisConstraints(pData.constraints_))
-        return c0_dc0_c1::computeFinalAccelerationPoint(pData,T);
-    else if(c0_dc0_dc1_c1::useThisConstraints(pData.constraints_))
-        return c0_dc0_dc1_c1::computeFinalAccelerationPoint(pData,T);
-    else if(c0_dc0_ddc0_c1::useThisConstraints(pData.constraints_))
-        return c0_dc0_ddc0_c1::computeFinalAccelerationPoint(pData,T);
-    else if(c0_dc0_ddc0_dc1_c1::useThisConstraints(pData.constraints_))
-        return c0_dc0_ddc0_dc1_c1::computeFinalAccelerationPoint(pData,T);
-    else{
-        std::cout<<"Current constraints set are not implemented"<<std::endl;
-        throw std::runtime_error("Current constraints set are not implemented");
-    }
-}
-
-coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
-    if(c0_dc0_c1::useThisConstraints(pData.constraints_))
-        return c0_dc0_c1::computeFinalVelocityPoint(pData,T);
-    else if(c0_dc0_ddc0_c1::useThisConstraints(pData.constraints_))
-        return c0_dc0_ddc0_c1::computeFinalVelocityPoint(pData,T);
-    else{
-        std::cout<<"Current constraints set are not implemented"<<std::endl;
-        throw std::runtime_error("Current constraints set are not implemented");
-    }
-}*/
-
-
 typedef coefs_t (*compFinalVelP) (const ProblemData& pData,double T);
 typedef std::map<ConstraintFlag,compFinalVelP > T_compFinalVelP;
 typedef T_compFinalVelP::const_iterator         CIT_compFinalVelP;
@@ -208,16 +174,6 @@ coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T)
         throw std::runtime_error("Current constraints set are not implemented");
     }
 }
-/*coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
-    if(c0_dc0_c1::useThisConstraints(pData.constraints_))
-        return c0_dc0_c1::computeFinalVelocityPoint(pData,T);
-    else if(c0_dc0_ddc0_c1::useThisConstraints(pData.constraints_))
-        return c0_dc0_ddc0_c1::computeFinalVelocityPoint(pData,T);
-    else{
-        std::cout<<"Current constraints set are not implemented"<<std::endl;
-        throw std::runtime_error("Current constraints set are not implemented");
-    }
-}*/
 
 void computeFinalAcceleration(const ProblemData& pData,double T,ResultDataCOMTraj& res){
     if(pData.constraints_.flag_&  END_ACC){

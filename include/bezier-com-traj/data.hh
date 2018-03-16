@@ -46,6 +46,7 @@ namespace bezier_com_traj
     */
     typedef std::pair<matrix6_t, point6_t> waypoint6_t;
     typedef std::pair<matrix3_t, point3_t> waypoint3_t;
+    typedef std::pair<double,point3_t> coefs_t;
 
 
     struct BEZIER_COM_TRAJ_DLLAPI ContactData
