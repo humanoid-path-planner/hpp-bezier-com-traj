@@ -4,6 +4,7 @@
 #include <bezier-com-traj/solve.hh>
 #include <bezier-com-traj/common_solve_methods.hh>
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+#include <boost/test/included/unit_test.hpp>
 
 using bezier_com_traj::MatrixXX;
 using bezier_com_traj::MatrixX3;

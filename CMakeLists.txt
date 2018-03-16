@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 INCLUDE(cmake/base.cmake)
 INCLUDE(cmake/python.cmake)
-INCLUDE(cmake2/FindqpOASES.cmake)
 
 SET(PROJECT_NAME bezier-com-traj)
 SET(PROJECT_DESCRIPTION
@@ -47,6 +46,8 @@ IF(BUILD_PYTHON_INTERFACE)
 ENDIF(BUILD_PYTHON_INTERFACE)
 
 
+find_package (centroidal-dynamics-lib REQUIRED)
+
 # Declare Headers
 SET(${PROJECT_NAME}_HEADERS
                 include/bezier-com-traj/data.hh
@@ -65,9 +66,6 @@ else()
         find_package(Eigen2 REQUIRED)
 endif()
 
-
-#SEARCH_FOR_QPOASES()
-ADD_REQUIRED_DEPENDENCY("qpOASES")
 
 add_subdirectory(src)
 add_subdirectory(tests)

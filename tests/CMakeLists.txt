@@ -25,11 +25,9 @@ MACRO(ADD_TESTCASE NAME GENERATED)
   ENDIF()
   ADD_TEST(${NAME} ${RUNTIME_OUTPUT_DIRECTORY}/${NAME})
 
-  PKG_CONFIG_USE_DEPENDENCY(${NAME} qpOASES)
-
   # Link against Boost and project library.
   TARGET_LINK_LIBRARIES(${NAME}
-    ${Boost_LIBRARIES} centroidal-dynamics-lib bezier-com-traj
+    ${Boost_LIBRARIES} bezier-com-traj  ${CDL_LIBRARIES}
     )
 
 ENDMACRO(ADD_TESTCASE)
@@ -37,14 +35,12 @@ ENDMACRO(ADD_TESTCASE)
 ADD_TESTCASE (test-transition-quasiStatic False)
 ADD_TESTCASE (test-transition False)
 
-
-
 if ( MSVC )
         SET(CMAKE_DEBUG_POSTFIX d)
 endif ( MSVC )
 
-ADD_EXECUTABLE(bezier-com-traj-test test_static_equilibrium.cpp)
+ADD_EXECUTABLE(bezier-com-traj-test test_static_equilibrium.cpp test_helper.hh)
 
-TARGET_LINK_LIBRARIES(bezier-com-traj-test bezier-com-traj)
+TARGET_LINK_LIBRARIES(bezier-com-traj-test bezier-com-traj ${CDL_LIBRARIES})
 
 

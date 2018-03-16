@@ -25,6 +25,8 @@ using namespace std;
 #define EPS 1e-3  // required precision
 
 
+
+
 void generateContacts(unsigned int N_CONTACTS, double MIN_CONTACT_DISTANCE, double LX, double LY,
                       RVector3 &CONTACT_POINT_LOWER_BOUNDS,
                       RVector3 &CONTACT_POINT_UPPER_BOUNDS,
