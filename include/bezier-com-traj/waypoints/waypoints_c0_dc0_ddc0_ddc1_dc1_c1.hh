@@ -11,12 +11,15 @@ namespace c0_dc0_ddc0_ddc1_dc1_c1{
 typedef waypoint3_t waypoint_t;
 typedef std::pair<double,point3_t> coefs_t;
 
-bool useThisConstraints(Constraints constraints){
+static const ConstraintFlag flag = INIT_POS | INIT_VEL | INIT_ACC | END_ACC | END_VEL | END_POS;
+
+/*bool useThisConstraints(Constraints constraints){
     if(constraints.c0_ && constraints.dc0_ && constraints.ddc0_ && constraints.ddc1_ && constraints.dc1_ && constraints.c1_)
         return true;
     else
         return false;
-}
+}*/
+
 /// ### EQUATION FOR CONSTRAINTS ON INIT AND FINAL POSITION AND VELOCITY AND ACCELERATION (DEGREE = 6)
 ///
 /**

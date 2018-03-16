@@ -407,13 +407,13 @@ void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMT
 
     std::vector<Vector3> pi = computeConstantWaypoints(pData,T);
     size_t i = 0;
-    if(pData.constraints_.c0_){
+    if(pData.constraints_.flag_ & INIT_POS ){
         wps.push_back(pi[i]);
         i++;
-        if(pData.constraints_.dc0_){
+        if(pData.constraints_.flag_ & INIT_VEL){
             wps.push_back(pi[i]);
             i++;
-            if(pData.constraints_.ddc0_){
+            if(pData.constraints_.flag_ & INIT_ACC){
                 wps.push_back(pi[i]);
                 i++;
             }
@@ -421,17 +421,17 @@ void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMT
     }
     wps.push_back(res.x);
     i++;
-    if(pData.constraints_.ddc1_){
-        assert(pData.constraints_.dc1_ && "You cannot constraint final acceleration if final velocity is not constrained.");
+    if(pData.constraints_.flag_ & END_ACC){
+        assert(pData.constraints_.flag_ & END_VEL && "You cannot constraint final acceleration if final velocity is not constrained.");
         wps.push_back(pi[i]);
         i++;
     }
-    if(pData.constraints_.dc1_){
-        assert(pData.constraints_.c1_ && "You cannot constraint final velocity if final position is not constrained.");
+    if(pData.constraints_.flag_ & END_VEL){
+        assert(pData.constraints_.flag_ & END_POS && "You cannot constraint final velocity if final position is not constrained.");
         wps.push_back(pi[i]);
         i++;
     }
-    if(pData.constraints_.c1_){
+    if(pData.constraints_.flag_ & END_POS){
         wps.push_back(pi[i]);
         i++;
     }
@@ -476,7 +476,7 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     VectorX constraint_equivalence;
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase,constraint_equivalence);
     //computeCostMidPoint(pData,H,g);
-    if(pData.constraints_.dc1_)
+    if(pData.constraints_.flag_ & END_VEL)
         computeCostMinAcceleration(pData,Ts,pointsPerPhase,H,g);
     else
         computeCostEndVelocity(pData,T,H,g);

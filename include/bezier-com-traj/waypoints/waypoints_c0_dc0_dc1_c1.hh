@@ -7,16 +7,17 @@
 
 namespace bezier_com_traj{
 namespace c0_dc0_dc1_c1{
-
 typedef waypoint3_t waypoint_t;
 typedef std::pair<double,point3_t> coefs_t;
 
-bool useThisConstraints(Constraints constraints){
+static const ConstraintFlag flag =INIT_POS | INIT_VEL | END_POS | END_VEL;
+
+/*bool useThisConstraints(Constraints constraints){
     if(constraints.c0_ && constraints.dc0_ && !constraints.ddc0_ && !constraints.ddc1_ &&  constraints.dc1_ && constraints.c1_)
         return true;
     else
         return false;
-}
+}*/
 
 /// ### EQUATION FOR CONSTRAINTS ON INIT AND FINAL POSITION AND VELOCITY (DEGREE = 4)
 /** @brief evaluateCurveAtTime compute the expression of the point on the curve at t, defined by the waypoint pi and one free waypoint (x)

@@ -65,49 +65,64 @@ namespace bezier_com_traj
        VectorX ang_;
     };
 
+    enum BEZIER_COM_TRAJ_DLLAPI ConstraintFlag{
+        INIT_POS = 0x00001,
+        INIT_VEL = 0x00002,
+        INIT_ACC = 0x00004,
+        END_POS  = 0x00008,
+        END_VEL  = 0x00010,
+        END_ACC  = 0x00020
+      };
+
+    inline ConstraintFlag operator~(ConstraintFlag a)
+    {return static_cast<ConstraintFlag>(~static_cast<const int>(a));}
+
+    inline ConstraintFlag operator|(ConstraintFlag a, ConstraintFlag b)
+    {return static_cast<ConstraintFlag>(static_cast<const int>(a) | static_cast<const int>(b));}
+
+    inline ConstraintFlag operator&(ConstraintFlag a, ConstraintFlag b)
+    {return static_cast<ConstraintFlag>(static_cast<const int>(a) & static_cast<const int>(b));}
+
+    inline ConstraintFlag operator^(ConstraintFlag a, ConstraintFlag b)
+    {return static_cast<ConstraintFlag>(static_cast<const int>(a) ^ static_cast<const int>(b));}
+
+    inline ConstraintFlag& operator|=(ConstraintFlag& a, ConstraintFlag b)
+    {return (ConstraintFlag&)((int&)(a) |= static_cast<const int>(b));}
+
+    inline ConstraintFlag& operator&=(ConstraintFlag& a, ConstraintFlag b)
+    {return (ConstraintFlag&)((int&)(a) &= static_cast<const int>(b));}
+
+    inline ConstraintFlag& operator^=(ConstraintFlag& a, ConstraintFlag b)
+    {return (ConstraintFlag&)((int&)(a) ^= static_cast<const int>(b));}
+
     struct BEZIER_COM_TRAJ_DLLAPI Constraints
     {
 
         Constraints()
-            : c0_(true)
-            , dc0_(true)
-            , ddc0_(false)
-            , ddc1_(false)
-            , dc1_(true)
-            , c1_(true)
+            : flag_(INIT_POS | INIT_VEL | END_VEL | END_POS)
             , constraintAcceleration_(true)
             , maxAcceleration_(5.)
             ,reduce_h_(1e-4) {}
 
-        Constraints(bool c0,bool dc0,bool ddc0,bool ddc1,bool dc1,bool c1)
-            : c0_(c0)
-            , dc0_(dc0)
-            , ddc0_(ddc0)
-            , ddc1_(ddc1)
-            , dc1_(dc1)
-            , c1_(c1)
+        Constraints(ConstraintFlag flag)
+            : flag_(flag)
             , constraintAcceleration_(true)
             , maxAcceleration_(5.)
             ,reduce_h_(1e-4)
         {
-            if(dc0_)
+            /*if(dc0_)
                 assert(c0_ && "You cannot constraint init velocity if init position is not constrained.");
             if(ddc0_)
                 assert(dc0_ && "You cannot constraint init acceleration if init velocity is not constrained.");
             if(dc1_)
                 assert(c1_ && "You cannot constraint final velocity if final position is not constrained.");
             if(ddc1_)
-                assert(dc1_ && "You cannot constraint final acceleration if final velocity is not constrained.");
+                assert(dc1_ && "You cannot constraint final acceleration if final velocity is not constrained.");*/
         }
 
         ~Constraints(){}
 
-        bool c0_;
-        bool dc0_;
-        bool ddc0_;
-        bool ddc1_;
-        bool dc1_;
-        bool c1_;
+        ConstraintFlag flag_;
         bool constraintAcceleration_;
         double maxAcceleration_;
         double reduce_h_;
@@ -184,7 +199,6 @@ namespace bezier_com_traj
         point_t dc1_;
         point_t ddc1_;
     };
-
 } // end namespace bezier_com_traj
 
 #endif

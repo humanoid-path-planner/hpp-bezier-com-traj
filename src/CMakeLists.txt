@@ -13,6 +13,13 @@ SET(${LIBRARY_NAME}_SOURCES
     ${INCLUDE_DIR}/bezier-com-traj/data.hh
     ${INCLUDE_DIR}/bezier-com-traj/solve.hh
     ${INCLUDE_DIR}/bezier-com-traj/common_solve_methods.hh
+    ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_definition.hh
+    ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh
+    ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh
+    ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh
+    ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh
+    ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh
+    ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh
     ${INCLUDE_DIR}/solver/eiquadprog-fast.hpp
     common_solve_methods.cpp
     eiquadprog-fast.cpp
