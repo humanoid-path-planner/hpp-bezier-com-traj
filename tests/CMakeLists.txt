@@ -41,7 +41,7 @@ if ( MSVC )
         SET(CMAKE_DEBUG_POSTFIX d)
 endif ( MSVC )
 
-ADD_EXECUTABLE(bezier-com-traj-test test_static_equilibrium.cpp test_helper.hh)
+ADD_EXECUTABLE(bezier-com-traj-test test-zero-step-capturability.cpp test_helper.hh)
 
 TARGET_LINK_LIBRARIES(bezier-com-traj-test bezier-com-traj ${CDL_LIBRARIES})
 
