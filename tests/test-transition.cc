@@ -213,11 +213,11 @@ BOOST_AUTO_TEST_CASE(quasi_static){
     Vector3 init = Vector3::Zero();
 
     ConstraintsPair Ab_first = stackConstraints(kin0,stab);
-    bezier_com_traj::ResultData res_first = bezier_com_traj::solveIntersection(Ab_first,Hg,init);
+    bezier_com_traj::ResultData res_first = bezier_com_traj::solve(Ab_first,Hg,init);
     BOOST_CHECK(res_first.success_);
 
     ConstraintsPair Ab_second = stackConstraints(kin2,stab);
-    bezier_com_traj::ResultData res_second = bezier_com_traj::solveIntersection(Ab_second,Hg,init);
+    bezier_com_traj::ResultData res_second = bezier_com_traj::solve(Ab_second,Hg,init);
     BOOST_CHECK(res_second.success_);
     delete cDataMid.contactPhase_;
 }
@@ -588,11 +588,11 @@ BOOST_AUTO_TEST_CASE(quasi_static_0){
     Vector3 init = Vector3::Zero();
 
     ConstraintsPair Ab_first = stackConstraints(kin_first,stab);
-    bezier_com_traj::ResultData res_first = bezier_com_traj::solveIntersection(Ab_first,Hg,init);
+    bezier_com_traj::ResultData res_first = bezier_com_traj::solve(Ab_first,Hg,init);
     BOOST_CHECK(res_first.success_);
 
     ConstraintsPair Ab_second = stackConstraints(kin_second,stab);
-    bezier_com_traj::ResultData res_second = bezier_com_traj::solveIntersection(Ab_second,Hg,init);
+    bezier_com_traj::ResultData res_second = bezier_com_traj::solve(Ab_second,Hg,init);
     BOOST_CHECK(res_second.success_);
 
     delete cDataFirst.contactPhase_;
@@ -614,11 +614,11 @@ BOOST_AUTO_TEST_CASE(quasi_static_1){
     Vector3 init = Vector3::Zero();
 
     ConstraintsPair Ab_first = stackConstraints(kin_first,stab);
-    bezier_com_traj::ResultData res_first = bezier_com_traj::solveIntersection(Ab_first,Hg,init);
+    bezier_com_traj::ResultData res_first = bezier_com_traj::solve(Ab_first,Hg,init);
     BOOST_CHECK(! res_first.success_);
 
     ConstraintsPair Ab_second = stackConstraints(kin_second,stab);
-    bezier_com_traj::ResultData res_second = bezier_com_traj::solveIntersection(Ab_second,Hg,init);
+    bezier_com_traj::ResultData res_second = bezier_com_traj::solve(Ab_second,Hg,init);
     BOOST_CHECK(! res_second.success_);
 
     delete cDataFirst.contactPhase_;
@@ -640,11 +640,11 @@ BOOST_AUTO_TEST_CASE(quasi_static_2){
     Vector3 init = Vector3::Zero();
 
     ConstraintsPair Ab_first = stackConstraints(kin_first,stab);
-    bezier_com_traj::ResultData res_first = bezier_com_traj::solveIntersection(Ab_first,Hg,init);
+    bezier_com_traj::ResultData res_first = bezier_com_traj::solve(Ab_first,Hg,init);
     BOOST_CHECK(res_first.success_);
 
     ConstraintsPair Ab_second = stackConstraints(kin_second,stab);
-    bezier_com_traj::ResultData res_second = bezier_com_traj::solveIntersection(Ab_second,Hg,init);
+    bezier_com_traj::ResultData res_second = bezier_com_traj::solve(Ab_second,Hg,init);
     BOOST_CHECK(res_second.success_);
 
 

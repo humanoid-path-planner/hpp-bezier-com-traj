@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(single_support){
     std::pair<MatrixX3,VectorX> Ab = generateConstraints(normal,position,Matrix3::Identity(),Vector3::Zero());
     std::pair<Matrix3,Vector3> Hg = computeCost();
     Vector3 init = Vector3::Zero();
-    bezier_com_traj::ResultData res = bezier_com_traj::solveIntersection(Ab,Hg,init);
+    bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,Hg,init);
     BOOST_CHECK(res.success_);
 
     // sample positions for second foot inside kinematics constraints and check for feasibility :
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(quasiStatic_exist){
         std::pair<MatrixX3,VectorX> Ab = generateConstraints(normal,position,Matrix3::Identity(),Vector3::Zero());
         std::pair<Matrix3,Vector3> Hg = computeCost();
         Vector3 init = Vector3::Zero();
-        bezier_com_traj::ResultData res = bezier_com_traj::solveIntersection(Ab,Hg,init);
+        bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,Hg,init);
         BOOST_CHECK(res.success_);
     }
 }
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(quasiStatic_empty_upX){
         std::pair<MatrixX3,VectorX> Ab = generateConstraints(normal,position,Matrix3::Identity(),Vector3::Zero());
         std::pair<Matrix3,Vector3> Hg = computeCost();
         Vector3 init = Vector3::Zero();
-        bezier_com_traj::ResultData res = bezier_com_traj::solveIntersection(Ab,Hg,init);
+        bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,Hg,init);
         BOOST_CHECK(! res.success_);
     }
 }
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(quasiStatic_empty_downX){
         std::pair<MatrixX3,VectorX> Ab = generateConstraints(normal,position,Matrix3::Identity(),Vector3::Zero());
         std::pair<Matrix3,Vector3> Hg = computeCost();
         Vector3 init = Vector3::Zero();
-        bezier_com_traj::ResultData res = bezier_com_traj::solveIntersection(Ab,Hg,init);
+        bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,Hg,init);
         BOOST_CHECK(! res.success_);
     }
 }
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(quasiStatic_empty_downY){
         std::pair<MatrixX3,VectorX> Ab = generateConstraints(normal,position,Matrix3::Identity(),Vector3::Zero());
         std::pair<Matrix3,Vector3> Hg = computeCost();
         Vector3 init = Vector3::Zero();
-        bezier_com_traj::ResultData res = bezier_com_traj::solveIntersection(Ab,Hg,init);
+        bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,Hg,init);
         BOOST_CHECK(! res.success_);
     }
 }
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(quasiStatic_empty_upY){
         std::pair<MatrixX3,VectorX> Ab = generateConstraints(normal,position,Matrix3::Identity(),Vector3::Zero());
         std::pair<Matrix3,Vector3> Hg = computeCost();
         Vector3 init = Vector3::Zero();
-        bezier_com_traj::ResultData res = bezier_com_traj::solveIntersection(Ab,Hg,init);
+        bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,Hg,init);
         BOOST_CHECK(! res.success_);
     }
 }

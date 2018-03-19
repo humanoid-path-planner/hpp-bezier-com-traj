@@ -16,9 +16,7 @@
 #define QHULL 1
 #endif
 
-#ifndef USE_SLACK
-#define USE_SLACK 0
-#endif
+const int numCol = 3;
 
 
 namespace bezier_com_traj
@@ -26,7 +24,7 @@ namespace bezier_com_traj
 typedef waypoint3_t waypoint_t;
 typedef std::pair<double,point3_t> coefs_t;
 
-ResultData solveIntersection(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init)
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init)
 {
     return solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
 }
@@ -150,12 +148,6 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
 
 std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const VectorX& h,const Vector3& g,const waypoint6_t& w){
     int dimH = (int)(mH.rows());
-    int numCol;
-    #if USE_SLACK
-    numCol = 4;
-    #else
-    numCol = 3;
-    #endif
     MatrixXX A(dimH,numCol);
     VectorX b(dimH);
     VectorX g_= VectorX::Zero(6);
@@ -163,9 +155,6 @@ std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const
     A.block(0,0,dimH,3) = mH*w.first;
     b = h + mH*(g_ - w.second);
     Normalize(A,b);
-    #if USE_SLACK
-    A.block(0,3,dimH,1) = VectorX::Ones(dimH); // slack variable, after normalization !!
-    #endif
     return std::make_pair<MatrixXX,VectorX>(A,b);
 }
 
@@ -197,7 +186,7 @@ void compareStabilityMethods(const MatrixXX& mH,const VectorX& h,const Vector3& 
 }
 
 
-std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const int pointsPerPhase,VectorX& /*constraints_equivalence*/){
+std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const int pointsPerPhase){
     // compute the list of discretized waypoint :
     double t_total = 0.;
     for(int i = 0 ; i < Ts.size() ; ++i)
@@ -213,12 +202,6 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
 
     assert(stepIdForPhase.back() == (wps_c.size()-1)); // -1 because the first one is the index (start at 0) and the second is the size
     // compute the total number of inequalities (to initialise A and b)
-    int numCol;
-    #if USE_SLACK
-    numCol = 4;
-    #else
-    numCol = 3;
-    #endif
     long int num_ineq = 0;
     long int num_stab_ineq = 0;
     long int num_kin_ineq = 0;
@@ -424,62 +407,52 @@ void computeFinalVelocity(ResultDataCOMTraj& res){
     res.dc1_ = res.c_of_t_.derivate(res.c_of_t_.max(), 1);
 }
 
-ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,const int pointsPerPhase, const double /*feasability_treshold*/){
-    assert(pData.contacts_.size() ==2 || pData.contacts_.size() ==3);
-    assert(Ts.size() == pData.contacts_.size());
+double computeTotalTime(const VectorX& Ts)
+{
     double T = 0;
     for(int i = 0 ; i < Ts.size() ; ++i)
         T+=Ts[i];
-    int sizeX;
-    #if USE_SLACK
-    sizeX = 4;
-    #else
-    sizeX = 3;
-    #endif
-    MatrixXX H(sizeX,sizeX);
-    VectorX g(sizeX);
-    ResultDataCOMTraj res;
-    VectorX constraint_equivalence;
-    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase,constraint_equivalence);
-    /*if(pData.constraints_.flag_ & END_VEL)
-        computeCostMinAcceleration(pData,Ts,pointsPerPhase,H,g);
-    else
-        computeCostEndVelocity(pData,T,H,g);*/
+    return T;
+}
+
+std::pair<MatrixXX, VectorX> genCostFunction(const ProblemData& pData,const VectorX& Ts,
+                                             const int pointsPerPhase)
+{
+    MatrixXX H(numCol,numCol);
+    VectorX g(numCol);
     cost::genCostFunction(pData,Ts,pointsPerPhase,H,g);
+    return std::make_pair(H,g);
+}
 
-    #if USE_SLACK
-    addSlackInCost(H,g);
-    #endif
-
-    VectorX x = VectorX::Zero(sizeX); // 3 + slack
-    x.head<3>() = init_guess;
-
-    // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
-    ResultData resQp = solve(Ab.first,Ab.second,H,g, x);
-    bool success;
-     #if USE_SLACK
-    double feasability = fabs(resQp.x[3]);
-    success = feasability<=feasability_treshold;
-    #else
-    success = resQp.success_;
-    #endif
-
-    if(success)
+ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const double T )
+{
+    ResultDataCOMTraj res;
+    if(resQp.success_)
     {
         res.success_ = true;
         res.x = resQp.x.head<3>();
         computeBezierCurve (pData,T,res);
         computeFinalVelocity(res);
         computeFinalAcceleration(res);
-        #if QHULL
-        printQHullFile(Ab,resQp.x,"bezier_wp.txt");
-        #endif
     }
     return res;
 }
 
-namespace cost {
+ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,const int pointsPerPhase, const double /*feasability_treshold*/){
+    assert(Ts.size() == pData.contacts_.size());
+    double T = computeTotalTime(Ts);
+    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase);
+    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,pointsPerPhase);
+    VectorX x = VectorX::Zero(numCol); x.head<3>() = init_guess;
+    ResultData resQp = solve(Ab,Hg, x);
+#if QHULL
+    if (resQp.success_) printQHullFile(Ab,resQp.x,"bezier_wp.txt");
+#endif
+    return genTraj(resQp, pData, T);
+}
 
+namespace cost {
+// TODO this is temporary.The acceleration integral can be computed analitcally
 void computeCostMinAcceleration(const ProblemData& pData,const VectorX& Ts,
                                 const int pointsPerPhase, MatrixXX& H, VectorX& g)
 {
