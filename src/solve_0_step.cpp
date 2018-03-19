@@ -4,6 +4,7 @@
  */
 
 #include <bezier-com-traj/solve.hh>
+#include <bezier-com-traj/utils.hh>
 #include <bezier-com-traj/common_solve_methods.hh>
 
 using namespace bezier_com_traj;

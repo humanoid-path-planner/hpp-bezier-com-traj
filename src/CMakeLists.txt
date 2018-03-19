@@ -14,6 +14,7 @@ SET(${LIBRARY_NAME}_SOURCES
     ${INCLUDE_DIR}/bezier-com-traj/config.hh
     ${INCLUDE_DIR}/bezier-com-traj/definitions.hh
     ${INCLUDE_DIR}/bezier-com-traj/data.hh
+    ${INCLUDE_DIR}/bezier-com-traj/utils.hh
     ${INCLUDE_DIR}/bezier-com-traj/flags.hh
     ${INCLUDE_DIR}/bezier-com-traj/solve.hh
     ${INCLUDE_DIR}/bezier-com-traj/common_solve_methods.hh
@@ -30,6 +31,7 @@ SET(${LIBRARY_NAME}_SOURCES
     eiquadprog-fast.cpp
     solve_transition.cpp
     solve_0_step.cpp
+    utils.cpp
 )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)

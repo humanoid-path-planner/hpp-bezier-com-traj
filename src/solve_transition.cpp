@@ -29,32 +29,6 @@ ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX
     return solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
 }
 
-void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,const std::string& fileName,bool clipZ){
-     std::ofstream file;
-     using std::endl;
-     std::string path("/local/fernbac/bench_iros18/constraints_obj/");
-     path.append(fileName);
-     file.open(path.c_str(),std::ios::out | std::ios::trunc);
-     file<<"3 1"<<endl;
-     file<<"\t "<<intPoint[0]<<"\t"<<intPoint[1]<<"\t"<<intPoint[2]<<endl;
-     file<<"4"<<endl;
-     clipZ ? file<<Ab.first.rows()+2<<endl : file<<Ab.first.rows()<<endl;
-     for(int i = 0 ; i < Ab.first.rows() ; ++i){
-         file<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
-     }
-     if(clipZ){
-         file<<"\t"<<0<<"\t"<<0<<"\t"<<1.<<"\t"<<-3.<<endl;
-         file<<"\t"<<0<<"\t"<<0<<"\t"<<-1.<<"\t"<<-1.<<endl;
-     }
-     file.close();
-}
-
-
-
-
-
-
-
 /**
  * @brief computeDiscretizedTime build an array of discretized points in time, such that there is the same number of point in each phase. Doesn't contain t=0, is of size pointsPerPhase*phaseTimings.size()
  * @param phaseTimings
