@@ -64,7 +64,7 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
     std::vector<waypoint6_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     std::vector<Matrix3> Cpi;
-    for(int i = 0 ; i < pi.size() ; ++i){
+    for(std::size_t i = 0 ; i < pi.size() ; ++i){
         Cpi.push_back(skew(pi[i]));
     }
     const Vector3 g = pData.contacts_.front().contactPhase_->m_gravity;

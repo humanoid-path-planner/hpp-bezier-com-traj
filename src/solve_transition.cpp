@@ -38,7 +38,7 @@ void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,cons
      file<<"\t "<<intPoint[0]<<"\t"<<intPoint[1]<<"\t"<<intPoint[2]<<endl;
      file<<"4"<<endl;
      clipZ ? file<<Ab.first.rows()+2<<endl : file<<Ab.first.rows()<<endl;
-     for(size_t i = 0 ; i < Ab.first.rows() ; ++i){
+     for(int i = 0 ; i < Ab.first.rows() ; ++i){
          file<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
      }
      if(clipZ){
@@ -64,7 +64,7 @@ std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,const int
     std::vector<double> timeArray;
     double t = 0;
     double t_total = 0;
-    for(size_t i = 0 ; i < phaseTimings.size() ; ++i)
+    for(int i = 0 ; i < phaseTimings.size() ; ++i)
         t_total += phaseTimings[i];
 
     for(int i = 0 ; i < phaseTimings.size() ; ++i){
@@ -85,7 +85,7 @@ std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     // evaluate curve work with normalized time !
     double t;
-    for (int i = 0 ; i<timeArray.size() ; ++i ){
+    for (std::size_t i = 0 ; i<timeArray.size() ; ++i ){
         t = timeArray[i] / T;
         if(t>1)
             t=1.;
@@ -98,12 +98,12 @@ std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double
 std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,double T,const std::vector<double>& timeArray){
     std::vector<waypoint6_t> wps = computeWwaypoints(pData,T);
     std::vector<waypoint6_t> res;
-    std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms(wps.size()-1);
+    std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms((int)wps.size()-1);
     double t;
     double b;
-    for(int i = 0 ; i < timeArray.size() ; ++i){
+    for(std::size_t i = 0 ; i < timeArray.size() ; ++i){
         waypoint6_t w = initwp<waypoint6_t>();
-        for (int j = 0 ; j < wps.size() ; ++j){
+        for (std::size_t j = 0 ; j < wps.size() ; ++j){
             t = timeArray[i]/T;
             if(t>1.)
                 t=1.;
@@ -123,7 +123,7 @@ std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& 
     std::vector<coefs_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     double t;
-    for (int i = 0 ; i<timeArray.size() ; ++i ){
+    for (std::size_t i = 0 ; i<timeArray.size() ; ++i ){
         t = timeArray[i] / T;
         if(t>1)
             t=1.;
@@ -207,7 +207,7 @@ void compareStabilityMethods(const MatrixXX& mH,const VectorX& h,const Vector3& 
 }
 
 
-std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const int pointsPerPhase,VectorX& constraints_equivalence){
+std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const int pointsPerPhase,VectorX& /*constraints_equivalence*/){
     // compute the list of discretized waypoint :
     double t_total = 0.;
     for(int i = 0 ; i < Ts.size() ; ++i)
@@ -216,12 +216,6 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     //std::cout<<"total time : "<<t_total<<std::endl;
     std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
     std::vector<coefs_t> wps_c = computeDiscretizedWaypoints(pData,t_total,timeArray);
-    std::vector<coefs_t> wps_ddc;
-    Vector3 acc_bounds;
-    if(pData.constraints_.constraintAcceleration_){
-        wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
-        acc_bounds = Vector3::Ones()*pData.constraints_.maxAcceleration_;
-    }
     std::vector<waypoint6_t> wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
     //std::cout<<" number of discretized waypoints c: "<<wps_c.size()<<std::endl;
     //std::cout<<" number of discretized waypoints w: "<<wps_w.size()<<std::endl;
@@ -238,9 +232,9 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     #else
     numCol = 3;
     #endif
-    int num_ineq = 0;
-    int num_stab_ineq = 0;
-    int num_kin_ineq = 0;
+    long int num_ineq = 0;
+    long int num_stab_ineq = 0;
+    long int num_kin_ineq = 0;
     int numStepForPhase;
     centroidal_dynamics::MatrixXX Hrow;
     VectorX h;
@@ -266,10 +260,10 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     VectorX b(num_ineq);
     std::pair<MatrixXX,VectorX> Ab_stab;
 
-    int id_rows = 0;
-    int current_size;
+    long int id_rows = 0;
+    long int current_size;
 
-    int id_phase = 0;
+    std::size_t id_phase = 0;
     ContactData phase = pData.contacts_[id_phase];
     // compute some constant matrice for the current phase :
     const Vector3& g = phase.contactPhase_->m_gravity;
@@ -286,7 +280,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
 
     // assign the Stability constraints  for each discretized waypoints :
     // we don't consider the first point, because it's independant of x.
-    for(int id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
+    for(std::size_t id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
         // add stability constraints :
 
         Ab_stab = dynamicStabilityConstraints(mH,h,g,wps_w[id_step]);
@@ -296,8 +290,8 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         id_rows += dimH ;
 
         // check if we are going to switch phases :
-        for(int i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
-            if(id_step == stepIdForPhase[i]){
+        for(std::size_t i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
+            if((int)id_step == stepIdForPhase[i]){
                 // switch to phase i
                 id_phase=i+1;
                 phase = pData.contacts_[id_phase];
@@ -324,20 +318,20 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     phase = pData.contacts_[id_phase];
     // assign the Kinematics constraints  for each discretized waypoints :
     // we don't consider the first point, because it's independant of x.
-    for(int id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
+    for(std::size_t id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
         // add constraints for wp id_step, on current phase :
         // add kinematics constraints :
         // constraint are of the shape A c <= b . But here c(x) = Fx + s so : AFx <= b - As
         if(id_step != timeArray.size()-1){ // we don't consider kinematics constraints for the last point (because it's independant of x)
-            current_size = phase.kin_.rows();
+            current_size = (int)phase.kin_.rows();
             A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps_c[id_step].first);
             b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps_c[id_step].second);
             id_rows += current_size;
         }
 
         // check if we are going to switch phases :
-        for(int i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
-            if(id_step == stepIdForPhase[i]){
+        for(std::size_t i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
+            if(id_step == (std::size_t)stepIdForPhase[i]){
                 // switch to phase i
                 id_phase=i+1;
                 phase = pData.contacts_[id_phase];
@@ -351,8 +345,10 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         }
     }
 
-    if(pData.constraints_.constraintAcceleration_) {   // assign the acceleration constraints  for each discretized waypoints :
-        for(int id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
+    if(pData.constraints_.constraintAcceleration_) {   // assign the acceleration constraints  for each discretized waypoints :        
+        std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
+        Vector3 acc_bounds = Vector3::Ones()*pData.constraints_.maxAcceleration_;
+        for(std::size_t id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
             A.block(id_rows,0,3,3) = Matrix3::Identity() * wps_ddc[id_step].first; // upper
             b.segment(id_rows,3) = acc_bounds - wps_ddc[id_step].second;
             A.block(id_rows+3,0,3,3) = -Matrix3::Identity() * wps_ddc[id_step].first; // lower
@@ -445,7 +441,7 @@ double analyseSlack(const VectorX& slack,const VectorX& constraint_equivalence )
     //std::cout<<"slack : "<<slack<<std::endl;
     std::cout<<"list of violated constraints : "<<std::endl;
     double previous_id = -1;
-    for(size_t i = 0 ; i < slack.size() ; ++i){
+    for(long int i = 0 ; i < slack.size() ; ++i){
         if((slack[i]*slack[i]) > std::numeric_limits<double>::epsilon()){
             if(constraint_equivalence[i] != previous_id){
                 std::cout<<"step "<<constraint_equivalence[i]<<std::endl;
@@ -457,7 +453,7 @@ double analyseSlack(const VectorX& slack,const VectorX& constraint_equivalence )
     return slack.lpNorm<Eigen::Infinity>();
 }
 
-ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,const int pointsPerPhase, const double feasability_treshold){
+ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,const int pointsPerPhase){
     assert(pData.contacts_.size() ==2 || pData.contacts_.size() ==3);
     assert(Ts.size() == pData.contacts_.size());
     double T = 0;

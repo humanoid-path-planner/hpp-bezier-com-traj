@@ -84,8 +84,8 @@ std::pair<MatrixX3, MatrixX3> computeRectangularContacts(MatrixX3 normals, Matri
         -lx,  ly, 0;
 
 
-    for (size_t ic = 0 ; ic < normals.rows() ; ++ic){
-        for (size_t i = 0 ; i < 4 ; ++i){
+    for (long int ic = 0 ; ic < normals.rows() ; ++ic){
+        for (long int i = 0 ; i < 4 ; ++i){
             rec_normals.block<1,3>(ic*4+i,0) = normals.block<1,3>(ic,0);
             rec_positions.block<1,3>(ic*4+i,0) = positions.block<1,3>(ic,0) + p.block<1,3>(i,0);
         }
@@ -167,7 +167,7 @@ ConstraintsPair stackConstraints(const ConstraintsPair& Ab,const ConstraintsPair
 
 
 bool verifyKinematicConstraints(const ConstraintsPair& Ab, const Vector3 &point){
-    for(size_t i = 0 ; i < Ab.second.size() ; ++i){
+    for(long int i = 0 ; i < Ab.second.size() ; ++i){
         if(Ab.first.block<1,3>(i,0).dot(point) > Ab.second[i] ){
             return false;
         }
@@ -207,7 +207,7 @@ bool verifyStabilityConstraintsPP(centroidal_dynamics::Equilibrium contactPhase,
     VectorX b = h+mH.block(0,0,dimH,3)*(g - acc);
 
     // verify inequalities with c :
-    for(size_t i = 0 ; i < b.size() ; ++i){
+    for(long int i = 0 ; i < b.size() ; ++i){
         if(A.block<1,3>(i,0).dot(c) > b[i] ){
             return false;
         }

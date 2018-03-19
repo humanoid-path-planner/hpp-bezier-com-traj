@@ -67,7 +67,7 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solveIntersection(const std::pair<MatrixXX, Ve
  * @param degree required degree
  * @return
  */
-std::vector<spline::Bern<double> > ComputeBersteinPolynoms(int degree);
+std::vector<spline::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree);
 
 } // end namespace bezier_com_traj
 

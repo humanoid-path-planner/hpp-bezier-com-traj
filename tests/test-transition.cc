@@ -32,10 +32,10 @@ std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,const int
     std::vector<double> timeArray;
     double t = 0;
     double t_total = 0;
-    for(size_t i = 0 ; i < phaseTimings.size() ; ++i)
+    for(long int i = 0 ; i < phaseTimings.size() ; ++i)
         t_total += phaseTimings[i];
 
-    for(int i = 0 ; i < phaseTimings.size() ; ++i){
+    for(long int i = 0 ; i < phaseTimings.size() ; ++i){
         double step = (double) phaseTimings[i] / pointsPerPhase;
         for(int j = 0 ; j < pointsPerPhase ; ++j){
             t += step;
@@ -52,7 +52,7 @@ bool check_constraints(const bezier_com_traj::ContactData& contactPhase, Vector3
     BOOST_CHECK(verifyKinematicConstraints(std::make_pair(contactPhase.Kin_,contactPhase.kin_),c));
     BOOST_CHECK(verifyStabilityConstraintsDLP(*contactPhase.contactPhase_,c,dc,ddc));
     BOOST_CHECK(verifyStabilityConstraintsPP(*contactPhase.contactPhase_,c,dc,ddc));
-
+    return true;
 }
 
 
@@ -60,7 +60,7 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
     BOOST_CHECK_EQUAL(pData.contacts_.size(),Ts.size());
 
     double t_total = 0;
-    for(size_t i = 0 ; i < Ts.size() ; ++i)
+    for(long int i = 0 ; i < Ts.size() ; ++i)
         t_total += Ts[i];
 
     Vector3 init = (pData.c1_ - pData.c0_)/2.;
@@ -97,7 +97,7 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
         std::vector<int> stepIdForPhase; // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
         for(int i = 0 ; i < Ts.size() ; ++i)
             stepIdForPhase.push_back(pointsPerPhase*(i+1)-1);
-        int id_phase = 0;
+        std::size_t id_phase = 0;
         bezier_com_traj::ContactData phase = pData.contacts_[id_phase];
 
         for(size_t id_step = 0 ; id_step < timings.size() ; ++id_step){
@@ -109,8 +109,8 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
             check_constraints(phase,c,dc,ddc);
 
             // check if we switch phases
-            for(int i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
-                if(id_step == stepIdForPhase[i]){
+            for(std::size_t i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
+                if(id_step == (std::size_t)stepIdForPhase[i]){
                     id_phase=i+1;
                     phase = pData.contacts_[id_phase];
                     check_constraints(phase,c,dc,ddc);

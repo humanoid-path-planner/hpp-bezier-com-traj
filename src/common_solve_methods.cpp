@@ -51,13 +51,13 @@ std::vector<waypoint6_t> ComputeDiscretizedWaypoints(const std::vector<waypoint6
     return res;
 }
 
-MatrixXX initMatrixA(const int dimH, const std::vector<waypoint6_t>& wps, const int extraConstraintSize, const bool useAngMomentum)
+MatrixXX initMatrixA(const int dimH, const std::vector<waypoint6_t>& wps, const long int extraConstraintSize, const bool useAngMomentum)
 {
     int dimPb = useAngMomentum ? 6 : 3;
     return MatrixXX::Zero(dimH * wps.size() + extraConstraintSize, dimPb);
 }
 
-void addKinematic(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Kin, Cref_vectorX kin, const int otherConstraintIndex)
+void addKinematic(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Kin, Cref_vectorX kin, const long int otherConstraintIndex)
 {
     int dimKin = (int)(kin.rows());
     if (dimKin == 0) return;
@@ -97,7 +97,7 @@ int removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b)
         else
             ++i;
     }
-    return last+1;
+    return (int)last+1;
 }
 
 int Normalize(Ref_matrixXX A, Ref_vectorX b)
@@ -128,8 +128,8 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     int dimH = (int)(H.rows());
     MatrixXX mH = cData.contactPhase_->m_mass * H;
     // init and fill Ab matrix
-    int dimKin =  cData.kin_.size();
-    int dimAng = useAngMomentum  ? (int)(cData.ang_.size()) : 0;
+    long int dimKin =  cData.kin_.size();
+    long int dimAng = useAngMomentum  ? (long int)(cData.ang_.size()) : 0;
     A = initMatrixA(dimH, wps, dimKin + dimAng, useAngMomentum);
     b = VectorX::Zero(A.rows());
     point6_t bc = point6_t::Zero(); bc.head(3) = g; // constant part of Aub, Aubi = mH * (bc - wsi)
@@ -207,7 +207,7 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
 }
 
 
-std::vector<spline::Bern<double> > ComputeBersteinPolynoms(int degree)
+std::vector<spline::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree)
 {
     std::vector<spline::Bern<double> > res;
     for (unsigned int i =0; i <= degree; ++i)
