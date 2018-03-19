@@ -18,6 +18,12 @@
 
 namespace bezier_com_traj
 {
+    /**
+    * @brief Contact data contains all the contact information
+    * relative to a contact phase: contact points and normals
+    * (within Equilibrium object), as well as any additional
+    * kinematic and angular constraints.
+    */
     struct BEZIER_COM_TRAJ_DLLAPI ContactData
     {
         ContactData()
@@ -29,12 +35,17 @@ namespace bezier_com_traj
        ~ContactData(){}
 
        centroidal_dynamics::Equilibrium* contactPhase_;
-       MatrixX3 Kin_;
-       VectorX kin_;
-       MatrixX3 Ang_;
-       VectorX ang_;
+       MatrixX3 Kin_; // inequality kinematic constraints
+       VectorX  kin_;
+       MatrixX3 Ang_; // inequality angular momentum constraints
+       VectorX  ang_;
     };
 
+    /**
+    * @brief Used to define the constraints on the trajectory generation problem.
+    * Flags are used to constrain initial and terminal com positions an derivatives.
+    * Additionally, the maximum acceleration can be bounded.
+    */
     struct BEZIER_COM_TRAJ_DLLAPI Constraints
     {
         Constraints()
@@ -58,6 +69,14 @@ namespace bezier_com_traj
     };
 
 
+    /**
+    * @brief Defines all the inputs of the problem:
+    * Initial and terminal constraints, as well as selected
+    * cost functions. Also,a list of ContactData defines the
+    * different phases of the problem. While the method
+    * can handle any phase greater than one, using more
+    * than three phases is probably too constraining.
+    */
     struct BEZIER_COM_TRAJ_DLLAPI ProblemData
     {
         ProblemData()
@@ -78,6 +97,11 @@ namespace bezier_com_traj
         CostFunction costFunction_;
     };
 
+
+    /**
+    * @brief Struct used to return the results of the trajectory generation
+    * problem.
+    */
     struct BEZIER_COM_TRAJ_DLLAPI ResultData
     {
         ResultData():
@@ -103,11 +127,16 @@ namespace bezier_com_traj
             x = (other.x);
             return *this;
         }
-        bool success_;
-        double cost_;
-        VectorX x;
+        bool success_; // whether the optimization was successful
+        double cost_; // cost evaluation for the solved control point
+        VectorX x; //control point
     };
 
+
+    /**
+    * @brief Specialized ResultData that computes the Bezier curves
+    * corresponding to the computed trajectory
+    */
     struct BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj : public ResultData
     {
         ResultDataCOMTraj():
@@ -119,10 +148,10 @@ namespace bezier_com_traj
 
         ~ResultDataCOMTraj(){}
 
-        bezier_t c_of_t_;
-        bezier_t dL_of_t_;
-        point_t dc1_;
-        point_t ddc1_;
+        bezier_t c_of_t_; // center of mass trajectory
+        bezier_t dL_of_t_; // angular momentum derivative trajectory
+        point_t dc1_; // terminal velocity
+        point_t ddc1_; //terminal acceleration
     };
 } // end namespace bezier_com_traj
 
