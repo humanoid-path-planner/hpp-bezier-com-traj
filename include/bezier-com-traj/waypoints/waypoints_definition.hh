@@ -175,23 +175,4 @@ coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T)
     }
 }
 
-void computeFinalAcceleration(const ProblemData& pData,double T,ResultDataCOMTraj& res){
-    if(pData.constraints_.flag_&  END_ACC){
-        res.ddc1_ = pData.ddc1_;
-    }else{
-        coefs_t a = computeFinalAccelerationPoint(pData,T);
-        res.ddc1_ = a.first*res.x + a.second;
-    }
-}
-
-void computeFinalVelocity(const ProblemData& pData,double T,ResultDataCOMTraj& res){
-    if(pData.constraints_.flag_&  END_VEL)
-        res.dc1_ = pData.dc1_;
-    else{
-        coefs_t v = computeFinalVelocityPoint(pData,T);
-        res.dc1_ = v.first*res.x + v.second;
-    }
-}
-
-
 }

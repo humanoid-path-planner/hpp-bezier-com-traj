@@ -66,13 +66,20 @@ namespace bezier_com_traj
        VectorX ang_;
     };
 
+    enum BEZIER_COM_TRAJ_DLLAPI CostFunction{
+        ACCELERATION      = 0x00001,
+        DISTANCE_TRAVELED = 0x00002,
+        UNKNOWN_COST      = 0x00004
+      };
+
     enum BEZIER_COM_TRAJ_DLLAPI ConstraintFlag{
         INIT_POS = 0x00001,
         INIT_VEL = 0x00002,
         INIT_ACC = 0x00004,
         END_POS  = 0x00008,
         END_VEL  = 0x00010,
-        END_ACC  = 0x00020
+        END_ACC  = 0x00020,
+        UNKNOWN  = 0x00040
       };
 
     inline ConstraintFlag operator~(ConstraintFlag a)
@@ -103,23 +110,13 @@ namespace bezier_com_traj
             : flag_(INIT_POS | INIT_VEL | END_VEL | END_POS)
             , constraintAcceleration_(true)
             , maxAcceleration_(5.)
-            ,reduce_h_(1e-4) {}
+            , reduce_h_(1e-4) {}
 
         Constraints(ConstraintFlag flag)
             : flag_(flag)
             , constraintAcceleration_(true)
             , maxAcceleration_(5.)
-            ,reduce_h_(1e-4)
-        {
-            /*if(dc0_)
-                assert(c0_ && "You cannot constraint init velocity if init position is not constrained.");
-            if(ddc0_)
-                assert(dc0_ && "You cannot constraint init acceleration if init velocity is not constrained.");
-            if(dc1_)
-                assert(c1_ && "You cannot constraint final velocity if final position is not constrained.");
-            if(ddc1_)
-                assert(dc1_ && "You cannot constraint final acceleration if final velocity is not constrained.");*/
-        }
+            , reduce_h_(1e-4) {}
 
         ~Constraints(){}
 
@@ -134,19 +131,21 @@ namespace bezier_com_traj
     struct BEZIER_COM_TRAJ_DLLAPI ProblemData
     {
         ProblemData()
-            : c0_(Vector3::Zero())
-            ,dc0_(Vector3::Zero())
+            : c0_ (Vector3::Zero())
+            ,dc0_ (Vector3::Zero())
             ,ddc0_(Vector3::Zero())
-            , c1_(Vector3::Zero())
-            ,dc1_(Vector3::Zero())
+            , c1_ (Vector3::Zero())
+            ,dc1_ (Vector3::Zero())
             ,ddc1_(Vector3::Zero())
-            ,useAngularMomentum_(false) {}
+            ,useAngularMomentum_(false)
+            ,costFunction_(ACCELERATION) {}
 
         std::vector<ContactData> contacts_;
         Vector3  c0_,dc0_,ddc0_,c1_,dc1_,ddc1_;
         Vector3  l0_;
         bool useAngularMomentum_;
         Constraints constraints_;
+        CostFunction costFunction_;
     };
 
     typedef Eigen::Vector3d point_t;
