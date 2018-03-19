@@ -1,4 +1,4 @@
-# - Try to find libcdd
+# - Try to find centroidal-dynamics-lib
 # Once done this will define
 #  CDL_FOUND - System has CDL
 #  CDL_INCLUDE_DIRS - The CDL include directories
@@ -6,7 +6,7 @@
 #  CDL_DEFINITIONS - Compiler switches required for using CDL
 
 
-find_path(CDL_INCLUDE_DIR centroidal-dynamics-lib/centroidal_dynamics.h
+find_path(CDL_INCLUDE_DIR centroidal-dynamics-lib/centroidal_dynamics.hh
           HINTS ${CDL_INCLUDEDIR} /usr/include
           PATH_SUFFIXES CDL )
 
