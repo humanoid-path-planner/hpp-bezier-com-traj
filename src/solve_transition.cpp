@@ -5,9 +5,12 @@
 
 #include <bezier-com-traj/solve.hh>
 #include <bezier-com-traj/common_solve_methods.hh>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
-#include  <limits>
 #include <bezier-com-traj/waypoints/waypoints_definition.hh>
+#include <bezier-com-traj/cost/costfunction_definition.hh>
+
+#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+
+#include  <limits>
 
 #ifndef QHULL
 #define QHULL 1
@@ -438,10 +441,11 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     ResultDataCOMTraj res;
     VectorX constraint_equivalence;
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase,constraint_equivalence);
-    if(pData.constraints_.flag_ & END_VEL)
+    /*if(pData.constraints_.flag_ & END_VEL)
         computeCostMinAcceleration(pData,Ts,pointsPerPhase,H,g);
     else
-        computeCostEndVelocity(pData,T,H,g);
+        computeCostEndVelocity(pData,T,H,g);*/
+    cost::genCostFunction(pData,Ts,pointsPerPhase,H,g);
 
     #if USE_SLACK
     addSlackInCost(H,g);
@@ -472,6 +476,27 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
         #endif
     }
     return res;
+}
+
+namespace cost {
+
+void computeCostMinAcceleration(const ProblemData& pData,const VectorX& Ts,
+                                const int pointsPerPhase, MatrixXX& H, VectorX& g)
+{
+    double t_total = 0.;
+    for(int i = 0 ; i < Ts.size() ; ++i)
+        t_total+=Ts[i];
+    std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
+    std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
+    // cost : x' H x + 2 x g'
+    H.block<3,3>(0,0) = Matrix3::Zero();
+    g.head<3>() = Vector3::Zero();
+    for(size_t i = 0 ; i < wps_ddc.size() ; ++i)
+    {
+        H.block<3,3>(0,0) += Matrix3::Identity() * wps_ddc[i].first * wps_ddc[i].first;
+        g.head<3>() += wps_ddc[i].first*wps_ddc[i].second;
+    }
+}
 }
 
 

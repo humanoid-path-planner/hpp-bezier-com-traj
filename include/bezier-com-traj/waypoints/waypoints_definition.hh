@@ -3,6 +3,8 @@
  * Author: Pierre Fernbach
  */
 
+#ifndef BEZIER_COM_TRAJ_WP_DEF_H
+#define BEZIER_COM_TRAJ_WP_DEF_H
 
 #include <bezier-com-traj/data.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh>
@@ -176,3 +178,5 @@ coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T)
 }
 
 }
+
+#endif

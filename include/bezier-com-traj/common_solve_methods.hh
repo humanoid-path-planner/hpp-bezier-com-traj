@@ -1,6 +1,6 @@
 /*
- * Copyright 2015, LAAS-CNRS
- * Author: Andrea Del Prete
+ * Copyright 2018, LAAS-CNRS
+ * Author: Steve Tonneau
  */
 
 #ifndef BEZIER_COM_TRAJ_LIB_COMMON_SOLVE_H

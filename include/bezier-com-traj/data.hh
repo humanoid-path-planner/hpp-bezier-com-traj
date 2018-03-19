@@ -1,54 +1,23 @@
 /*
- * Copyright 2015, LAAS-CNRS
- * Author: Andrea Del Prete
+ * Copyright 2018, LAAS-CNRS
+ * Author: Steve Tonneau
  */
 
 #ifndef BEZIER_COM_TRAJ_LIB_DATA_H
 #define BEZIER_COM_TRAJ_LIB_DATA_H
 
-#include <Eigen/Dense>
 #include <bezier-com-traj/config.hh>
+#include <bezier-com-traj/flags.hh>
+#include <bezier-com-traj/definitions.hh>
+
 #include <spline/bezier_curve.h>
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+#include <Eigen/Dense>
+
 #include <vector>
 
 namespace bezier_com_traj
 {
-    typedef double value_type;
-    typedef Eigen::Matrix <value_type, 3, 3>                           Matrix3;
-    typedef Eigen::Matrix <value_type, 6, 3>                           Matrix63;
-    typedef Eigen::Matrix <value_type, Eigen::Dynamic, 3>              MatrixX3;
-    typedef Eigen::Matrix <value_type, Eigen::Dynamic, Eigen::Dynamic> MatrixXX;
-    typedef centroidal_dynamics::Vector3 Vector3;
-    typedef centroidal_dynamics::Vector6 Vector6;
-    typedef centroidal_dynamics::VectorX VectorX;
-
-    typedef Eigen::Ref<Vector3>     Ref_vector3;
-    typedef Eigen::Ref<VectorX>     Ref_vectorX;
-    typedef Eigen::Ref<MatrixX3>    Ref_matrixX3;
-    typedef Eigen::Ref<MatrixXX>    Ref_matrixXX;
-
-    typedef const Eigen::Ref<const Vector3>     & Cref_vector3;
-    typedef const Eigen::Ref<const Vector6>     & Cref_vector6;
-    typedef const Eigen::Ref<const VectorX>     & Cref_vectorX;
-    typedef const Eigen::Ref<const MatrixXX>    & Cref_matrixXX;
-    typedef const Eigen::Ref<const MatrixX3>    & Cref_matrixX3;
-
-
-    typedef Matrix63 matrix6_t;
-    typedef Vector6 point6_t;
-    typedef Matrix3 matrix3_t;
-    typedef Vector3 point3_t;
-    /**
-    * @brief waypoint_t a waypoint is composed of a  6*3 matrix that depend
-    * on the variable x, and of a 6d vector independent of x, such that
-    * each control point of the target bezier curve is given by pi = wix * x + wis
-    */
-    typedef std::pair<matrix6_t, point6_t> waypoint6_t;
-    typedef std::pair<matrix3_t, point3_t> waypoint3_t;
-    typedef std::pair<double,point3_t> coefs_t;
-
-
     struct BEZIER_COM_TRAJ_DLLAPI ContactData
     {
         ContactData()
@@ -66,46 +35,8 @@ namespace bezier_com_traj
        VectorX ang_;
     };
 
-    enum BEZIER_COM_TRAJ_DLLAPI CostFunction{
-        ACCELERATION      = 0x00001,
-        DISTANCE_TRAVELED = 0x00002,
-        UNKNOWN_COST      = 0x00004
-      };
-
-    enum BEZIER_COM_TRAJ_DLLAPI ConstraintFlag{
-        INIT_POS = 0x00001,
-        INIT_VEL = 0x00002,
-        INIT_ACC = 0x00004,
-        END_POS  = 0x00008,
-        END_VEL  = 0x00010,
-        END_ACC  = 0x00020,
-        UNKNOWN  = 0x00040
-      };
-
-    inline ConstraintFlag operator~(ConstraintFlag a)
-    {return static_cast<ConstraintFlag>(~static_cast<const int>(a));}
-
-    inline ConstraintFlag operator|(ConstraintFlag a, ConstraintFlag b)
-    {return static_cast<ConstraintFlag>(static_cast<const int>(a) | static_cast<const int>(b));}
-
-    inline ConstraintFlag operator&(ConstraintFlag a, ConstraintFlag b)
-    {return static_cast<ConstraintFlag>(static_cast<const int>(a) & static_cast<const int>(b));}
-
-    inline ConstraintFlag operator^(ConstraintFlag a, ConstraintFlag b)
-    {return static_cast<ConstraintFlag>(static_cast<const int>(a) ^ static_cast<const int>(b));}
-
-    inline ConstraintFlag& operator|=(ConstraintFlag& a, ConstraintFlag b)
-    {return (ConstraintFlag&)((int&)(a) |= static_cast<const int>(b));}
-
-    inline ConstraintFlag& operator&=(ConstraintFlag& a, ConstraintFlag b)
-    {return (ConstraintFlag&)((int&)(a) &= static_cast<const int>(b));}
-
-    inline ConstraintFlag& operator^=(ConstraintFlag& a, ConstraintFlag b)
-    {return (ConstraintFlag&)((int&)(a) ^= static_cast<const int>(b));}
-
     struct BEZIER_COM_TRAJ_DLLAPI Constraints
     {
-
         Constraints()
             : flag_(INIT_POS | INIT_VEL | END_VEL | END_POS)
             , constraintAcceleration_(true)
@@ -124,7 +55,6 @@ namespace bezier_com_traj
         bool constraintAcceleration_;
         double maxAcceleration_;
         double reduce_h_;
-
     };
 
 
@@ -148,10 +78,6 @@ namespace bezier_com_traj
         CostFunction costFunction_;
     };
 
-    typedef Eigen::Vector3d point_t;
-    typedef const Eigen::Ref<const point_t>& point_t_tC;
-    typedef spline::bezier_curve  <double, double, 3, true, point_t > bezier_t;
-    typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
     struct BEZIER_COM_TRAJ_DLLAPI ResultData
     {
         ResultData():
@@ -177,7 +103,6 @@ namespace bezier_com_traj
             x = (other.x);
             return *this;
         }
-
         bool success_;
         double cost_;
         VectorX x;

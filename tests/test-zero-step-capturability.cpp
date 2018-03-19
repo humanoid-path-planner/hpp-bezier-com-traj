@@ -1,6 +1,6 @@
 /*
- * Copyright 2015, LAAS-CNRS
- * Author: Andrea Del Prete
+ * Copyright 2018, LAAS-CNRS
+ * Author: Steve Tonneau
  */
 
 #include <vector>
@@ -147,7 +147,7 @@ bool checkTrajectory(const Vector3& c0, const std::string& solver, const Equilib
 
 int main()
 {
-  srand(time(NULL));
+  srand((unsigned int)time(NULL));
   RVector3 CONTACT_POINT_LOWER_BOUNDS, CONTACT_POINT_UPPER_BOUNDS;
   RVector3 RPY_LOWER_BOUNDS, RPY_UPPER_BOUNDS;
 

@@ -12,9 +12,12 @@ SET(LIBRARY_NAME ${PROJECT_NAME})
 
 SET(${LIBRARY_NAME}_SOURCES
     ${INCLUDE_DIR}/bezier-com-traj/config.hh
+    ${INCLUDE_DIR}/bezier-com-traj/definitions.hh
     ${INCLUDE_DIR}/bezier-com-traj/data.hh
+    ${INCLUDE_DIR}/bezier-com-traj/flags.hh
     ${INCLUDE_DIR}/bezier-com-traj/solve.hh
     ${INCLUDE_DIR}/bezier-com-traj/common_solve_methods.hh
+    ${INCLUDE_DIR}/bezier-com-traj/cost/costfunction_definition.hh
     ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_definition.hh
     ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh
     ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh

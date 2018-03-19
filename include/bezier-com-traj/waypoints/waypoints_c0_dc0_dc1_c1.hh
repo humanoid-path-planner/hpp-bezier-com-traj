@@ -3,6 +3,9 @@
  * Author: Pierre Fernbach
  */
 
+#ifndef BEZIER_COM_TRAJ_C0DC0D1C1_H
+#define BEZIER_COM_TRAJ_C0DC0D1C1_H
+
 #include <bezier-com-traj/data.hh>
 
 namespace bezier_com_traj{
@@ -129,3 +132,5 @@ coefs_t computeFinalAccelerationPoint(const ProblemData& pData,double T){
 
 }
 }
+
+#endif
