@@ -7,6 +7,23 @@
 namespace bezier_com_traj
 {
 
+
+template<> waypoint6_t initwp<waypoint6_t>()
+{
+    waypoint6_t w;
+    w.first  = matrix6_t::Zero();
+    w.second = point6_t::Zero();
+    return w;
+}
+
+template<> waypoint3_t initwp<waypoint3_t>()
+{
+    waypoint3_t w;
+    w.first  = matrix3_t::Zero();
+    w.second = point3_t::Zero();
+    return w;
+}
+
 Matrix3 skew(point_t_tC x)
 {
     Matrix3 res = Matrix3::Zero();
@@ -22,6 +39,26 @@ std::vector<spline::Bern<double> > ComputeBersteinPolynoms(const unsigned int de
     for (unsigned int i =0; i <= (unsigned int)degree; ++i)
         res.push_back(spline::Bern<double>(degree,i));
     return res;
+}
+
+
+std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,const int pointsPerPhase ){
+    std::vector<double> timeArray;
+    double t = 0;
+    double t_total = 0;
+    for(int i = 0 ; i < phaseTimings.size() ; ++i)
+        t_total += phaseTimings[i];
+
+    for(int i = 0 ; i < phaseTimings.size() ; ++i){
+        double step = (double) phaseTimings[i] / pointsPerPhase;
+        for(int j = 0 ; j < pointsPerPhase ; ++j){
+            t += step;
+            timeArray.push_back(t);
+        }
+    }
+    timeArray.pop_back();
+    timeArray.push_back(t_total); // avoid numerical errors
+    return timeArray;
 }
 
 void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,const std::string& fileName,bool clipZ){

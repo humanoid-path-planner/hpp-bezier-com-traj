@@ -16,6 +16,7 @@
 
 namespace bezier_com_traj
 {
+template<typename T> T initwp();
 
 /**
  * @brief Compute the Bernstein polynoms for a given degree
@@ -36,6 +37,17 @@ BEZIER_COM_TRAJ_DLLAPI std::vector<spline::Bern<double> > ComputeBersteinPolynom
 template<typename Point>
 BEZIER_COM_TRAJ_DLLAPI bezier_t computeBezierCurve(const ConstraintFlag& flag, const double T,
                                                    const std::vector<Point>& pi, const Point& x);
+
+/**
+ * @brief computeDiscretizedTime build an array of discretized points in time,
+ * such that there is the same number of point in each phase. Doesn't contain t=0,
+ * is of size pointsPerPhase*phaseTimings.size()
+ * @param phaseTimings
+ * @param pointsPerPhase
+ * @return
+ */
+std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings, const int pointsPerPhase );
+
 
 /**
  * @brief write a polytope describe by A x <= b linear constraints in

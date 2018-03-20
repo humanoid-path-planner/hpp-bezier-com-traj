@@ -28,10 +28,12 @@ SET(${LIBRARY_NAME}_SOURCES
     ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh
     ${INCLUDE_DIR}/solver/eiquadprog-fast.hpp
     common_solve_methods.cpp
+    costfunction_definition.cpp
     eiquadprog-fast.cpp
     solve_transition.cpp
     solve_0_step.cpp
     utils.cpp
+    waypoints_definition.cpp
 )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)

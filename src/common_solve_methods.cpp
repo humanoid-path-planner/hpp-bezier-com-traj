@@ -1,27 +1,10 @@
 
 #include <bezier-com-traj/common_solve_methods.hh>
 #include <solver/eiquadprog-fast.hpp>
-
+#include <bezier-com-traj/waypoints/waypoints_definition.hh>
 
 namespace bezier_com_traj
 {
-
-template<> waypoint6_t initwp<waypoint6_t>()
-{
-    waypoint6_t w;
-    w.first  = matrix6_t::Zero();
-    w.second = point6_t::Zero();
-    return w;
-}
-
-template<> waypoint3_t initwp<waypoint3_t>()
-{
-    waypoint3_t w;
-    w.first  = matrix3_t::Zero();
-    w.second = point3_t::Zero();
-    return w;
-}
-
 std::vector<waypoint6_t> ComputeDiscretizedWaypoints(const std::vector<waypoint6_t>& wps, const std::vector<spline::Bern<double> >& berns,  int numSteps)
 {
     double dt = 1./double(numSteps);
@@ -193,6 +176,21 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
         res.cost_ = QPsolver.getObjValue();
     }
     return res;
+}
+
+std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(
+        const ProblemData& pData,double T,const std::vector<double>& timeArray)
+{
+    std::vector<coefs_t> wps;
+    std::vector<point_t> pi = computeConstantWaypoints(pData,T);
+    double t;
+    for (std::size_t i = 0 ; i<timeArray.size() ; ++i ){
+        t = timeArray[i] / T;
+        if(t>1)
+            t=1.;
+        wps.push_back(evaluateAccelerationCurveAtTime(pData,pi,T,t));
+    }
+    return wps;
 }
 
 } // namespace bezier_com_traj

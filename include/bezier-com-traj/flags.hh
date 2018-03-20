@@ -11,9 +11,10 @@
 namespace bezier_com_traj
 {
     enum BEZIER_COM_TRAJ_DLLAPI CostFunction{
-        ACCELERATION      = 0x00001,
-        DISTANCE_TRAVELED = 0x00002,
-        UNKNOWN_COST      = 0x00004
+        ACCELERATION        = 0x00001,
+        DISTANCE_TRAVELED   = 0x00002,
+        TARGET_END_VELOCITY = 0x00004,
+        UNKNOWN_COST        = 0x00008
       };
 
     enum BEZIER_COM_TRAJ_DLLAPI ConstraintFlag{

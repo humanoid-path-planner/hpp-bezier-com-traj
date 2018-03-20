@@ -29,31 +29,6 @@ ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX
     return solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
 }
 
-/**
- * @brief computeDiscretizedTime build an array of discretized points in time, such that there is the same number of point in each phase. Doesn't contain t=0, is of size pointsPerPhase*phaseTimings.size()
- * @param phaseTimings
- * @param pointsPerPhase
- * @return
- */
-std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,const int pointsPerPhase ){
-    std::vector<double> timeArray;
-    double t = 0;
-    double t_total = 0;
-    for(int i = 0 ; i < phaseTimings.size() ; ++i)
-        t_total += phaseTimings[i];
-
-    for(int i = 0 ; i < phaseTimings.size() ; ++i){
-        double step = (double) phaseTimings[i] / pointsPerPhase;
-        for(int j = 0 ; j < pointsPerPhase ; ++j){
-            t += step;
-            timeArray.push_back(t);
-        }
-    }
-    timeArray.pop_back();
-    timeArray.push_back(t_total); // avoid numerical errors
-    return timeArray;
-}
-
 std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double T,const std::vector<double>& timeArray){
     //int numStep = int(T / timeStep);
     std::vector<coefs_t> wps;
@@ -89,21 +64,6 @@ std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,d
         res.push_back(w);
     }
     return res;
-}
-
-
-
-std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(const ProblemData& pData,double T,const std::vector<double>& timeArray){
-    std::vector<coefs_t> wps;
-    std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    double t;
-    for (std::size_t i = 0 ; i<timeArray.size() ; ++i ){
-        t = timeArray[i] / T;
-        if(t>1)
-            t=1.;
-        wps.push_back(evaluateAccelerationCurveAtTime(pData,pi,T,t));
-    }
-    return wps;
 }
 
  std::pair<MatrixXX,VectorX> dynamicStabilityConstraints_cross(const MatrixXX& mH,const VectorX& h,const Vector3& g,const coefs_t& c,const coefs_t& ddc){
@@ -303,35 +263,6 @@ void addSlackInCost( MatrixXX& H, VectorX& g){
     g[3] = 0;
 }
 
-//cost : min distance between x and midPoint :
-void computeCostMidPoint(const ProblemData& pData, MatrixXX& H, VectorX& g){
-    // cost : x' H x + 2 x g'
-    Vector3 midPoint = (pData.c0_ + pData.c1_)/2.; // todo : replace it with point found by planning ??
-    H.block<3,3>(0,0) = Matrix3::Identity();
-    g.head<3>() = -midPoint;
-}
-
-void computeCostMinAcceleration(const ProblemData& pData,const VectorX& Ts, const int pointsPerPhase, MatrixXX& H, VectorX& g){
-    double t_total = 0.;
-    for(int i = 0 ; i < Ts.size() ; ++i)
-        t_total+=Ts[i];
-    std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
-    std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
-    // cost : x' H x + 2 x g'
-    H.block<3,3>(0,0) = Matrix3::Zero();
-    g.head<3>() = Vector3::Zero();
-    for(size_t i = 0 ; i < wps_ddc.size() ; ++i){
-        H.block<3,3>(0,0) += Matrix3::Identity() * wps_ddc[i].first * wps_ddc[i].first;
-        g.head<3>() += wps_ddc[i].first*wps_ddc[i].second;
-    }
-}
-
-//cost : min distance between end velocity and the one computed by planning
-void computeCostEndVelocity(const ProblemData& pData,const double T, MatrixXX& H, VectorX& g){
-    coefs_t v = computeFinalVelocityPoint(pData,T);
-    H.block<3,3>(0,0) = Matrix3::Identity() * v.first * v.first;
-    g.head<3> () = v.first*(v.second - pData.dc1_);
-}
 
 void computeFinalAcceleration(ResultDataCOMTraj& res){
     res.ddc1_ = res.c_of_t_.derivate(res.c_of_t_.max(), 2);
@@ -350,11 +281,11 @@ double computeTotalTime(const VectorX& Ts)
 }
 
 std::pair<MatrixXX, VectorX> genCostFunction(const ProblemData& pData,const VectorX& Ts,
-                                             const int pointsPerPhase)
+                                             const double T, const int pointsPerPhase)
 {
     MatrixXX H(numCol,numCol);
     VectorX g(numCol);
-    cost::genCostFunction(pData,Ts,pointsPerPhase,H,g);
+    cost::genCostFunction(pData,Ts,T,pointsPerPhase,H,g);
     return std::make_pair(H,g);
 }
 
@@ -377,34 +308,13 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     assert(Ts.size() == pData.contacts_.size());
     double T = computeTotalTime(Ts);
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase);
-    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,pointsPerPhase);
+    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,pointsPerPhase);
     VectorX x = VectorX::Zero(numCol); x.head<3>() = init_guess;
     ResultData resQp = solve(Ab,Hg, x);
 #if QHULL
     if (resQp.success_) printQHullFile(Ab,resQp.x,"bezier_wp.txt");
 #endif
     return genTraj(resQp, pData, T);
-}
-
-namespace cost {
-// TODO this is temporary.The acceleration integral can be computed analitcally
-void computeCostMinAcceleration(const ProblemData& pData,const VectorX& Ts,
-                                const int pointsPerPhase, MatrixXX& H, VectorX& g)
-{
-    double t_total = 0.;
-    for(int i = 0 ; i < Ts.size() ; ++i)
-        t_total+=Ts[i];
-    std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
-    std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
-    // cost : x' H x + 2 x g'
-    H.block<3,3>(0,0) = Matrix3::Zero();
-    g.head<3>() = Vector3::Zero();
-    for(size_t i = 0 ; i < wps_ddc.size() ; ++i)
-    {
-        H.block<3,3>(0,0) += Matrix3::Identity() * wps_ddc[i].first * wps_ddc[i].first;
-        g.head<3>() += wps_ddc[i].first*wps_ddc[i].second;
-    }
-}
 }
 
 

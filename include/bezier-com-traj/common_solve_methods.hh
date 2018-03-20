@@ -13,7 +13,6 @@
 
 namespace bezier_com_traj
 {
-template<typename T> T initwp();
 
 /**
  * @brief ComputeDiscretizedWaypoints Given the waypoints defining a bezier curve,
@@ -55,6 +54,10 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_ma
  * @return
  */
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init);
+
+
+std::vector<coefs_t> computeDiscretizedAccelerationWaypoints
+    (const ProblemData& pData,double T,const std::vector<double>& timeArray);
 
 } // end namespace bezier_com_traj
 
