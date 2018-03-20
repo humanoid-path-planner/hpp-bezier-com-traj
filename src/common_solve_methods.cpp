@@ -178,19 +178,10 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
     return res;
 }
 
-std::vector<coefs_t> computeDiscretizedAccelerationWaypoints(
-        const ProblemData& pData,double T,const std::vector<double>& timeArray)
+
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init)
 {
-    std::vector<coefs_t> wps;
-    std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    double t;
-    for (std::size_t i = 0 ; i<timeArray.size() ; ++i ){
-        t = timeArray[i] / T;
-        if(t>1)
-            t=1.;
-        wps.push_back(evaluateAccelerationCurveAtTime(pData,pi,T,t));
-    }
-    return wps;
+    return solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
 }
 
 } // namespace bezier_com_traj

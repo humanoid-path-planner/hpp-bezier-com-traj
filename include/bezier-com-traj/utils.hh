@@ -34,8 +34,8 @@ BEZIER_COM_TRAJ_DLLAPI std::vector<spline::Bern<double> > ComputeBersteinPolynom
  * @param pis list of waypoints
  * @return the bezier curve
  */
-template<typename Point>
-BEZIER_COM_TRAJ_DLLAPI bezier_t computeBezierCurve(const ConstraintFlag& flag, const double T,
+template<typename Bezier, typename Point>
+BEZIER_COM_TRAJ_DLLAPI Bezier computeBezierCurve(const ConstraintFlag& flag, const double T,
                                                    const std::vector<Point>& pi, const Point& x);
 
 /**
@@ -69,9 +69,9 @@ int Normalize(Ref_matrixXX A, Ref_vectorX b);
 
 } // end namespace bezier_com_traj
 
-template<typename Point>
-bezier_com_traj::bezier_t bezier_com_traj::computeBezierCurve(const ConstraintFlag& flag, const double T,
-                                                   const std::vector<Point>& pi, const Point& x)
+template<typename Bezier, typename Point>
+Bezier bezier_com_traj::computeBezierCurve(const ConstraintFlag& flag, const double T,
+                                           const std::vector<Point>& pi, const Point& x)
 {
     std::vector<Point> wps;
     size_t i = 0;
@@ -103,7 +103,7 @@ bezier_com_traj::bezier_t bezier_com_traj::computeBezierCurve(const ConstraintFl
         wps.push_back(pi[i]);
         i++;
     }
-    return bezier_t (wps.begin(), wps.end(),T);
+    return Bezier (wps.begin(), wps.end(),T);
 }
 
 

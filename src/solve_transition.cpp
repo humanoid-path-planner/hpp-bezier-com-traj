@@ -24,27 +24,6 @@ namespace bezier_com_traj
 typedef waypoint3_t waypoint_t;
 typedef std::pair<double,point3_t> coefs_t;
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init)
-{
-    return solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
-}
-
-std::vector<coefs_t> computeDiscretizedWaypoints(const ProblemData& pData,double T,const std::vector<double>& timeArray){
-    //int numStep = int(T / timeStep);
-    std::vector<coefs_t> wps;
-    std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    // evaluate curve work with normalized time !
-    double t;
-    for (std::size_t i = 0 ; i<timeArray.size() ; ++i ){
-        t = timeArray[i] / T;
-        if(t>1)
-            t=1.;
-        wps.push_back(evaluateCurveAtTime(pData,pi,t));
-    }
-    return wps;
-}
-
-
 std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,double T,const std::vector<double>& timeArray){
     std::vector<waypoint6_t> wps = computeWwaypoints(pData,T);
     std::vector<waypoint6_t> res;
@@ -116,18 +95,18 @@ void compareStabilityMethods(const MatrixXX& mH,const VectorX& h,const Vector3& 
     MatrixXX A_error = Ab_cross.first - Ab_w.first;
     VectorX b_error = Ab_cross.second - Ab_w.second;
 
-    assert(A_error.lpNorm<Eigen::Infinity>() < 1e-4 && b_error.lpNorm<Eigen::Infinity>() < 1e-4 && "Both method didn't find the same results.");
+    assert(A_error.lpNorm<Eigen::Infinity>() < 1e-4 &&
+           b_error.lpNorm<Eigen::Infinity>() < 1e-4 &&
+           "Both method didn't find the same results.");
 }
 
 
-std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,const int pointsPerPhase){
-    // compute the list of discretized waypoint :
-    double t_total = 0.;
-    for(int i = 0 ; i < Ts.size() ; ++i)
-        t_total+=Ts[i];
+std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,
+                                                       const double t_total,const int pointsPerPhase)
+{
     // Compute all the discretized wayPoint
     std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
-    std::vector<coefs_t> wps_c = computeDiscretizedWaypoints(pData,t_total,timeArray);
+    std::vector<coefs_t> wps_c = computeDiscretizedWaypoints<point_t>(pData,t_total,timeArray);
     std::vector<waypoint6_t> wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
     assert(/*wps_c.size() == wps_ddc.size() &&*/  wps_w.size() == wps_c.size());
     std::vector<int> stepIdForPhase; // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
@@ -158,7 +137,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
         num_ineq += 2*3 *(wps_c.size()) ; // upper and lower bound on acceleration for each discretized waypoint (exept the first one)
     }
     // init constraints matrix :
-    MatrixXX A = MatrixXX::Zero(num_ineq,numCol); // 3 + 1 :  because of the slack constraints
+    MatrixXX A = MatrixXX::Zero(num_ineq,numCol);
     VectorX b(num_ineq);
     std::pair<MatrixXX,VectorX> Ab_stab;
 
@@ -244,7 +223,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     }
 
     if(pData.constraints_.constraintAcceleration_) {   // assign the acceleration constraints  for each discretized waypoints :
-        std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
+        std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints<point_t>(pData,t_total,timeArray);
         Vector3 acc_bounds = Vector3::Ones()*pData.constraints_.maxAcceleration_;
         for(std::size_t id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
             A.block(id_rows,0,3,3) = Matrix3::Identity() * wps_ddc[id_step].first; // upper
@@ -258,26 +237,12 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
     return std::make_pair(A,b);
 }
 
-void addSlackInCost( MatrixXX& H, VectorX& g){
-    H(3,3) = 1e9;
-    g[3] = 0;
-}
-
-
 void computeFinalAcceleration(ResultDataCOMTraj& res){
     res.ddc1_ = res.c_of_t_.derivate(res.c_of_t_.max(), 2);
 }
 
 void computeFinalVelocity(ResultDataCOMTraj& res){
     res.dc1_ = res.c_of_t_.derivate(res.c_of_t_.max(), 1);
-}
-
-double computeTotalTime(const VectorX& Ts)
-{
-    double T = 0;
-    for(int i = 0 ; i < Ts.size() ; ++i)
-        T+=Ts[i];
-    return T;
 }
 
 std::pair<MatrixXX, VectorX> genCostFunction(const ProblemData& pData,const VectorX& Ts,
@@ -297,17 +262,26 @@ ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const doub
         res.success_ = true;
         res.x = resQp.x.head<3>();
         std::vector<Vector3> pis = computeConstantWaypoints(pData,T);
-        res.c_of_t_ = computeBezierCurve<point_t> (pData.constraints_.flag_,T,pis,res.x);
+        res.c_of_t_ = computeBezierCurve<bezier_t, point_t> (pData.constraints_.flag_,T,pis,res.x);
         computeFinalVelocity(res);
         computeFinalAcceleration(res);
     }
     return res;
 }
 
-ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,const int pointsPerPhase, const double /*feasability_treshold*/){
+double computeTotalTime(const VectorX& Ts)
+{
+    double T = 0;
+    for(int i = 0 ; i < Ts.size() ; ++i)
+        T+=Ts[i];
+    return T;
+}
+
+ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,
+                               const int pointsPerPhase, const double /*feasability_treshold*/){
     assert(Ts.size() == pData.contacts_.size());
     double T = computeTotalTime(Ts);
-    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,pointsPerPhase);
+    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,pointsPerPhase);
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,pointsPerPhase);
     VectorX x = VectorX::Zero(numCol); x.head<3>() = init_guess;
     ResultData resQp = solve(Ab,Hg, x);

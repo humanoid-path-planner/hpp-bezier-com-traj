@@ -59,6 +59,7 @@ SET(${PROJECT_NAME}_HEADERS
                 include/bezier-com-traj/solve.hh
                 include/bezier-com-traj/solve_end_effector.hh
                 include/bezier-com-traj/common_solve_methods.hh
+                include/bezier-com-traj/common_solve_methods.inl
                 include/bezier-com-traj/cost/costfunction_definition.hh
                 include/bezier-com-traj/waypoints/waypoints_definition.hh
                 include/bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh

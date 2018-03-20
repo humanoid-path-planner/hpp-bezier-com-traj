@@ -37,7 +37,7 @@ void computeCostMinAcceleration(const ProblemData& pData, const VectorX& Ts, con
     for(int i = 0 ; i < Ts.size() ; ++i)
         t_total+=Ts[i];
     std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
-    std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints(pData,t_total,timeArray);
+    std::vector<coefs_t> wps_ddc = computeDiscretizedAccelerationWaypoints<point3_t>(pData,t_total,timeArray);
     // cost : x' H x + 2 x g'
     H.block<3,3>(0,0) = Matrix3::Zero();
     g.head<3>() = Vector3::Zero();

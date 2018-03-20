@@ -12,9 +12,9 @@
 
 namespace bezier_com_traj{
 /**
-  * This file is used to choose the correct expressions of the curves waypoints,
-  * depending on the options set in ProblemData.constraints
-  */
+* This file is used to choose the correct expressions of the curves waypoints,
+* depending on the options set in ProblemData.constraints
+*/
 
 /** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t,
  * defined by the waypoint pi and one free waypoint (x)

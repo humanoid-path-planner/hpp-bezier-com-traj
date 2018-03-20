@@ -42,7 +42,7 @@ std::vector<spline::Bern<double> > ComputeBersteinPolynoms(const unsigned int de
 }
 
 
-std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,const int pointsPerPhase ){
+std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings, const int pointsPerPhase ){
     std::vector<double> timeArray;
     double t = 0;
     double t_total = 0;
