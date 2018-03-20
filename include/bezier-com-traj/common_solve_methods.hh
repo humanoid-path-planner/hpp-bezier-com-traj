@@ -13,12 +13,7 @@
 
 namespace bezier_com_traj
 {
-
-
-BEZIER_COM_TRAJ_DLLAPI Matrix3 skew(point_t_tC x);
 template<typename T> T initwp();
-int Normalize(Ref_matrixXX A, Ref_vectorX b);
-
 
 /**
  * @brief ComputeDiscretizedWaypoints Given the waypoints defining a bezier curve,
@@ -42,7 +37,6 @@ BEZIER_COM_TRAJ_DLLAPI  std::vector<waypoint6_t> ComputeDiscretizedWaypoints(con
  */
 BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint6_t>& wps, const std::vector<waypoint6_t>& wpL, const bool useAngMomentum, bool& fail);
 
-
 /**
  * @brief solve x' h x + 2 g' x, subject to A*x <= b using quadprog
  * @param A Inequality matrix
@@ -61,13 +55,6 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_ma
  * @return
  */
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init);
-
-/**
- * @brief Compute the Bernstein polynoms for a given degree
- * @param degree required degree
- * @return
- */
-std::vector<spline::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree);
 
 } // end namespace bezier_com_traj
 

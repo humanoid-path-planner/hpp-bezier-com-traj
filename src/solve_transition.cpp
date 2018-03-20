@@ -245,7 +245,6 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
                 // TODO : filter for redunbdant constraints ...
                 // add stability constraints :
                 Ab_stab = dynamicStabilityConstraints(mH,h,g,wps_w[id_step]);
-                //compareStabilityMethods(mH,h,g,wps_c[id_step],wps_ddc[id_step],wps_w[id_step]);
                 A.block(id_rows,0,dimH,numCol) = Ab_stab.first;
                 b.segment(id_rows,dimH) = Ab_stab.second;
                 id_rows += dimH ;
@@ -334,45 +333,6 @@ void computeCostEndVelocity(const ProblemData& pData,const double T, MatrixXX& H
     g.head<3> () = v.first*(v.second - pData.dc1_);
 }
 
-
-void computeBezierCurve(const ProblemData& pData, const double T, ResultDataCOMTraj& res)
-{
-    std::vector<Vector3> wps;
-
-    std::vector<Vector3> pi = computeConstantWaypoints(pData,T);
-    size_t i = 0;
-    if(pData.constraints_.flag_ & INIT_POS ){
-        wps.push_back(pi[i]);
-        i++;
-        if(pData.constraints_.flag_ & INIT_VEL){
-            wps.push_back(pi[i]);
-            i++;
-            if(pData.constraints_.flag_ & INIT_ACC){
-                wps.push_back(pi[i]);
-                i++;
-            }
-        }
-    }
-    wps.push_back(res.x);
-    i++;
-    if(pData.constraints_.flag_ & END_ACC){
-        assert(pData.constraints_.flag_ & END_VEL && "You cannot constraint final acceleration if final velocity is not constrained.");
-        wps.push_back(pi[i]);
-        i++;
-    }
-    if(pData.constraints_.flag_ & END_VEL){
-        assert(pData.constraints_.flag_ & END_POS && "You cannot constraint final velocity if final position is not constrained.");
-        wps.push_back(pi[i]);
-        i++;
-    }
-    if(pData.constraints_.flag_ & END_POS){
-        wps.push_back(pi[i]);
-        i++;
-    }
-
-    res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
-}
-
 void computeFinalAcceleration(ResultDataCOMTraj& res){
     res.ddc1_ = res.c_of_t_.derivate(res.c_of_t_.max(), 2);
 }
@@ -405,7 +365,8 @@ ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const doub
     {
         res.success_ = true;
         res.x = resQp.x.head<3>();
-        computeBezierCurve (pData,T,res);
+        std::vector<Vector3> pis = computeConstantWaypoints(pData,T);
+        res.c_of_t_ = computeBezierCurve<point_t> (pData.constraints_.flag_,T,pis,res.x);
         computeFinalVelocity(res);
         computeFinalAcceleration(res);
     }

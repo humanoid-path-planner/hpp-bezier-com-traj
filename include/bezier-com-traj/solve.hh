@@ -35,12 +35,6 @@ namespace bezier_com_traj
      */
     BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, const Vector3& init_guess,const int pointsPerPhase = 3, const double feasability_treshold = 0.);
 
-
-    void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,const std::string& fileName,bool clipZ = false);
-
-
-
-
 } // end namespace bezier_com_traj
 
 #endif

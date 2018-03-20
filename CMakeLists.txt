@@ -52,6 +52,7 @@ find_package (Spline REQUIRED)
 # Declare Headers
 SET(${PROJECT_NAME}_HEADERS
                 include/bezier-com-traj/data.hh
+                include/bezier-com-traj/utils.hh
                 include/bezier-com-traj/flags.hh
                 include/bezier-com-traj/definitions.hh
                 include/bezier-com-traj/config.hh
