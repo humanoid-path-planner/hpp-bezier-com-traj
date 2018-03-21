@@ -23,7 +23,8 @@ namespace bezier_com_traj
       * @param timeStep time that the solver has to stop.
       * @return ResultData a struct containing the resulting trajectory, if success is true.
       */
-     BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solve0step(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep = -1);
+     BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solve0step(const ProblemData& pData, const std::vector<double>& Ts,
+                                                         const double timeStep = -1);
 
      /**
      * @brief solveOnestep Tries to solve the one step problem :  Given two or three contact phases, an initial and final com position and velocity,
@@ -33,7 +34,9 @@ namespace bezier_com_traj
      * @param timeStep time step used by the discretization
      * @return ResultData a struct containing the resulting trajectory, if success is true.
      */
-    BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, const Vector3& init_guess,const int pointsPerPhase = 3, const double feasability_treshold = 0.);
+    BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,
+                                                          const Vector3& init_guess,const int pointsPerPhase = 3,
+                                                          const double feasability_treshold = 0.);
 
 } // end namespace bezier_com_traj
 

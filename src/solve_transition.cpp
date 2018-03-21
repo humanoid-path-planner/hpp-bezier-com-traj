@@ -70,58 +70,20 @@ std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const
     Normalize(A,b);
     return std::make_pair<MatrixXX,VectorX>(A,b);
 }
-
-std::pair<MatrixXX,VectorX> staticStabilityConstraints(const MatrixXX& mH,const VectorX& h, const Vector3& g,const coefs_t& c){
-     int dimH = (int)(mH.rows());
-     MatrixXX A(dimH,4);
-     VectorX b(dimH);
-     A.block(0,0,dimH,3) = mH.block(0,3,dimH,3) * c.first * skew(g);
-     b = h + mH.block(0,0,dimH,3)*g - mH.block(0,3,dimH,3)*g.cross(c.second);
-     // add 1 for the slack variable :
-     A.block(0,3,dimH,1) = VectorX::Ones(dimH);
-    // Normalize(A,b);
-     return std::make_pair<MatrixXX,VectorX>(A,b);
-}
-
-void compareStabilityMethods(const MatrixXX& mH,const VectorX& h,const Vector3& g,const coefs_t& c,const coefs_t& ddc,const waypoint6_t& w){
-    std::pair<MatrixXX,VectorX> Ab_cross,Ab_w;
-
-    Ab_cross = dynamicStabilityConstraints_cross(mH,h,g,c,ddc);
-    Ab_w = dynamicStabilityConstraints(mH,h,g,w);
-    Normalize(Ab_cross.first,Ab_cross.second);
-    Normalize(Ab_w.first,Ab_w.second);
-
-
-    MatrixXX A_error = Ab_cross.first - Ab_w.first;
-    VectorX b_error = Ab_cross.second - Ab_w.second;
-
-    assert(A_error.lpNorm<Eigen::Infinity>() < 1e-4 &&
-           b_error.lpNorm<Eigen::Infinity>() < 1e-4 &&
-           "Both method didn't find the same results.");
-}
-
-
-std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,const VectorX& Ts,
-                                                       const double t_total,const int pointsPerPhase)
+std::vector<int> stepIdPerPhase(const VectorX& Ts, const int pointsPerPhase)
 {
-    // Compute all the discretized wayPoint
-    std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
-    std::vector<coefs_t> wps_c = computeDiscretizedWaypoints<point_t>(pData,t_total,timeArray);
-    std::vector<waypoint6_t> wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
-    assert(/*wps_c.size() == wps_ddc.size() &&*/  wps_w.size() == wps_c.size());
-    std::vector<int> stepIdForPhase; // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
+    std::vector<int> res;
     for(int i = 0 ; i < Ts.size() ; ++i)
-        stepIdForPhase.push_back(pointsPerPhase*(i+1)-1);
+        res.push_back(pointsPerPhase*(i+1)-1);
+    return res;
+}
 
-    assert(stepIdForPhase.back() == (wps_c.size()-1)); // -1 because the first one is the index (start at 0) and the second is the size
-    // compute the total number of inequalities (to initialise A and b)
-    long int num_ineq = 0;
+long int computeNumIneq(const ProblemData& pData, const VectorX& Ts, const int pointsPerPhase, size_t numPoints)
+{
     long int num_stab_ineq = 0;
     long int num_kin_ineq = 0;
     int numStepForPhase;
-    centroidal_dynamics::MatrixXX Hrow;
-    VectorX h;
-    MatrixXX H,mH;
+    centroidal_dynamics::MatrixXX Hrow; VectorX h;
     for(int i = 0 ; i < Ts.size() ; ++i){
         pData.contacts_[i].contactPhase_->getPolytopeInequalities(Hrow,h);
         numStepForPhase = pointsPerPhase;
@@ -132,61 +94,93 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
             --numStepForPhase; // we don't consider kinematics constraints for the last point (because it's independant of x)
         num_kin_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
     }
-    num_ineq = num_stab_ineq + num_kin_ineq;
-    if(pData.constraints_.constraintAcceleration_){
-        num_ineq += 2*3 *(wps_c.size()) ; // upper and lower bound on acceleration for each discretized waypoint (exept the first one)
-    }
+    long int res = num_stab_ineq + num_kin_ineq;
+    if(pData.constraints_.constraintAcceleration_)
+        res += 2*3 *(numPoints) ; // upper and lower bound on acceleration for each discretized waypoint (exept the first one)
+    return res;
+
+}
+
+void updateH(const ProblemData& pData, const ContactData& phase, MatrixXX& mH, VectorX& h, int& dimH)
+{
+    VectorX hrow;
+    centroidal_dynamics::MatrixXX Hrow;
+    phase.contactPhase_->getPolytopeInequalities(Hrow,hrow);
+    mH = -Hrow * phase.contactPhase_->m_mass;
+    mH.rowwise().normalize();
+    h = hrow;
+    dimH = (int)(mH.rows());
+    if(pData.constraints_.reduce_h_ > 0 )
+        h -= VectorX::Ones(h.rows())*pData.constraints_.reduce_h_;
+}
+
+void assignStabilityConstraintsForTimeStep(MatrixXX& mH, VectorX& h, const waypoint6_t& wp_w, const int dimH, long int& id_rows,
+              MatrixXX& A, VectorX& b, const Vector3& g)
+{
+    std::pair<MatrixXX,VectorX> Ab_stab = dynamicStabilityConstraints(mH,h,g,wp_w);
+    A.block(id_rows,0,dimH,numCol) = Ab_stab.first;
+    b.segment(id_rows,dimH) = Ab_stab.second;    
+    id_rows += dimH ;
+}
+
+void switchContactPhase(const ProblemData& pData,
+                                  MatrixXX& A, VectorX& b,
+                                  MatrixXX& mH, VectorX& h,
+                                  const waypoint6_t& wp_w,  ContactData& phase,
+                                  const long int id_phase, long int& id_rows, int& dimH)
+{
+    phase = pData.contacts_[id_phase];
+    updateH(pData, phase, mH, h, dimH);
+    // the current waypoint must have the constraints of both phases. So we add it again :
+    // TODO : filter for redunbdant constraints ...
+    // add stability constraints :
+    assignStabilityConstraintsForTimeStep(mH, h, wp_w, dimH, id_rows, A, b, phase.contactPhase_->m_gravity);
+}
+
+std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData, const VectorX& Ts,
+                                                       const double t_total, const int pointsPerPhase)
+{
+    // Compute all the discretized wayPoint
+    std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
+    std::vector<coefs_t> wps_c = computeDiscretizedWaypoints<point_t>(pData,t_total,timeArray);
+    std::vector<waypoint6_t> wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
+    assert(wps_w.size() == wps_c.size());
+    std::vector<int> stepIdForPhase = stepIdPerPhase(Ts, pointsPerPhase); // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
+    assert(stepIdForPhase.back() == (wps_c.size()-1)); // -1 because the first one is the index (start at 0) and the second is the size
+    // compute the total number of inequalities (to initialise A and b)
+    long int num_ineq = computeNumIneq(pData, Ts, pointsPerPhase, wps_c.size());
+
+    MatrixXX mH;
+    VectorX h;
+
     // init constraints matrix :
     MatrixXX A = MatrixXX::Zero(num_ineq,numCol);
     VectorX b(num_ineq);
-    std::pair<MatrixXX,VectorX> Ab_stab;
 
     long int id_rows = 0;
     long int current_size;
 
     std::size_t id_phase = 0;
     ContactData phase = pData.contacts_[id_phase];
-    // compute some constant matrice for the current phase :
+    // compute some constant matrix for the current phase :
     const Vector3& g = phase.contactPhase_->m_gravity;
-    phase.contactPhase_->getPolytopeInequalities(Hrow,h);
-    H = -Hrow;
-    H.rowwise().normalize();
-    int dimH = (int)(H.rows());
-    mH = phase.contactPhase_->m_mass * H;
-    if(pData.constraints_.reduce_h_ > 0 )
-        h -= VectorX::Ones(h.rows())*pData.constraints_.reduce_h_;
+    int dimH;
+    updateH(pData, phase, mH, h, dimH);
 
     // assign the Stability constraints  for each discretized waypoints :
     // we don't consider the first point, because it's independant of x.
-    for(std::size_t id_step = 0 ; id_step <  timeArray.size() ; ++id_step ){
+    for(std::size_t id_step = 0 ; id_step <  timeArray.size() ; ++id_step)
+    {
         // add stability constraints :
-
-        Ab_stab = dynamicStabilityConstraints(mH,h,g,wps_w[id_step]);
-        //compareStabilityMethods(mH,h,g,wps_c[id_step],wps_ddc[id_step],wps_w[id_step]);
-        A.block(id_rows,0,dimH,numCol) = Ab_stab.first;
-        b.segment(id_rows,dimH) = Ab_stab.second;
-        id_rows += dimH ;
-
+        assignStabilityConstraintsForTimeStep(mH, h, wps_w[id_step], dimH, id_rows, A, b, g);
         // check if we are going to switch phases :
-        for(std::size_t i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
-            if((int)id_step == stepIdForPhase[i]){
-                // switch to phase i
+        for(std::size_t i = 0 ; i < (stepIdForPhase.size()-1) ; ++i)
+        {
+            if((int)id_step == stepIdForPhase[i])
+            {
                 id_phase=i+1;
-                phase = pData.contacts_[id_phase];
-                phase.contactPhase_->getPolytopeInequalities(Hrow,h);
-                H = -Hrow;
-                H.rowwise().normalize();
-                dimH = (int)(H.rows());
-                mH = phase.contactPhase_->m_mass * H;
-                if(pData.constraints_.reduce_h_ > 0 )
-                    h -= VectorX::Ones(h.rows())*pData.constraints_.reduce_h_;
-                // the current waypoint must have the constraints of both phases. So we add it again :
-                // TODO : filter for redunbdant constraints ...
-                // add stability constraints :
-                Ab_stab = dynamicStabilityConstraints(mH,h,g,wps_w[id_step]);
-                A.block(id_rows,0,dimH,numCol) = Ab_stab.first;
-                b.segment(id_rows,dimH) = Ab_stab.second;
-                id_rows += dimH ;
+                switchContactPhase(pData, A,b, mH, h,
+                            wps_w[id_step], phase, id_phase, id_rows, dimH);
             }
         }
     }
