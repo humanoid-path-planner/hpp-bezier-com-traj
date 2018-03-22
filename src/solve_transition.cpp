@@ -163,11 +163,11 @@ long int assignStabilityConstraints(const ProblemData& pData, MatrixXX& A, Vecto
         // add stability constraints :
         assignStabilityConstraintsForTimeStep(mH, h, wps_w[id_step], dimH, id_rows, A, b, g);
         // check if we are going to switch phases :
-        for(std::size_t i = 0 ; i < (stepIdForPhase.size()-1) ; ++i)
+        for(std::vector<int>::const_iterator it_switch = stepIdForPhase.begin() ; it_switch != (stepIdForPhase.end()-1) ; ++it_switch)
         {
-            if((int)id_step == stepIdForPhase[i])
+            if((int)id_step == (*it_switch))
             {
-                id_phase=i+1;
+                id_phase++;
                 switchContactPhase(pData, A,b, mH, h,
                             wps_w[id_step], phase, id_phase, id_rows, dimH);
             }
