@@ -90,12 +90,12 @@ Bezier bezier_com_traj::computeBezierCurve(const ConstraintFlag& flag, const dou
     wps.push_back(x);
     i++;
     if(flag & END_ACC){
-        assert(pData.constraints_.flag_ & END_VEL && "You cannot constrain final acceleration if final velocity is not constrained.");
+        assert(flag & END_VEL && "You cannot constrain final acceleration if final velocity is not constrained.");
         wps.push_back(pi[i]);
         i++;
     }
     if(flag & END_VEL){
-        assert(pData.constraints_.flag_ & END_POS && "You cannot constrain final velocity if final position is not constrained.");
+        assert(flag & END_POS && "You cannot constrain final velocity if final position is not constrained.");
         wps.push_back(pi[i]);
         i++;
     }
