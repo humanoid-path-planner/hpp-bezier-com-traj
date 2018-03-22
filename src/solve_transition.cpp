@@ -302,7 +302,7 @@ double computeTotalTime(const VectorX& Ts)
 ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,
                                const int pointsPerPhase, const double /*feasability_treshold*/){
     assert(Ts.size() == pData.contacts_.size());
-    double T = computeTotalTime(Ts);
+    double T = Ts.sum();
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,pointsPerPhase);
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,pointsPerPhase);
     VectorX x = VectorX::Zero(numCol); x.head<3>() = init_guess;
