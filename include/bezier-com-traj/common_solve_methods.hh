@@ -64,11 +64,11 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
 
 template <typename Point>
 BEZIER_COM_TRAJ_DLLAPI std::vector< std::pair<double,Point> > computeDiscretizedWaypoints
-    (const ProblemData& pData, double T,const std::vector<double>& timeArray);
+    (const ProblemData& pData, double T,const T_time& timeArray);
 
 template <typename Point>
 BEZIER_COM_TRAJ_DLLAPI std::vector< std::pair<double,Point> > computeDiscretizedAccelerationWaypoints
-    (const ProblemData& pData, double T,const std::vector<double>& timeArray);
+    (const ProblemData& pData, double T,const T_time& timeArray);
 
 } // end namespace bezier_com_traj
 

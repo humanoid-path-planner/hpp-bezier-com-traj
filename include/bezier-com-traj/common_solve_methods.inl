@@ -4,7 +4,7 @@ namespace bezier_com_traj
 
 template <typename Point>
 std::vector< std::pair<double,Point> > computeDiscretizedWaypoints
-    (const ProblemData& pData, double T,const std::vector<double>& timeArray)
+    (const ProblemData& pData, double T,const T_time& timeArray)
 {
     typedef std::pair<double,Point> coefs_t;
     //int numStep = int(T / timeStep);
@@ -23,7 +23,7 @@ std::vector< std::pair<double,Point> > computeDiscretizedWaypoints
 
 template <typename Point>
 std::vector< std::pair<double,Point> > computeDiscretizedAccelerationWaypoints
-    (const ProblemData& pData, double T,const std::vector<double>& timeArray)
+    (const ProblemData& pData, double T,const T_time& timeArray)
 {
     typedef std::pair<double,Point> coefs_t;
     std::vector<coefs_t> wps;

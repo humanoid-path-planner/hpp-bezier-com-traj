@@ -27,7 +27,7 @@ namespace cost {
  * @param g vector matrix
  */
 void genCostFunction(const ProblemData& pData,const VectorX& Ts, const double T,
-                     const int pointsPerPhase, MatrixXX& H, VectorX& g);
+                     const T_time& timeArray, MatrixXX& H, VectorX& g);
 
 } // namespace cost
 } // namespace bezier_com_traj

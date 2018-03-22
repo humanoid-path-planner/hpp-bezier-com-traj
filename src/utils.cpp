@@ -42,7 +42,8 @@ std::vector<spline::Bern<double> > ComputeBersteinPolynoms(const unsigned int de
 }
 
 
-std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings, const int pointsPerPhase ){
+std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings, const int pointsPerPhase )
+{
     std::vector<double> timeArray;
     double t = 0;
     double t_total = 0;
@@ -60,6 +61,26 @@ std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings, const in
     timeArray.push_back(t_total); // avoid numerical errors
     return timeArray;
 }
+
+/*std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings, const double timeStep)
+{
+    std::vector<double> timeArray;
+    double t = 0;
+    double t_total = 0;
+    for(int i = 0 ; i < phaseTimings.size() ; ++i)
+        t_total += phaseTimings[i];
+
+    for(int i = 0 ; i < phaseTimings.size() ; ++i){
+        double step = (double) phaseTimings[i] / pointsPerPhase;
+        for(int j = 0 ; j < pointsPerPhase ; ++j){
+            t += step;
+            timeArray.push_back(t);
+        }
+    }
+    timeArray.pop_back();
+    timeArray.push_back(t_total); // avoid numerical errors
+    return timeArray;
+}*/
 
 void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,const std::string& fileName,bool clipZ){
      std::ofstream file;

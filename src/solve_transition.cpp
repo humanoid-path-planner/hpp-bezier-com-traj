@@ -25,7 +25,7 @@ namespace bezier_com_traj
 typedef waypoint3_t waypoint_t;
 typedef std::pair<double,point3_t> coefs_t;
 
-std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,double T,const std::vector<double>& timeArray)
+std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,double T, const T_time& timeArray)
 {
     std::vector<waypoint6_t> wps = computeWwaypoints(pData,T);
     std::vector<waypoint6_t> res;
@@ -142,7 +142,7 @@ void switchContactPhase(const ProblemData& pData,
     assignStabilityConstraintsForTimeStep(mH, h, wp_w, dimH, id_rows, A, b, phase.contactPhase_->m_gravity);
 }
 
-long int assignStabilityConstraints(const ProblemData& pData, MatrixXX& A, VectorX& b, const std::vector<double>& timeArray,
+long int assignStabilityConstraints(const ProblemData& pData, MatrixXX& A, VectorX& b, const T_time& timeArray,
                                     const double t_total, const std::vector<int>& stepIdForPhase)
 {
     long int id_rows = 0;
@@ -176,7 +176,7 @@ long int assignStabilityConstraints(const ProblemData& pData, MatrixXX& A, Vecto
     return id_rows;
 }
 
-void assignKinematicConstraints(const ProblemData& pData, MatrixXX& A, VectorX& b, const std::vector<double>& timeArray,
+void assignKinematicConstraints(const ProblemData& pData, MatrixXX& A, VectorX& b, const T_time& timeArray,
                                 const double t_total, const std::vector<int>& stepIdForPhase, long int& id_rows)
 {
     std::size_t id_phase = 0;
@@ -268,11 +268,11 @@ void computeFinalVelocity(ResultDataCOMTraj& res){
 }
 
 std::pair<MatrixXX, VectorX> genCostFunction(const ProblemData& pData,const VectorX& Ts,
-                                             const double T, const int pointsPerPhase)
+                                             const double T, const T_time& timeArray)
 {
     MatrixXX H(numCol,numCol);
     VectorX g(numCol);
-    cost::genCostFunction(pData,Ts,T,pointsPerPhase,H,g);
+    cost::genCostFunction(pData,Ts,T,timeArray,H,g);
     return std::make_pair(H,g);
 }
 
@@ -303,8 +303,9 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
                                const int pointsPerPhase, const double /*feasability_treshold*/){
     assert(Ts.size() == pData.contacts_.size());
     double T = Ts.sum();
+    T_time timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,pointsPerPhase);
-    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,pointsPerPhase);
+    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
     VectorX x = VectorX::Zero(numCol); x.head<3>() = init_guess;
     ResultData resQp = solve(Ab,Hg, x);
 #if QHULL
