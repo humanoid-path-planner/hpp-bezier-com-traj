@@ -44,7 +44,8 @@ typedef const Eigen::Ref<const point_t>& point_t_tC;
 typedef spline::bezier_curve  <double, double, 3, true, point_t > bezier_t;
 typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
 
-typedef std::vector<double> T_time;
+typedef std::vector< std::pair<double, int> > T_time;
+typedef T_time::const_iterator CIT_time;
 
 /**
 * @brief waypoint_t a waypoint is composed of a  6*3 matrix that depend

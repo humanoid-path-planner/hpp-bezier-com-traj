@@ -89,11 +89,11 @@ namespace tsid
                                         int& iq,
                                         double& R_norm)
     {
-      int nVars = J.rows();
+      long int nVars = J.rows();
 #ifdef TRACE_SOLVER
       std::cout << "Add constraint " << iq << '/';
 #endif
-      int j, k;
+      long int j, k;
       double cc, ss, h, t1, t2, xny;
 
 #ifdef OPTIMIZE_ADD_CONSTRAINT
@@ -176,7 +176,7 @@ namespace tsid
                                            int l)
     {
 
-      int nVars = R.rows();
+      const long int nVars = R.rows();
 #ifdef TRACE_SOLVER
       std::cout << "Delete constraint " << l << ' ' << iq;
 #endif
@@ -270,9 +270,9 @@ namespace tsid
                                                          const VectorXd & ci0,
                                                          VectorXd & x)
     {
-      const int nVars = g0.size();
-      const int nEqCon = ce0.size();
-      const int nIneqCon = ci0.size();
+      const int nVars    = (int) g0.size();
+      const int nEqCon   = (int)ce0.size();
+      const int nIneqCon = (int)ci0.size();
 
       if(nVars!=m_nVars || nEqCon!=m_nEqCon || nIneqCon!=m_nIneqCon)
         reset(nVars, nEqCon, nIneqCon);

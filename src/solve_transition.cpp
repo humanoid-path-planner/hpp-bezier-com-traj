@@ -30,14 +30,13 @@ std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,d
     std::vector<waypoint6_t> wps = computeWwaypoints(pData,T);
     std::vector<waypoint6_t> res;
     std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms((int)wps.size()-1);
-    double t;
-    double b;
-    for(std::size_t i = 0 ; i < timeArray.size() ; ++i){
+    double t, b;
+    for (CIT_time cit = timeArray.begin(); cit != timeArray.end(); ++cit)
+    {
         waypoint6_t w = initwp<waypoint6_t>();
-        for (std::size_t j = 0 ; j < wps.size() ; ++j){
-            t = timeArray[i]/T;
-            if(t>1.)
-                t=1.;
+        t = std::min(cit->first / T, 1.);
+        for (std::size_t j = 0 ; j < wps.size() ; ++j)
+        {
             b = berns[j](t);
             w.first +=b*(wps[j].first );
             w.second+=b*(wps[j].second);
@@ -75,23 +74,35 @@ std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const
     return std::make_pair<MatrixXX,VectorX>(A,b);
 }
 
-std::vector<int> stepIdPerPhase(const VectorX& Ts, const int pointsPerPhase)
+std::vector<int> stepIdPerPhase(const T_time& timeArray) // const int pointsPerPhase)
 {
     std::vector<int> res;
-    for(int i = 0 ; i < Ts.size() ; ++i)
-        res.push_back(pointsPerPhase*(i+1)-1);
+    int i = 0;
+    CIT_time cit = timeArray.begin();
+    for (CIT_time cit2 = timeArray.begin()+1; cit2 != timeArray.end(); ++cit, ++cit2, ++i)
+    {
+        if (cit2->second != cit->second)
+        {
+            res.push_back(i);
+        }
+    }
+    res.push_back(i);
     return res;
 }
 
-long int computeNumIneq(const ProblemData& pData, const VectorX& Ts, const int pointsPerPhase, size_t numPoints)
+long int computeNumIneq(const ProblemData& pData, const VectorX& Ts, const std::vector<int>& phaseSwitch)
 {
+    const size_t numPoints = phaseSwitch.back() +1;
     long int num_stab_ineq = 0;
     long int num_kin_ineq = 0;
     int numStepForPhase;
+    int numStepsCumulated= 0;
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
-    for(int i = 0 ; i < Ts.size() ; ++i){
+    for(int i = 0 ; i < Ts.size() ; ++i)
+    {
         pData.contacts_[i].contactPhase_->getPolytopeInequalities(Hrow,h);
-        numStepForPhase = pointsPerPhase;
+        numStepForPhase = phaseSwitch[i]+1 - numStepsCumulated; // pointsPerPhase;
+        numStepsCumulated= phaseSwitch[i]+1;
         if(i > 0 )
             ++numStepForPhase; // because at the switch point between phases we add the constraints of both phases.
         num_stab_ineq += Hrow.rows() * numStepForPhase;
@@ -103,7 +114,6 @@ long int computeNumIneq(const ProblemData& pData, const VectorX& Ts, const int p
     if(pData.constraints_.constraintAcceleration_)
         res += 2*3 *(numPoints) ; // upper and lower bound on acceleration for each discretized waypoint (exept the first one)
     return res;
-
 }
 
 void updateH(const ProblemData& pData, const ContactData& phase, MatrixXX& mH, VectorX& h, int& dimH)
@@ -219,7 +229,7 @@ void assignKinematicConstraints(const ProblemData& pData, MatrixXX& A, VectorX& 
 }
 
 
-void assignAccelerationConstraints(const ProblemData& pData, MatrixXX& A, VectorX& b, const std::vector<double>& timeArray,
+void assignAccelerationConstraints(const ProblemData& pData, MatrixXX& A, VectorX& b, const T_time& timeArray,
                                 const double t_total, long int& id_rows)
 {
     if(pData.constraints_.constraintAcceleration_)
@@ -238,15 +248,14 @@ void assignAccelerationConstraints(const ProblemData& pData, MatrixXX& A, Vector
 }
 
 std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData, const VectorX& Ts,
-                                                       const double t_total, const int pointsPerPhase)
+                                                       const double t_total, const T_time& timeArray)
 {
     // Compute all the discretized wayPoint
-    std::vector<double> timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
-    std::vector<int> stepIdForPhase = stepIdPerPhase(Ts, pointsPerPhase);
+    std::vector<int> stepIdForPhase = stepIdPerPhase(timeArray);
     // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
 
     // init constraints matrix :
-    long int num_ineq = computeNumIneq(pData, Ts, pointsPerPhase, stepIdForPhase.back()+1);
+    long int num_ineq = computeNumIneq(pData, Ts, stepIdForPhase);
     MatrixXX A = MatrixXX::Zero(num_ineq,numCol); VectorX b(num_ineq);
 
     // assign dynamic and kinematic constraints per timestep, including additional acceleration
@@ -304,7 +313,7 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     assert(Ts.size() == pData.contacts_.size());
     double T = Ts.sum();
     T_time timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
-    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,pointsPerPhase);
+    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
     VectorX x = VectorX::Zero(numCol); x.head<3>() = init_guess;
     ResultData resQp = solve(Ab,Hg, x);

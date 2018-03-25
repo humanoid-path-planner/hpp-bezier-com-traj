@@ -11,10 +11,9 @@ std::vector< std::pair<double,Point> > computeDiscretizedWaypoints
     std::vector<coefs_t> wps;
     std::vector<Point> pi = computeConstantWaypoints(pData,T);
     // evaluate curve work with normalized time !
-    double t;
-    for (std::size_t i = 0 ; i<timeArray.size() ; ++i )
+    for (CIT_time cit = timeArray.begin(); cit != timeArray.end(); ++cit)
     {
-        t = std::min(timeArray[i] / T, 1.);
+        double t = std::min(cit->first / T, 1.);
         wps.push_back(evaluateCurveAtTime(pData,pi,t));
     }
     return wps;
@@ -28,11 +27,10 @@ std::vector< std::pair<double,Point> > computeDiscretizedAccelerationWaypoints
     typedef std::pair<double,Point> coefs_t;
     std::vector<coefs_t> wps;
     std::vector<Point> pi = computeConstantWaypoints(pData,T);
-    double t;
-    for (std::size_t i = 0 ; i<timeArray.size() ; ++i ){
-        t = timeArray[i] / T;
-        if(t>1)
-            t=1.;
+    // evaluate curve work with normalized time !
+    for (CIT_time cit = timeArray.begin(); cit != timeArray.end(); ++cit)
+    {
+        double t = std::min(cit->first / T, 1.);
         wps.push_back(evaluateAccelerationCurveAtTime(pData,pi,T,t));
     }
     return wps;
