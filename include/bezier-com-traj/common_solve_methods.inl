@@ -7,7 +7,6 @@ std::vector< std::pair<double,Point> > computeDiscretizedWaypoints
     (const ProblemData& pData, double T,const T_time& timeArray)
 {
     typedef std::pair<double,Point> coefs_t;
-    //int numStep = int(T / timeStep);
     std::vector<coefs_t> wps;
     std::vector<Point> pi = computeConstantWaypoints(pData,T);
     // evaluate curve work with normalized time !

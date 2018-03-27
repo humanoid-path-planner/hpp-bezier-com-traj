@@ -48,9 +48,11 @@ T_time computeDiscretizedTime(const VectorX& phaseTimings, const int pointsPerPh
     double t = 0;
     double t_total = phaseTimings.sum();
 
-    for(int i = 0 ; i < phaseTimings.size() ; ++i){
+    for(int i = 0 ; i < phaseTimings.size() ; ++i)
+    {
         double step = (double) phaseTimings[i] / pointsPerPhase;
-        for(int j = 0 ; j < pointsPerPhase ; ++j){
+        for(int j = 0 ; j < pointsPerPhase ; ++j)
+        {
             t += step;
             timeArray.push_back(std::make_pair(t,i));
         }
@@ -60,25 +62,25 @@ T_time computeDiscretizedTime(const VectorX& phaseTimings, const int pointsPerPh
     return timeArray;
 }
 
-/*std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings, const double timeStep)
+T_time computeDiscretizedTime(const VectorX& phaseTimings, const double timeStep)
 {
-    std::vector<double> timeArray;
+    T_time timeArray;
     double t = 0;
-    double t_total = 0;
+    double currentTiming = 0.;
     for(int i = 0 ; i < phaseTimings.size() ; ++i)
-        t_total += phaseTimings[i];
-
-    for(int i = 0 ; i < phaseTimings.size() ; ++i){
-        double step = (double) phaseTimings[i] / pointsPerPhase;
-        for(int j = 0 ; j < pointsPerPhase ; ++j){
-            t += step;
-            timeArray.push_back(t);
+    {
+       assert(timeStep * 2 <= phaseTimings[i] && "Time step too high: should allow to contain at least 2 points per phase");
+       t = currentTiming;
+       currentTiming += phaseTimings[i];
+        while(t < currentTiming)
+        {
+            timeArray.push_back(std::make_pair(t,i));
+            t += timeStep;
         }
+        timeArray.push_back(std::make_pair(currentTiming,i));
     }
-    timeArray.pop_back();
-    timeArray.push_back(t_total); // avoid numerical errors
     return timeArray;
-}*/
+}
 
 void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,const std::string& fileName,bool clipZ){
      std::ofstream file;

@@ -213,7 +213,8 @@ void assignKinematicConstraints(const ProblemData& pData, MatrixXX& A, VectorX& 
         // check if we are going to switch phases :
         for(std::size_t i = 0 ; i < (stepIdForPhase.size()-1) ; ++i)
         {
-            if(id_step == (std::size_t)stepIdForPhase[i]){
+            if(id_step == (std::size_t)stepIdForPhase[i])
+            {
                 // switch to phase i
                 id_phase=i+1;
                 phase = pData.contacts_[id_phase];
@@ -318,7 +319,7 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     VectorX x = VectorX::Zero(numCol); x.head<3>() = init_guess;
     ResultData resQp = solve(Ab,Hg, x);
 #if QHULL
-    if (resQp.success_) printQHullFile(Ab,resQp.x,"bezier_wp.txt");
+    if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
 #endif
     return genTraj(resQp, pData, T);
 }
