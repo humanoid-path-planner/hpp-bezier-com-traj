@@ -64,6 +64,7 @@ inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,doubl
     const double T2 = T*T;
     const double alpha = 1./(T2);
     // equation of waypoints for curve w found with sympy
+    // TODO Apparently sympy equations are false ...
     /*waypoint6_t w0 = initwp<waypoint6_t>();
     w0.first.block<3,3>(0,0) = 6*alpha*Matrix3::Identity();
     w0.first.block<3,3>(3,0) = 6.0*Cpi[0]*alpha;

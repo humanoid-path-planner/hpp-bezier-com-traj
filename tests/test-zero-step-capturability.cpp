@@ -233,11 +233,11 @@ int main()
                 }
                // try discretize
                 VectorX t2(1); t2 << Ts[0];
-                bezier_com_traj::ResultDataCOMTraj rData0 = bezier_com_traj::solveTransition(pData,t2,DISCRETIZATION_STEP);
+                bezier_com_traj::ResultDataCOMTraj rData0 = bezier_com_traj::computeCOMTraj(pData,t2,DISCRETIZATION_STEP);
                 if(rData0.success_)
                 {
                     bezier_com_traj::ResultDataCOMTraj rDatatest = bezier_com_traj::solve0step(pData,Ts,DISCRETIZATION_STEP);
-                    //bezier_com_traj::ResultDataCOMTraj rDatatest = bezier_com_traj::solveOnestep(pData,t2,tg,(int)(round(T / DISCRETIZATION_STEP)));
+                    //bezier_com_traj::ResultDataCOMTraj rDatatest = bezier_com_traj::computeCOMTraj(pData,t2,tg,(int)(round(T / DISCRETIZATION_STEP)));
                     assert(rDatatest.success_);
                     assert ((rData0.c_of_t_(0.) - c0).norm() < 0.0001);
                     assert ((rData0.c_of_t_.compute_derivate(1)(0.) - pData.dc0_).norm() < 0.0001);
@@ -250,7 +250,7 @@ int main()
                 else
                 {
                     VectorX t2(1); t2 << Ts[0];
-                    bezier_com_traj::ResultDataCOMTraj rDatatest = bezier_com_traj::solveTransition(pData,t2,DISCRETIZATION_STEP);
+                    bezier_com_traj::ResultDataCOMTraj rDatatest = bezier_com_traj::computeCOMTraj(pData,t2,DISCRETIZATION_STEP);
                     assert(! rDatatest.success_);
                     if(succCont)
                         std::cout << "error: Solver discretize failed while a solution was found for the continuous case" << std::endl;

@@ -300,7 +300,7 @@ ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const doub
     return res;
 }
 
-ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,
+ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,
                                const int pointsPerPhase, const double /*feasability_treshold*/)
 {
     assert(Ts.size() == pData.contacts_.size());
@@ -316,7 +316,7 @@ ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const
     return genTraj(resQp, pData, T);
 }
 
-ResultDataCOMTraj solveTransition(const ProblemData& pData, const VectorX& Ts,
+ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
                                const double timeStep)
 {
     assert(Ts.size() == pData.contacts_.size());
