@@ -50,8 +50,6 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
  */
 std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T);
 
-coefs_t computeFinalAccelerationPoint(const ProblemData& pData,double T);
-
 coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T);
 
 }

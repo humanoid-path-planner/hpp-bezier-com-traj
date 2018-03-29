@@ -7,6 +7,7 @@
 #include <iostream>
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 #include <bezier-com-traj/solve.hh>
+#include <bezier-com-traj/data.hh>
 #include <math.h>
 
 using namespace centroidal_dynamics;
@@ -117,9 +118,9 @@ bool checkTrajectory(const Vector3& c0, const std::string& solver, const Equilib
     const bezier_com_traj::bezier_t c_of_t  = resData.c_of_t_;
     const bezier_com_traj::bezier_t dL_of_t = resData.dL_of_t_;
     bezier_com_traj::bezier_t ddc_of_t = c_of_t.compute_derivate(2);
-    for (int i = 0; i < num_steps; ++i)
+    for (int i = 1; i < num_steps; ++i)
     {
-        double dt = double(i) / float(num_steps) * T;
+        double dt = double(i) / double(num_steps) * T;
         c_of_t(dt);
         dL_of_t(dt);
         Vector6 w = computew(eq, c_of_t(dt),ddc_of_t(dt),dL_of_t(dt));
@@ -128,7 +129,7 @@ bool checkTrajectory(const Vector3& c0, const std::string& solver, const Equilib
           if(res(j)>0.0001)
           {
             std::cout << "check trajectory failed for solver " << solver  << " " <<  res(j)  << "; iteration " << dt<< "; numsteps " << num_steps << " c_of_t(dt) " << (c_of_t)(dt).transpose() << " dc_of_t(dt) " << c_of_t.derivate(dt,1).transpose() << " dL_of_t(dt) " << (dL_of_t)(dt).transpose()  << std::endl;
-            std::cout << "c0 " << c0.transpose() << std::endl;
+            /*std::cout << "c0 " << c0.transpose() << std::endl;
             std::cout << "H row " << H.row(j) << std::endl;
             std::cout << "w " << w << std::endl;
             std::cout << "j " << j << std::endl;
@@ -138,7 +139,7 @@ bool checkTrajectory(const Vector3& c0, const std::string& solver, const Equilib
             std::cout << "T c" << c_of_t.T_ << std::endl;
             std::cout << "T " << T << std::endl;
             std::cout << "T ddc " << ddc_of_t.T_ << std::endl;
-            std::cout << "1 / T * T " <<  1/ (T * T) << std::endl;
+            std::cout << "1 / T * T " <<  1/ (T * T) << std::endl;*/
             return false;
           }
     }
@@ -198,12 +199,14 @@ int main()
         {
             bezier_com_traj::ContactData data;
             data.contactPhase_ = &solver_PP;
-            bezier_com_traj::ProblemData pData;
+            bezier_com_traj::ProblemData pData;            
+            pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::END_VEL;
             pData.c0_ = c0;
             pData.dc0_ << fRandom(-1.,1.) , fRandom(-1.,1.) , fRandom(-1.,1.);
             //pData.dc0_ *= 1;
             pData.l0_ = Vector3(0.,0.,0.);
-            pData.contacts_.push_back(data);            
+            pData.contacts_.push_back(data);
+            pData.costFunction_ = bezier_com_traj::DISTANCE_TRAVELED;
             double T;
             for (int k = -1; k < 2; ++k)
             //for (int k = 0; k < 1; ++k)
@@ -229,17 +232,26 @@ int main()
                     succCont = false;
                 }
                // try discretize
-                bezier_com_traj::ResultDataCOMTraj rData0 = bezier_com_traj::solve0step(pData,Ts,DISCRETIZATION_STEP);
+                VectorX t2(1); t2 << Ts[0];
+                bezier_com_traj::ResultDataCOMTraj rData0 = bezier_com_traj::solveTransition(pData,t2,DISCRETIZATION_STEP);
                 if(rData0.success_)
                 {
+                    bezier_com_traj::ResultDataCOMTraj rDatatest = bezier_com_traj::solve0step(pData,Ts,DISCRETIZATION_STEP);
+                    //bezier_com_traj::ResultDataCOMTraj rDatatest = bezier_com_traj::solveOnestep(pData,t2,tg,(int)(round(T / DISCRETIZATION_STEP)));
+                    assert(rDatatest.success_);
                     assert ((rData0.c_of_t_(0.) - c0).norm() < 0.0001);
+                    assert ((rData0.c_of_t_.compute_derivate(1)(0.) - pData.dc0_).norm() < 0.0001);
                     succDisc = true;
                     succDiscretize += 1;
                     std::string solverName("discretize");
-                    checkTrajectory(c0, solverName, &solver_PP,rData0,T, int(T / DISCRETIZATION_STEP));
+                    checkTrajectory(c0, solverName, &solver_PP,rData0,T, (int)(round(T / DISCRETIZATION_STEP)));
+                    //checkTrajectory(c0, solverName, &solver_PP,rData0,T, (int)(T / DISCRETIZATION_STEP));
                 }
                 else
                 {
+                    VectorX t2(1); t2 << Ts[0];
+                    bezier_com_traj::ResultDataCOMTraj rDatatest = bezier_com_traj::solveTransition(pData,t2,DISCRETIZATION_STEP);
+                    assert(! rDatatest.success_);
                     if(succCont)
                         std::cout << "error: Solver discretize failed while a solution was found for the continuous case" << std::endl;
                     succDisc = false;
@@ -273,8 +285,8 @@ int main()
                 }
                 else
                 {
-                    //if(succCont || succDisc ||succdLbool)
-                    //    std::cout << "error: Solver discretize with angular momentum failed while a solution was found for another case" << std::endl;
+                    if(succCont || succDisc ||succdLbool)
+                        std::cout << "error: Solver discretize with angular momentum failed while a solution was found for another case" << std::endl;
                     succDiscdL = false;
                 }
                 pData.contacts_.front().Kin_ = Eigen::Matrix3d::Identity();

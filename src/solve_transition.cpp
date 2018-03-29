@@ -102,12 +102,10 @@ long int computeNumIneq(const ProblemData& pData, const VectorX& Ts, const std::
     {
         pData.contacts_[i].contactPhase_->getPolytopeInequalities(Hrow,h);
         numStepForPhase = phaseSwitch[i]+1 - numStepsCumulated; // pointsPerPhase;
-        numStepsCumulated= phaseSwitch[i]+1;
+        numStepsCumulated = phaseSwitch[i]+1;
         if(i > 0 )
             ++numStepForPhase; // because at the switch point between phases we add the constraints of both phases.
         num_stab_ineq += Hrow.rows() * numStepForPhase;
-        if(i == Ts.size()-1)
-            --numStepForPhase; // we don't consider kinematics constraints for the last point (because it's independant of x)
         num_kin_ineq += pData.contacts_[i].kin_.rows() * numStepForPhase;
     }
     long int res = num_stab_ineq + num_kin_ineq;
@@ -202,9 +200,9 @@ void assignKinematicConstraints(const ProblemData& pData, MatrixXX& A, VectorX& 
         // add constraints for wp id_step, on current phase :
         // add kinematics constraints :
         // constraint are of the shape A c <= b . But here c(x) = Fx + s so : AFx <= b - As
-        if(id_step != timeArray.size()-1)
+        current_size = (int)phase.kin_.rows();
+        if(current_size > 0)
         { // we don't consider kinematics constraints for the last point (because it's independant of x)
-            current_size = (int)phase.kin_.rows();
             A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps_c[id_step].first);
             b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps_c[id_step].second);
             id_rows += current_size;
@@ -297,26 +295,36 @@ ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const doub
         res.c_of_t_ = computeBezierCurve<bezier_t, point_t> (pData.constraints_.flag_,T,pis,res.x);
         computeFinalVelocity(res);
         computeFinalAcceleration(res);
+        res.dL_of_t_ = bezier_t::zero(T);
     }
     return res;
 }
 
-double computeTotalTime(const VectorX& Ts)
-{
-    double T = 0;
-    for(int i = 0 ; i < Ts.size() ; ++i)
-        T+=Ts[i];
-    return T;
-}
-
 ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,
-                               const int pointsPerPhase, const double /*feasability_treshold*/){
+                               const int pointsPerPhase, const double /*feasability_treshold*/)
+{
     assert(Ts.size() == pData.contacts_.size());
     double T = Ts.sum();
     T_time timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
     VectorX x = VectorX::Zero(numCol); x.head<3>() = init_guess;
+    ResultData resQp = solve(Ab,Hg, x);
+#if QHULL
+    if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
+#endif
+    return genTraj(resQp, pData, T);
+}
+
+ResultDataCOMTraj solveTransition(const ProblemData& pData, const VectorX& Ts,
+                               const double timeStep)
+{
+    assert(Ts.size() == pData.contacts_.size());
+    double T = Ts.sum();
+    T_time timeArray = computeDiscretizedTime(Ts,timeStep);
+    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
+    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
+    VectorX x = VectorX::Zero(numCol);
     ResultData resQp = solve(Ab,Hg, x);
 #if QHULL
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");

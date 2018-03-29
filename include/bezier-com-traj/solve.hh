@@ -39,6 +39,18 @@ namespace bezier_com_traj
                                                           const Vector3& init_guess,const int pointsPerPhase = 3,
                                                           const double feasability_treshold = 0.);
 
+
+    /**
+    * @brief solveOnestep Tries to solve the one step problem :  Given two or three contact phases,
+    * an initial and final com position and velocity,
+    * try to compute the CoM trajectory (as a Bezier curve) that connect them
+    * @param pData problem Data. Should contain only two contact phases.
+    * @param Ts timelength of each contact phase. Should be the same legnth as pData.contacts
+    * @param timeStep time step used by the discretization
+    * @return ResultData a struct containing the resulting trajectory, if success is true.
+    */
+   BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveTransition(const ProblemData& pData, const VectorX& Ts, const double timeStep = -1);
+
 } // end namespace bezier_com_traj
 
 #endif

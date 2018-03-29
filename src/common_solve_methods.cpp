@@ -169,7 +169,6 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
     ResultData res;
     res.success_ = (status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL );
     res.x = x;
-    //std::cout<<"quad_prog status : "<<status<<std::endl;
     if(res.success_)
     {
         assert (!(is_nan(x)));

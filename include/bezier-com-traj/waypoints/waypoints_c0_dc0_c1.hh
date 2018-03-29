@@ -27,8 +27,6 @@ inline coefs_t evaluateCurveAtTime(const std::vector<point_t>& pi,double t){
     // equation found with sympy
     wp.first = -3.0*t3 + 3.0*t2;
     wp.second = -1.0*pi[0]*t3 + 3.0*pi[0]*t2 - 3.0*pi[0]*t + 1.0*pi[0] + 3.0*pi[1]*t3 - 6.0*pi[1]*t2 + 3.0*pi[1]*t + 1.0*pi[3]*t3;
-    // std::cout<<"wp at t = "<<t<<std::endl;
-    // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -38,8 +36,6 @@ inline coefs_t evaluateAccelerationCurveAtTime(const std::vector<point_t>& pi,do
     // equation found with sympy
     wp.first = (-18.0*t + 6.0)*alpha;
     wp.second = (-6.0*pi[0]*t + 6.0*pi[0] + 18.0*pi[1]*t - 12.0*pi[1] + 6.0*pi[3]*t)*alpha;
-    // std::cout<<"acc_wp at t = "<<t<<std::endl;
-    // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -101,15 +97,6 @@ inline coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
     // equation found with sympy
     v.first = -3./T;
     v.second = 3.* pData.c1_ / T;
-    return v;
-}
-
-inline coefs_t computeFinalAccelerationPoint(const ProblemData& pData,double T){
-    coefs_t v;
-    std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    // equation found with sympy
-    v.first = -12./(T*T);
-    v.second = (-6.*pi[1] + 6.*pi[3])/ (T*T);
     return v;
 }
 

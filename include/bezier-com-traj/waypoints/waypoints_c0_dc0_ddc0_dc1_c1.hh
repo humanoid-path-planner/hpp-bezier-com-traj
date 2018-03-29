@@ -31,8 +31,6 @@ inline coefs_t evaluateCurveAtTime(const std::vector<point_t>& pi, double t){
     // equation found with sympy
     wp.first = 10.0*t5 - 20.0*t4 + 10.0*t3;
     wp.second = -1.0*pi[0]*t5 + 5.0*pi[0]*t4 - 10.0*pi[0]*t3 + 10.0*pi[0]*t2 - 5.0*pi[0]*t + 1.0*pi[0] + 5.0*pi[1]*t5 - 20.0*pi[1]*t4 + 30.0*pi[1]*t3 - 20.0*pi[1]*t2 + 5.0*pi[1]*t - 10.0*pi[2]*t5 + 30.0*pi[2]*t4 - 30.0*pi[2]*t3 + 10.0*pi[2]*t2 - 5.0*pi[4]*t5 + 5.0*pi[4]*t4 + 1.0*pi[5]*t5;
-    // std::cout<<"wp at t = "<<t<<std::endl;
-    // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -44,8 +42,6 @@ inline coefs_t evaluateAccelerationCurveAtTime(const std::vector<point_t>& pi,do
     // equation found with sympy
     wp.first = (200.0*t3 - 240.0*t2 + 60.0*t)*alpha;
     wp.second = 1.0*(-20.0*pi[0]*t3 + 60.0*pi[0]*t2 - 60.0*pi[0]*t + 20.0*pi[0] + 100.0*pi[1]*t3 - 240.0*pi[1]*t2 + 180.0*pi[1]*t - 40.0*pi[1] - 200.0*pi[2]*t3 + 360.0*pi[2]*t2 - 180.0*pi[2]*t + 20.0*pi[2] - 100.0*pi[4]*t3 + 60.0*pi[4]*t2 + 20.0*pi[5]*t3)*alpha;
-    // std::cout<<"acc_wp at t = "<<t<<std::endl;
-    // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
@@ -61,10 +57,6 @@ inline std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,do
     pi.push_back(point_t::Zero()); // x
     pi.push_back((-pData.dc1_ * T / n) + pData.c1_); // p4
     pi.push_back(pData.c1_); // p5
-    /*std::cout<<"fixed waypoints : "<<std::endl;
-    for(std::vector<point_t>::const_iterator pit = pi.begin() ; pit != pi.end() ; ++pit){
-        std::cout<<" pi = "<<*pit<<std::endl;
-    }*/
     return pi;
 }
 
@@ -138,16 +130,6 @@ inline coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
     v.second = (-5.0*pi[4] + 5.0*pi[5])/ T;
     return v;
 }
-
-inline coefs_t computeFinalAccelerationPoint(const ProblemData& pData,double T){
-    coefs_t v;
-    std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    // equation found with sympy
-    v.first = 20./(T*T);
-    v.second = (-40.0*pi[4] + 20.*pi[5])/ (T*T);
-    return v;
-}
-
 
 }
 }

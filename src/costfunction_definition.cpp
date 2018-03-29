@@ -24,6 +24,8 @@ void computeCostMidPoint(const ProblemData& pData,const VectorX& /*Ts*/, const d
 void computeCostEndVelocity(const ProblemData& pData,const VectorX& /*Ts*/, const double T,
                             const T_time& /*timeArray*/, MatrixXX& H, VectorX& g)
 {
+    if (pData.constraints_.flag_ && END_VEL)
+        throw std::runtime_error("Can't use computeCostEndVelocity as cost function when end velocity is a contraint");
     coefs_t v = computeFinalVelocityPoint(pData,T);
     H.block<3,3>(0,0) = Matrix3::Identity() * v.first * v.first;
     g.head<3> () = v.first*(v.second - pData.dc1_);

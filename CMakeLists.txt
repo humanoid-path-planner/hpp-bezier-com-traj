@@ -63,7 +63,7 @@ SET(${PROJECT_NAME}_HEADERS
                 include/bezier-com-traj/cost/costfunction_definition.hh
                 include/bezier-com-traj/waypoints/waypoints_definition.hh
                 include/bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh
-                include/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1.hh
                 include/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh
                 include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh
                 include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh

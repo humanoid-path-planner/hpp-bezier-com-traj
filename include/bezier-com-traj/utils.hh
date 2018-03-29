@@ -98,19 +98,27 @@ Bezier bezier_com_traj::computeBezierCurve(const ConstraintFlag& flag, const dou
     }
     wps.push_back(x);
     i++;
-    if(flag & END_ACC){
-        assert(flag & END_VEL && "You cannot constrain final acceleration if final velocity is not constrained.");
-        wps.push_back(pi[i]);
+    if(flag & (END_VEL) && !(flag & (END_POS) ))
+    {
+        wps.push_back(x);
         i++;
     }
-    if(flag & END_VEL){
-        assert(flag & END_POS && "You cannot constrain final velocity if final position is not constrained.");
-        wps.push_back(pi[i]);
-        i++;
-    }
-    if(flag & END_POS){
-        wps.push_back(pi[i]);
-        i++;
+    else
+    {
+        if(flag & END_ACC){
+            assert(flag & END_VEL && "You cannot constrain final acceleration if final velocity is not constrained.");
+            wps.push_back(pi[i]);
+            i++;
+        }
+        if(flag & END_VEL){
+            assert(flag & END_POS && "You cannot constrain final velocity if final position is not constrained.");
+            wps.push_back(pi[i]);
+            i++;
+        }
+        if(flag & END_POS){
+            wps.push_back(pi[i]);
+            i++;
+        }
     }
     return Bezier (wps.begin(), wps.end(),T);
 }

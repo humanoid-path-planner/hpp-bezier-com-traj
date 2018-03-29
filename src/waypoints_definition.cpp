@@ -9,6 +9,7 @@
 #include <bezier-com-traj/data.hh>
 #include <bezier-com-traj/waypoints/waypoints_definition.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh>
+#include <bezier-com-traj/waypoints/waypoints_c0_dc0_dc1.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh>
@@ -29,6 +30,7 @@ typedef std::map<ConstraintFlag,evalCurveAtTime > T_evalCurveAtTime;
 typedef T_evalCurveAtTime::const_iterator         CIT_evalCurveAtTime;
 static const T_evalCurveAtTime evalCurveAtTimes = boost::assign::map_list_of
         (c0_dc0_c1::flag                , c0_dc0_c1::evaluateCurveAtTime)
+        (c0_dc0_dc1::flag               , c0_dc0_dc1::evaluateCurveAtTime)
         (c0_dc0_dc1_c1::flag            , c0_dc0_dc1_c1::evaluateCurveAtTime)
         (c0_dc0_ddc0_c1::flag           , c0_dc0_ddc0_c1::evaluateCurveAtTime)
         (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::evaluateCurveAtTime)
@@ -57,6 +59,7 @@ typedef std::map<ConstraintFlag,evalAccCurveAtTime > T_evalAccCurveAtTime;
 typedef T_evalAccCurveAtTime::const_iterator         CIT_evalAccCurveAtTime;
 static const T_evalAccCurveAtTime evalAccCurveAtTimes = boost::assign::map_list_of
         (c0_dc0_c1::flag                , c0_dc0_c1::evaluateAccelerationCurveAtTime)
+        (c0_dc0_dc1::flag               , c0_dc0_dc1::evaluateAccelerationCurveAtTime)
         (c0_dc0_dc1_c1::flag            , c0_dc0_dc1_c1::evaluateAccelerationCurveAtTime)
         (c0_dc0_ddc0_c1::flag           , c0_dc0_ddc0_c1::evaluateAccelerationCurveAtTime)
         (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::evaluateAccelerationCurveAtTime)
@@ -84,6 +87,7 @@ typedef std::map<ConstraintFlag,compConsWp > T_compConsWp;
 typedef T_compConsWp::const_iterator         CIT_compConsWp;
 static const T_compConsWp compConsWps = boost::assign::map_list_of
         (c0_dc0_c1::flag                , c0_dc0_c1::computeConstantWaypoints)
+        (c0_dc0_dc1::flag               , c0_dc0_dc1::computeConstantWaypoints)
         (c0_dc0_dc1_c1::flag            , c0_dc0_dc1_c1::computeConstantWaypoints)
         (c0_dc0_ddc0_c1::flag           , c0_dc0_ddc0_c1::computeConstantWaypoints)
         (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::computeConstantWaypoints)
@@ -111,6 +115,7 @@ typedef std::map<ConstraintFlag,compWp > T_compWp;
 typedef T_compWp::const_iterator         CIT_compWp;
 static const T_compWp compWps = boost::assign::map_list_of
         (c0_dc0_c1::flag                , c0_dc0_c1::computeWwaypoints)
+        (c0_dc0_dc1::flag               , c0_dc0_dc1::computeWwaypoints)
         (c0_dc0_dc1_c1::flag            , c0_dc0_dc1_c1::computeWwaypoints)
         (c0_dc0_ddc0_c1::flag           , c0_dc0_ddc0_c1::computeWwaypoints)
         (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::computeWwaypoints)
@@ -134,33 +139,12 @@ static const T_compWp compWps = boost::assign::map_list_of
     }
 }
 
-typedef coefs_t (*compFinalAccP) (const ProblemData& pData,double T);
-typedef std::map<ConstraintFlag,compFinalAccP > T_compFinalAccP;
-typedef T_compFinalAccP::const_iterator         CIT_compFinalAccP;
-static const T_compFinalAccP compFinalAccPs = boost::assign::map_list_of
-        (c0_dc0_c1::flag                , c0_dc0_c1::computeFinalAccelerationPoint)
-        (c0_dc0_dc1_c1::flag            , c0_dc0_dc1_c1::computeFinalAccelerationPoint)
-        (c0_dc0_ddc0_c1::flag           , c0_dc0_ddc0_c1::computeFinalAccelerationPoint)
-        (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::computeFinalAccelerationPoint)
-        (c0_dc0_ddc0_ddc1_dc1_c1::flag  , c0_dc0_ddc0_ddc1_dc1_c1::computeFinalAccelerationPoint);
-
- coefs_t computeFinalAccelerationPoint(const ProblemData& pData,double T)
-{
-    CIT_compFinalAccP cit = compFinalAccPs.find(pData.constraints_.flag_);
-    if(cit != compFinalAccPs.end())
-        return cit->second(pData,T);
-    else
-    {
-        std::cout<<"Current constraints set are not implemented"<<std::endl;
-        throw std::runtime_error("Current constraints set are not implemented");
-    }
-}
-
 typedef coefs_t (*compFinalVelP) (const ProblemData& pData,double T);
 typedef std::map<ConstraintFlag,compFinalVelP > T_compFinalVelP;
 typedef T_compFinalVelP::const_iterator         CIT_compFinalVelP;
 static const T_compFinalVelP compFinalVelPs = boost::assign::map_list_of
         (c0_dc0_c1::flag                , c0_dc0_c1::computeFinalVelocityPoint)
+        (c0_dc0_dc1::flag               , c0_dc0_dc1::computeFinalVelocityPoint)
         (c0_dc0_dc1_c1::flag            , c0_dc0_dc1_c1::computeFinalVelocityPoint)
         (c0_dc0_ddc0_c1::flag           , c0_dc0_ddc0_c1::computeFinalVelocityPoint)
         (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::computeFinalVelocityPoint)

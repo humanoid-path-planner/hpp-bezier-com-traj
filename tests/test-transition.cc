@@ -198,7 +198,7 @@ bezier_com_traj::ProblemData gen_problem_data_flat(){
 
     return pData;
 }
-
+/*
 BOOST_AUTO_TEST_CASE(quasi_static){
 
 // compute kinematic constraints for the right foot :
@@ -228,10 +228,17 @@ BOOST_AUTO_TEST_CASE(transition){
     VectorX Ts(3);
     Ts<<0.6,0.6,0.6;
     check_transition(pData,Ts);
+}*/
+
+BOOST_AUTO_TEST_CASE(transition_noc1){
+    bezier_com_traj::ProblemData pData = gen_problem_data_flat();
+    pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::END_VEL;
+    VectorX Ts(3);
+    Ts<<0.6,0.6,0.6;
+    check_transition(pData,Ts);
 }
 
-
-BOOST_AUTO_TEST_CASE(transition_noDc1){
+/*BOOST_AUTO_TEST_CASE(transition_noDc1){
     bezier_com_traj::ProblemData pData = gen_problem_data_flat();
     pData.constraints_.flag_ ^= bezier_com_traj::END_VEL;
     VectorX Ts(3);
@@ -678,6 +685,6 @@ BOOST_AUTO_TEST_CASE(transition_2){
 
     check_transition(pData,Ts);
 
-}
+}*/
 
 BOOST_AUTO_TEST_SUITE_END()
