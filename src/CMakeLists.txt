@@ -31,7 +31,7 @@ SET(${LIBRARY_NAME}_SOURCES
     common_solve_methods.cpp
     costfunction_definition.cpp
     eiquadprog-fast.cpp
-    solve_transition.cpp
+    computeCOMTraj.cpp
     solve_0_step.cpp
     utils.cpp
     waypoints_definition.cpp
