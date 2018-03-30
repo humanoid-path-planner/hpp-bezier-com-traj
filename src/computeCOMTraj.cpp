@@ -202,7 +202,7 @@ void assignKinematicConstraints(const ProblemData& pData, MatrixXX& A, VectorX& 
         // constraint are of the shape A c <= b . But here c(x) = Fx + s so : AFx <= b - As
         current_size = (int)phase.kin_.rows();
         if(current_size > 0)
-        { // we don't consider kinematics constraints for the last point (because it's independant of x)
+        {
             A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps_c[id_step].first);
             b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps_c[id_step].second);
             id_rows += current_size;
@@ -219,9 +219,12 @@ void assignKinematicConstraints(const ProblemData& pData, MatrixXX& A, VectorX& 
                 // the current waypoint must have the constraints of both phases. So we add it again :
                 // TODO : filter for redunbdant constraints ...
                 current_size = phase.kin_.rows();
-                A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps_c[id_step].first);
-                b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps_c[id_step].second);
-                id_rows += current_size;
+                if(current_size > 0)
+                {
+                    A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps_c[id_step].first);
+                    b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps_c[id_step].second);
+                    id_rows += current_size;
+                }
             }
         }
     }
