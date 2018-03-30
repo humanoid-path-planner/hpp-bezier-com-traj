@@ -67,36 +67,39 @@ assert cData.contactPhase_.getAlgorithm() == EquilibriumAlgorithm.EQUILIBRIUM_AL
 Id = matrix([[ 1.,  0.,  0.],
              [ 0.,  1.,  0.],
              [ 0.,  0.,  1.]])
-Zeros = matrix([[ 0.,  0.,  0.],
-             [ 0.,  0.,  0.],
-             [ 0.,  0.,  0.]]) 
-
-assert (cData.Kin_ == Zeros).all(), "Kin_ accessor not working"
-cData.Kin_ = Id
-assert (cData.Kin_ == Id).all(), "Kin_ assignment not working"
-
+             
 excep = False
 try:
-    cData.kin_
+    cData.Kin_
 except RuntimeError,e:
     excep = True
 assert excep, "No kin assigned should have raised exception"
-cData.kin_ = matrix([0.,0.,1.]).T 
-cData.kin_
-
-
-assert (cData.Ang_ == Zeros).all(), "Ang_ accessor not working"
-cData.Ang_ = Id
-assert (cData.Ang_ == Id).all(), "Ang_ assignment not working"
+cData.setKinematicConstraints(Id, matrix([0.,0.,1.]).T )
+cData.Kin_
 
 excep = False
 try:
-    cData.ang_
+    cData.setKinematicConstraints(Id, matrix([0.,0.,0.,1.]).T )
 except RuntimeError,e:
     excep = True
-assert excep, "No ang assigned should have raised exception"
-cData.ang_ = matrix([0.,0.,1.]).T 
-cData.ang_
+assert excep, "Miss matching matrix and vector should raise an error"
+
+excep = False
+try:
+    cData.Ang_
+except RuntimeError,e:
+    excep = True
+assert excep, "No Ang_ assigned should have raised exception"
+cData.setAngularConstraints(Id, matrix([0.,0.,1.]).T )
+cData.Ang_
+
+
+excep = False
+try:
+    cData.setAngularConstraints(Id, matrix([0.,0.,0.,1.]).T )
+except RuntimeError,e:
+    excep = True
+assert excep, "Miss matching matrix and vector should raise an error"
 
 
 #testing constraints

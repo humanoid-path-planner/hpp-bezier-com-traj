@@ -133,54 +133,47 @@ void setContactPhase_(ContactData& data, centroidal_dynamics::Equilibrium* eq)
     data.contactPhase_ = eq;
 }
 
-VectorX get_kin(const ContactData& res)
-{
-    if(res.kin_.size() == 0)
-    {
-        std::cout << " no kinematic constraints assigned  " << std::endl;
-        throw contact_data_exception();
-    }
-    return res.kin_;
-}
-
-VectorX get_ang(const ContactData& res)
+boost::python::tuple get_Ang(const ContactData& res)
 {
     if(res.ang_.size() == 0)
     {
         std::cout << " no angular momentum constraints assigned  " << std::endl;
         throw contact_data_exception();
     }
-    return res.ang_;
+    return boost::python::make_tuple(res.Ang_, res.ang_);
 }
 
-MatrixX3 get_Kin(const ContactData& res)
+boost::python::tuple get_Kin(const ContactData& res)
 {
-    return res.Kin_;
+    if(res.kin_.size() == 0)
+    {
+        std::cout << " no kinematic constraints assigned  " << std::endl;
+        throw contact_data_exception();
+    }
+    return boost::python::make_tuple(res.Kin_, res.kin_);
 }
 
-MatrixX3 get_Ang(const ContactData& res)
-{
-    return res.Ang_;
-}
 
-void set_kin(ContactData& res, const VectorX& val)
+void set_Kin(ContactData& res, const MatrixX3 & val, const VectorX& val2)
 {
-    res.kin_ = val;
-}
-
-void set_ang(ContactData& res, const VectorX& val)
-{
-    res.ang_ = val;
-}
-
-void set_Kin(ContactData& res, const MatrixX3 & val)
-{
+    if(val2.size() != val.rows())
+    {
+        std::cout << " Kinematic inequality matrix sizes do not match  " << std::endl;
+        throw contact_data_exception();
+    }
     res.Kin_ = val;
+    res.kin_ = val2;
 }
 
-void set_Ang(ContactData& res, const MatrixX3 & val)
+void set_Ang(ContactData& res, const MatrixX3 & val, const VectorX& val2)
 {
+    if(val2.size() != val.rows())
+    {
+        std::cout << " Angular inequality matrix sizes do not match  " << std::endl;
+        throw contact_data_exception();
+    }
     res.Ang_ = val;
+    res.ang_ = val2;
 }
 
 /** END CONTACT DATA **/
@@ -387,10 +380,10 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
     class_<ContactData>("ContactData", init<centroidal_dynamics::Equilibrium*>()[with_custodian_and_ward<1,2>()])
                 .add_property("contactPhase_", make_function(&getContactPhase_,
                                                              return_value_policy<reference_existing_object>()), &setContactPhase_)
-                .add_property("Kin_",&get_Kin, &set_Kin )
-                .add_property("kin_",&get_kin, &set_kin )
-                .add_property("Ang_",&get_Ang, &set_Ang )
-                .add_property("ang_",&get_ang, &set_ang )
+                .add_property("Kin_",&get_Kin)
+                .add_property("Ang_",&get_Ang)
+                .def("setKinematicConstraints", &set_Kin)
+                .def("setAngularConstraints", &set_Ang)
             ;
 
     class_<ProblemData>("ProblemData", init<>())
