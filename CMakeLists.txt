@@ -52,11 +52,24 @@ find_package (Spline REQUIRED)
 # Declare Headers
 SET(${PROJECT_NAME}_HEADERS
                 include/bezier-com-traj/data.hh
+                include/bezier-com-traj/utils.hh
+                include/bezier-com-traj/flags.hh
+                include/bezier-com-traj/definitions.hh
                 include/bezier-com-traj/config.hh
                 include/bezier-com-traj/solve.hh
                 include/bezier-com-traj/solve_end_effector.hh
                 include/bezier-com-traj/common_solve_methods.hh
+                include/bezier-com-traj/common_solve_methods.inl
+                include/bezier-com-traj/cost/costfunction_definition.hh
+                include/bezier-com-traj/waypoints/waypoints_definition.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh
                 include/solver/eiquadprog-fast.hpp
+
   )
 
 find_package(Eigen3)

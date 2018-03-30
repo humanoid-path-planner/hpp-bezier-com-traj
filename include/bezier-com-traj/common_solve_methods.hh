@@ -1,24 +1,19 @@
 /*
- * Copyright 2015, LAAS-CNRS
- * Author: Andrea Del Prete
+ * Copyright 2018, LAAS-CNRS
+ * Author: Steve Tonneau
  */
 
 #ifndef BEZIER_COM_TRAJ_LIB_COMMON_SOLVE_H
 #define BEZIER_COM_TRAJ_LIB_COMMON_SOLVE_H
 
-#include <Eigen/Dense>
 #include <bezier-com-traj/config.hh>
 #include <bezier-com-traj/data.hh>
+#include <bezier-com-traj/waypoints/waypoints_definition.hh>
 
+#include <Eigen/Dense>
 
 namespace bezier_com_traj
 {
-
-
-BEZIER_COM_TRAJ_DLLAPI Matrix3 skew(point_t_tC x);
-template<typename T> T initwp();
-int Normalize(Ref_matrixXX A, Ref_vectorX b);
-
 
 /**
  * @brief ComputeDiscretizedWaypoints Given the waypoints defining a bezier curve,
@@ -28,7 +23,8 @@ int Normalize(Ref_matrixXX A, Ref_vectorX b);
  * @param numSteps desired number of wayoints
  * @return a vector of waypoint representing the discretization of the curve
  */
-BEZIER_COM_TRAJ_DLLAPI  std::vector<waypoint6_t> ComputeDiscretizedWaypoints(const std::vector<waypoint6_t>& wps, const std::vector<spline::Bern<double> >& bernstein, int numSteps);
+BEZIER_COM_TRAJ_DLLAPI  std::vector<waypoint6_t> ComputeDiscretizedWaypoints(
+        const std::vector<waypoint6_t>& wps, const std::vector<spline::Bern<double> >& bernstein, int numSteps);
 
 /**
  * @brief compute6dControlPointInequalities Given linear and angular control waypoints,
@@ -40,8 +36,9 @@ BEZIER_COM_TRAJ_DLLAPI  std::vector<waypoint6_t> ComputeDiscretizedWaypoints(con
  * @param fail set to true if problem is found infeasible
  * @return
  */
-BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, const std::vector<waypoint6_t>& wps, const std::vector<waypoint6_t>& wpL, const bool useAngMomentum, bool& fail);
-
+BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(
+        const ContactData& cData, const std::vector<waypoint6_t>& wps,
+        const std::vector<waypoint6_t>& wpL, const bool useAngMomentum, bool& fail);
 
 /**
  * @brief solve x' h x + 2 g' x, subject to A*x <= b using quadprog
@@ -51,7 +48,8 @@ BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequa
  * @param g cost Vector
  * @return
  */
-BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess);
+BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H,
+                                        Cref_vectorX  g, Cref_vectorX initGuess);
 
 
 /**
@@ -60,15 +58,21 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_ma
  * @param Hg Cost matrix and vector
  * @return
  */
-BEZIER_COM_TRAJ_DLLAPI ResultData solveIntersection(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init);
+BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
+                                        const std::pair<MatrixXX, VectorX>& Hg, const Vector3& init);
 
-/**
- * @brief Compute the Bernstein polynoms for a given degree
- * @param degree required degree
- * @return
- */
-std::vector<spline::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree);
+
+template <typename Point>
+BEZIER_COM_TRAJ_DLLAPI std::vector< std::pair<double,Point> > computeDiscretizedWaypoints
+    (const ProblemData& pData, double T,const T_time& timeArray);
+
+template <typename Point>
+BEZIER_COM_TRAJ_DLLAPI std::vector< std::pair<double,Point> > computeDiscretizedAccelerationWaypoints
+    (const ProblemData& pData, double T,const T_time& timeArray);
 
 } // end namespace bezier_com_traj
+
+#include "common_solve_methods.inl"
+
 
 #endif

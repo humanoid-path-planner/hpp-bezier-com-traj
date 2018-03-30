@@ -3,6 +3,10 @@
  * Author: Pierre Fernbach
  */
 
+
+#ifndef BEZIER_COM_TRAJ_C0DC0C1_H
+#define BEZIER_COM_TRAJ_C0DC0C1_H
+
 #include <bezier-com-traj/data.hh>
 
 namespace bezier_com_traj{
@@ -16,31 +20,27 @@ static const ConstraintFlag flag =INIT_POS | INIT_VEL | END_POS;
      * @param t param (normalized !)
      * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
      */
-coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
+inline coefs_t evaluateCurveAtTime(const std::vector<point_t>& pi,double t){
     coefs_t wp;
     double t2 = t*t;
     double t3 = t2*t;
     // equation found with sympy
     wp.first = -3.0*t3 + 3.0*t2;
     wp.second = -1.0*pi[0]*t3 + 3.0*pi[0]*t2 - 3.0*pi[0]*t + 1.0*pi[0] + 3.0*pi[1]*t3 - 6.0*pi[1]*t2 + 3.0*pi[1]*t + 1.0*pi[3]*t3;
-    // std::cout<<"wp at t = "<<t<<std::endl;
-    // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
-coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double t){
+inline coefs_t evaluateAccelerationCurveAtTime(const std::vector<point_t>& pi,double T,double t){
     coefs_t wp;
     double alpha = 1./(T*T);
     // equation found with sympy
     wp.first = (-18.0*t + 6.0)*alpha;
     wp.second = (-6.0*pi[0]*t + 6.0*pi[0] + 18.0*pi[1]*t - 12.0*pi[1] + 6.0*pi[3]*t)*alpha;
-    // std::cout<<"acc_wp at t = "<<t<<std::endl;
-    // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
 
-std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T){
+inline std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T){
     // equation for constraint on initial and final position and velocity (degree 4, 4 constant waypoint and one free (p2))
     // first, compute the constant waypoints that only depend on pData :
     int n = 3;
@@ -53,7 +53,7 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
     return pi;
 }
 
-std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
+inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
     std::vector<waypoint6_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     std::vector<Matrix3> Cpi;
@@ -92,7 +92,7 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
 }
 
 
-coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
+inline coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
     coefs_t v;
     // equation found with sympy
     v.first = -3./T;
@@ -100,15 +100,8 @@ coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
     return v;
 }
 
-coefs_t computeFinalAccelerationPoint(const ProblemData& pData,double T){
-    coefs_t v;
-    std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    // equation found with sympy
-    v.first = -12./(T*T);
-    v.second = (-6.*pi[1] + 6.*pi[3])/ (T*T);
-    return v;
-}
-
 
 }
 }
+
+#endif

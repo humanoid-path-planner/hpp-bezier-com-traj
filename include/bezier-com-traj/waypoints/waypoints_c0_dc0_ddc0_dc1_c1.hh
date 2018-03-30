@@ -3,6 +3,10 @@
  * Author: Pierre Fernbach
  */
 
+
+#ifndef BEZIER_COM_TRAJ_c0_dc0_ddc0_dc1_c1_H
+#define BEZIER_COM_TRAJ_c0_dc0_ddc0_dc1_c1_H
+
 #include <bezier-com-traj/data.hh>
 
 namespace bezier_com_traj{
@@ -18,7 +22,7 @@ static const ConstraintFlag flag = INIT_POS | INIT_VEL | INIT_ACC | END_VEL | EN
  * @param t param (normalized !)
  * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
  */
-coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
+inline coefs_t evaluateCurveAtTime(const std::vector<point_t>& pi, double t){
     coefs_t wp;
     double t2 = t*t;
     double t3 = t2*t;
@@ -27,12 +31,10 @@ coefs_t evaluateCurveAtTime(std::vector<point_t> pi,double t){
     // equation found with sympy
     wp.first = 10.0*t5 - 20.0*t4 + 10.0*t3;
     wp.second = -1.0*pi[0]*t5 + 5.0*pi[0]*t4 - 10.0*pi[0]*t3 + 10.0*pi[0]*t2 - 5.0*pi[0]*t + 1.0*pi[0] + 5.0*pi[1]*t5 - 20.0*pi[1]*t4 + 30.0*pi[1]*t3 - 20.0*pi[1]*t2 + 5.0*pi[1]*t - 10.0*pi[2]*t5 + 30.0*pi[2]*t4 - 30.0*pi[2]*t3 + 10.0*pi[2]*t2 - 5.0*pi[4]*t5 + 5.0*pi[4]*t4 + 1.0*pi[5]*t5;
-    // std::cout<<"wp at t = "<<t<<std::endl;
-    // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
-coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double t){
+inline coefs_t evaluateAccelerationCurveAtTime(const std::vector<point_t>& pi,double T,double t){
     coefs_t wp;
     double alpha = 1./(T*T);
     double t2 = t*t;
@@ -40,13 +42,11 @@ coefs_t evaluateAccelerationCurveAtTime(std::vector<point_t> pi,double T,double 
     // equation found with sympy
     wp.first = (200.0*t3 - 240.0*t2 + 60.0*t)*alpha;
     wp.second = 1.0*(-20.0*pi[0]*t3 + 60.0*pi[0]*t2 - 60.0*pi[0]*t + 20.0*pi[0] + 100.0*pi[1]*t3 - 240.0*pi[1]*t2 + 180.0*pi[1]*t - 40.0*pi[1] - 200.0*pi[2]*t3 + 360.0*pi[2]*t2 - 180.0*pi[2]*t + 20.0*pi[2] - 100.0*pi[4]*t3 + 60.0*pi[4]*t2 + 20.0*pi[5]*t3)*alpha;
-    // std::cout<<"acc_wp at t = "<<t<<std::endl;
-    // std::cout<<" first : "<<wp.first<<" ; second : "<<wp.second.transpose()<<std::endl;
     return wp;
 }
 
 
-std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T){
+inline std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T){
     // equation for constraint on initial and final position and velocity and initial acceleration(degree 5, 5 constant waypoint and one free (p3))
     // first, compute the constant waypoints that only depend on pData :
     double n = 5.;
@@ -57,14 +57,10 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
     pi.push_back(point_t::Zero()); // x
     pi.push_back((-pData.dc1_ * T / n) + pData.c1_); // p4
     pi.push_back(pData.c1_); // p5
-    /*std::cout<<"fixed waypoints : "<<std::endl;
-    for(std::vector<point_t>::const_iterator pit = pi.begin() ; pit != pi.end() ; ++pit){
-        std::cout<<" pi = "<<*pit<<std::endl;
-    }*/
     return pi;
 }
 
-std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
+inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
     std::vector<waypoint6_t> wps;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     std::vector<Matrix3> Cpi;
@@ -126,7 +122,7 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
     return wps;
 }
 
-coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
+inline coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
     coefs_t v;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     // equation found with sympy
@@ -135,15 +131,7 @@ coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
     return v;
 }
 
-coefs_t computeFinalAccelerationPoint(const ProblemData& pData,double T){
-    coefs_t v;
-    std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    // equation found with sympy
-    v.first = 20./(T*T);
-    v.second = (-40.0*pi[4] + 20.*pi[5])/ (T*T);
-    return v;
+}
 }
 
-
-}
-}
+#endif

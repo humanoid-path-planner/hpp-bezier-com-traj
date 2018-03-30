@@ -1,6 +1,6 @@
 /*
- * Copyright 2015, LAAS-CNRS
- * Author: Andrea Del Prete
+ * Copyright 2018, LAAS-CNRS
+ * Author: Steve Tonneau
  */
 
 #ifndef BEZIER_COM_TRAJ_LIB_SOLVE_H
@@ -23,23 +23,33 @@ namespace bezier_com_traj
       * @param timeStep time that the solver has to stop.
       * @return ResultData a struct containing the resulting trajectory, if success is true.
       */
-     BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solve0step(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep = -1);
+     BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solve0step(const ProblemData& pData, const std::vector<double>& Ts,
+                                                         const double timeStep = -1);
 
      /**
-     * @brief solveOnestep Tries to solve the one step problem :  Given two or three contact phases, an initial and final com position and velocity,
-     *  try to compute the CoM trajectory (as a Bezier curve) that connect them
+     * @brief computeCOMTraj Tries to solve the one step problem :  Given two or three contact phases,
+     * an initial and final com position and velocity,
+     * try to compute the CoM trajectory (as a Bezier curve) that connect them
      * @param pData problem Data. Should contain only two contact phases.
      * @param Ts timelength of each contact phase. Should be the same legnth as pData.contacts
      * @param timeStep time step used by the discretization
      * @return ResultData a struct containing the resulting trajectory, if success is true.
      */
-    BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj solveOnestep(const ProblemData& pData, const VectorX& Ts, const Vector3& init_guess,const int pointsPerPhase = 3);
+    BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
+                                                          const Vector3& init_guess,const int pointsPerPhase = 3,
+                                                          const double feasability_treshold = 0.);
 
 
-    void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,VectorX intPoint,const std::string& fileName,bool clipZ = false);
-
-
-
+    /**
+    * @brief computeCOMTraj Tries to solve the one step problem :  Given two or three contact phases,
+    * an initial and final com position and velocity,
+    * try to compute the CoM trajectory (as a Bezier curve) that connect them
+    * @param pData problem Data. Should contain only two contact phases.
+    * @param Ts timelength of each contact phase. Should be the same legnth as pData.contacts
+    * @param timeStep time step used by the discretization
+    * @return ResultData a struct containing the resulting trajectory, if success is true.
+    */
+   BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts, const double timeStep = -1);
 
 } // end namespace bezier_com_traj
 
