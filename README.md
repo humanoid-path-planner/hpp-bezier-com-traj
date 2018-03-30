@@ -2,7 +2,7 @@
 
 Copyright 2018 LAAS-CNRS
 
-Author: Pierre Fernbach and Steve Tonneau
+Authors: Pierre Fernbach and Steve Tonneau
 
 ## Description
 bezier_COM_Traj implements tools to compute Bezier trajectories given various sets of constraints: initial and terminal conditions (position, velocities, acceleration), additional linear constraints on the complete trajectory, and, most interestingly, constraints related to the center of mass dynamics.
