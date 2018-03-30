@@ -303,7 +303,8 @@ ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const doub
 ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,
                                const int pointsPerPhase, const double /*feasability_treshold*/)
 {
-    assert(Ts.size() == pData.contacts_.size());
+    if(Ts.size() != pData.contacts_.size())
+        throw std::runtime_error("Time phase vector has different size than the number of contact phases");
     double T = Ts.sum();
     T_time timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
@@ -319,7 +320,8 @@ ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,con
 ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
                                const double timeStep)
 {
-    assert(Ts.size() == pData.contacts_.size());
+    if(Ts.size() != pData.contacts_.size())
+        throw std::runtime_error("Time phase vector has different size than the number of contact phases");
     double T = Ts.sum();
     T_time timeArray = computeDiscretizedTime(Ts,timeStep);
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
