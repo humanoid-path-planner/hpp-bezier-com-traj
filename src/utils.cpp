@@ -47,7 +47,7 @@ T_time computeDiscretizedTime(const VectorX& phaseTimings, const int pointsPerPh
     T_time timeArray;
     double t = 0;
     double t_total = phaseTimings.sum();
-
+    timeArray.push_back(std::make_pair(0.,0));
     for(int i = 0 ; i < phaseTimings.size() ; ++i)
     {
         double step = (double) phaseTimings[i] / pointsPerPhase;
