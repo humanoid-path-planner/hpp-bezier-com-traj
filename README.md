@@ -100,11 +100,11 @@ eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_A
 Then, we will define the initial state of our robot:
 ```
 #c0 is the initial center of mass position
-c0 = matrix([0.,0.,1.]) 
+c0 = matrix([0.,0.,1.]) .T
 
-#we set the inital speed dc0 to an easy 10 cm / s along the x axis
-dc0 =  matrix([0.1,0.,0.]) 
-l0 = matrix([0.,0.,0.]) 
+#we set the inital speed dc0 to a rather slow 10 cm / s along the x axis
+dc0 =  matrix([0.1,0.,0.]).T
+l0 = matrix([0.,0.,0.]).T 
 T = 1.2
 tstep = -1.
 ```
@@ -131,7 +131,8 @@ print result.success
 
 ```
 
-The found centroidal trajectory is accessible from the returned object:
+The found centroidal trajectory is accessible from the returned object, only if the problem
+was feasible 
 ```
 res.c_of_t # a bezier curve object describing the com trajectory
 
