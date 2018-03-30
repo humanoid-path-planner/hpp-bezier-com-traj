@@ -31,7 +31,7 @@ https://hal.archives-ouvertes.fr/hal-01726155v1
 * [eigenpy](https://github.com/stack-of-tasks/eigenpy)
 * Additionally you will need to activate the python bindings for the above libraries
 
-##Installation on ubuntu-14.04 64 bit
+## Installation on ubuntu-14.04 64 bit
 
 Once the required libraries are installed you can clone this repository using ssh:
 ```
@@ -47,6 +47,7 @@ mkdir $BEZIER_COM_DIR/build
 cd $BEZIER_COM_DIR/build
 cmake -DCMAKE_INSTALL_PREFIX=${DEVEL_DIR}/install ..
 make install
+```
 
 ### Optional: Python bindings installation
 To install the Python bindings, in the CMakeLists.txt file, first enable the BUILD_PYTHON_INTERFACE option:
@@ -61,7 +62,87 @@ cmake -DCMAKE_INSTALL_PREFIX=${DEVEL_DIR}/install ..
 make install
 ```
 The python bindings should then be accessible through the package bezier_com_traj.
-To see example of use, you can refer to the [test file](https://gitlab.com/stonneau/bezier_COM_traj/blob/master/python/test/binding_tests.py)
+To see all the possible uses, you can refer to the [test file](https://gitlab.com/stonneau/bezier_COM_traj/blob/master/python/test/binding_tests.py)
 
 In spite of an exhaustive documentation, please refer to the C++ documentation, which mostly applies
 to python.
+
+## Python example : Zero step capturability
+
+For the zero step capturability, we will first define a contact phase using the objects from centroidal_dynamics:
+```
+#importing the libraries of interest
+from centroidal_dynamics import * #centroidal dynamics utilities
+from spline import * #bezier curves utilities
+from bezier_com_traj import * #the actual library
+
+
+# create an Equilibrium solver, for a robot of 54 kilos. We linearize the friction cone to four generating rays
+eq = Equilibrium("test", 54., 4) 
+
+# Now define some contact points ...
+from numpy import array, asmatrix, matrix
+import numpy as np
+
+P = asmatrix(array([array([x,y,0]) for x in [-0.05,0.05] for y in [-0.1,0.1]]))
+
+#and normals
+z = array([0.,0.,1.])
+N = asmatrix(array([z for _ in range(4)]))
+
+#setting contact positions and normals, as well as friction coefficient of 0.3 
+#EQUILIBRIUM_ALGORITHM_PP is the algorithm that will always be used for our problems
+eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_PP)
+
+
+```
+
+Then, we will define the initial state of our robot:
+```
+#c0 is the initial center of mass position
+c0 = matrix([0.,0.,1.]) 
+
+#we set the inital speed dc0 to an easy 10 cm / s along the x axis
+dc0 =  matrix([0.1,0.,0.]) 
+l0 = matrix([0.,0.,0.]) 
+T = 1.2
+tstep = -1.
+```
+
+And finally, some optimization parameters:
+The total duration of the trajectory, as well as 
+the discretization step. If the discretization step is < 0,
+then the continuous formulation is used
+
+```
+#trajectory duration of 1.2 seconds
+T = 1.2
+#continuous resolution of the trajectory
+tstep = -1.
+```
+
+We can now solve the problem:
+```
+# the boolean value indicates whether to use or not angular momentum
+result = zeroStepCapturability(eq,c0,dc0,l0,False,T,tstep)
+
+print result.success
+#True the problem was feasible, and a trajectory was successfully computed
+
+```
+
+The found centroidal trajectory is accessible from the returned object:
+```
+res.c_of_t # a bezier curve object describing the com trajectory
+
+#We can check that the end velocity is indeed zero:
+dc_of_t = res.c_of_t.compute_derivate(1) # computing first derivative
+print np.linalg.norm(dc_of_t(dc_of_t.max()))
+# 0.0
+
+```
+
+refer to the [test file](https://gitlab.com/stonneau/bezier_COM_traj/blob/master/python/test/binding_tests.py) for more advanced problems, including kinematic constraints,
+mutiple contact phases handling and angular momentum 
+
+
