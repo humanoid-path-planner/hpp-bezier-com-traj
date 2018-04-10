@@ -18,13 +18,15 @@ namespace bezier_com_traj
       };
 
     enum BEZIER_COM_TRAJ_DLLAPI ConstraintFlag{
-        INIT_POS = 0x00001,
-        INIT_VEL = 0x00002,
-        INIT_ACC = 0x00004,
-        END_POS  = 0x00008,
-        END_VEL  = 0x00010,
-        END_ACC  = 0x00020,
-        UNKNOWN  = 0x00040
+        INIT_POS  = 0x00001,
+        INIT_VEL  = 0x00002,
+        INIT_ACC  = 0x00004,
+        END_POS   = 0x00008,
+        END_VEL   = 0x00010,
+        END_ACC   = 0x00020,
+        INIT_JERK = 0x00040,
+        END_JERK  = 0x00080,
+        UNKNOWN   = 0x00100
       };
 
     inline ConstraintFlag operator~(ConstraintFlag a)

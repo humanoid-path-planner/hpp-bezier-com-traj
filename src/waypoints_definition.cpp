@@ -14,6 +14,8 @@
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh>
+#include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_j0_j1_ddc1_dc1_c1.hh>
+
 #include "boost/assign.hpp"
 
 
