@@ -38,32 +38,191 @@ coefs_t initCoefs(){
     return c;
 }
 
+
+void computeConstantWaypoints(const ProblemData& pData,double T,double n,point_t& p0,point_t& p1, point_t& p2, point_t& p4, point_t& p5, point_t& p6){
+    p0 = pData.c0_;
+    p1 = (pData.dc0_ * T / n )+  pData.c0_;
+    p2 = (pData.ddc0_*T*T/(n*(n-1))) + (2*pData.dc0_ *T / n) + pData.c0_; // * T because derivation make a T appear
+    p6 = pData.c1_;
+    p5 = (-pData.dc1_ * T / n) + pData.c1_; // * T ?
+    p4 = (pData.ddc1_ *T*T / (n*(n-1))) - (2 * pData.dc1_ *T / n) + pData.c1_ ; // * T ??
+}
+
 void computeConstantWaypoints(const ProblemData& pData,double T,double n,point_t& p0,point_t& p1, point_t& p2, point_t& p3, point_t& p5, point_t& p6,point_t& p7,point_t& p8){
     p0 = pData.c0_;
     p1 = (pData.dc0_ * T / n )+  pData.c0_;
     p2 = (pData.ddc0_*T*T/(n*(n-1))) + (2*pData.dc0_ *T / n) + pData.c0_; // * T because derivation make a T appear
-    p3 = (3*pData.ddc0_*T*T/(n*(n-1))) + (3*pData.dc0_ *T / n) + pData.c0_;
+    p3 = (pData.j0_*T*T*T/(n*(n-1)*(n-2)))+ (3*pData.ddc0_*T*T/(n*(n-1))) + (3*pData.dc0_ *T / n) + pData.c0_;
+
     p8 = pData.c1_;
     p7 = (-pData.dc1_ * T / n) + pData.c1_; // * T ?
     p6 = (pData.ddc1_ *T*T / (n*(n-1))) - (2 * pData.dc1_ *T / n) + pData.c1_ ; // * T ??
-    p5 = (3*pData.ddc1_ *T*T / (n*(n-1))) - (3 * pData.dc1_ *T / n) + pData.c1_ ; // * T ??
+    p5 = (-pData.j1_*T*T*T/(n*(n-1)*(n-2))) + (3*pData.ddc1_ *T*T / (n*(n-1))) - (3 * pData.dc1_ *T / n) + pData.c1_ ; // * T ??
 }
 
-std::vector<bezier_t::point_t> computeConstantWaypoints(const ProblemData& pData,double T,double n){
-    point_t p0,p1,p2,p3,p4,p5,p6,p7;
-    computeConstantWaypoints(pData,T,n,p0,p1,p2,p3,p4,p5,p6,p7);
+// with jerk and jerk derivative constrained to 0
+void computeConstantWaypoints(const ProblemData& pData,double T,double n,point_t& p0,point_t& p1, point_t& p2, point_t& p3, point_t& p4, point_t& p5,point_t& p6,point_t& p7,point_t& p8,point_t& p9){
+    p0 = pData.c0_;
+    p1 = (pData.dc0_ * T / n )+  pData.c0_;
+    p2 = (n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1)); // * T because derivation make a T appear
+    p3 = (n*n*pData.c0_ - n*pData.c0_ + 3*n*pData.dc0_*T - 3*pData.dc0_*T + 3*pData.ddc0_*T*T)/(n*(n - 1));
+    p4 = (n*n*pData.c0_ - n*pData.c0_ + 4*n*pData.dc0_*T - 4*pData.dc0_ *T+ 6*pData.ddc0_*T*T)/(n*(n - 1)) ;
+
+    p9 = pData.c1_;
+    p8 = (-pData.dc1_ * T / n) + pData.c1_; // * T ?
+    p7 = (n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1)) ; // * T ??
+    p6 = (n*n*pData.c1_ - n*pData.c1_ - 3*n*pData.dc1_*T + 3*pData.dc1_*T + 3*pData.ddc1_*T*T)/(n*(n - 1)) ; // * T ??
+    p5 = (n*n*pData.c1_ - n*pData.c1_ - 4*n*pData.dc1_*T + 4*pData.dc1_*T + 6*pData.ddc1_*T*T)/(n*(n - 1)) ;
+}
+
+
+// with jerk and jerk second derivative constrained to 0
+void computeConstantWaypoints(const ProblemData& pData,double T,double n,point_t& p0,point_t& p1, point_t& p2, point_t& p3, point_t& p4, point_t& p5,point_t& p6,point_t& p7,point_t& p8,point_t& p9,point_t& p10,point_t& p11){
+    p0 = pData.c0_;
+    p1 = (pData.dc0_ * T / n )+  pData.c0_;
+    p2 = (n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1)); // * T because derivation make a T appear
+    p3 = (n*n*pData.c0_ - n*pData.c0_ + 3*n*pData.dc0_*T - 3*pData.dc0_*T + 3*pData.ddc0_*T*T)/(n*(n - 1));
+    p4 = (n*n*pData.c0_ - n*pData.c0_ + 4*n*pData.dc0_*T - 4*pData.dc0_ *T+ 6*pData.ddc0_*T*T)/(n*(n - 1)) ;
+    p5 = (n*n*pData.c0_ - n*pData.c0_ + 5*n*pData.dc0_*T - 5*pData.dc0_ *T+ 10*pData.ddc0_*T*T)/(n*(n - 1)) ;
+
+    p11 = pData.c1_;
+    p10 = (-pData.dc1_ * T / n) + pData.c1_; // * T ?
+    p9 = (n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1)) ; // * T ??
+    p8 = (n*n*pData.c1_ - n*pData.c1_ - 3*n*pData.dc1_*T + 3*pData.dc1_*T + 3*pData.ddc1_*T*T)/(n*(n - 1)) ; // * T ??
+    p7 = (n*n*pData.c1_ - n*pData.c1_ - 4*n*pData.dc1_*T + 4*pData.dc1_*T + 6*pData.ddc1_*T*T)/(n*(n - 1)) ;
+    p6 = (n*n*pData.c1_ - n*pData.c1_ - 5*n*pData.dc1_*T + 5*pData.dc1_*T + 10*pData.ddc1_*T*T)/(n*(n - 1)) ;
+}
+
+// up to jerk second derivativ constraints for init, pos vel and acc constraint for goal
+std::vector<bezier_t::point_t> computeConstantWaypointsInitPredef(const ProblemData& pData,double T){
+    const double n = 8;
     std::vector<bezier_t::point_t> pts;
-    pts.push_back(p0);
-    pts.push_back(p1);
-    pts.push_back(p2);
-    pts.push_back(p3);
-    pts.push_back(p4);
-    pts.push_back(p5);
-    pts.push_back(p6);
-    pts.push_back(p7);
+    pts.push_back(pData.c0_);
+    pts.push_back((pData.dc0_ * T / n )+  pData.c0_);
+    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1))); // * T because derivation make a T appear
+    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 3*n*pData.dc0_*T - 3*pData.dc0_*T + 3*pData.ddc0_*T*T)/(n*(n - 1)));
+    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 4*n*pData.dc0_*T - 4*pData.dc0_ *T+ 6*pData.ddc0_*T*T)/(n*(n - 1))) ;
+    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 5*n*pData.dc0_*T - 5*pData.dc0_ *T+ 10*pData.ddc0_*T*T)/(n*(n - 1))) ;
+
+    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1))) ; // * T ??
+    pts.push_back((-pData.dc1_ * T / n) + pData.c1_); // * T ?
+    pts.push_back(pData.c1_);
+
     return pts;
 }
 
+
+// up to jerk second derivativ constraints for goal, pos vel and acc constraint for init
+std::vector<bezier_t::point_t> computeConstantWaypointsGoalPredef(const ProblemData& pData,double T){
+    const double n = 8;
+    std::vector<bezier_t::point_t> pts;
+    pts.push_back(pData.c0_);
+    pts.push_back((pData.dc0_ * T / n )+  pData.c0_);
+    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1))); // * T because derivation make a T appear
+
+    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 5*n*pData.dc1_*T + 5*pData.dc1_*T + 10*pData.ddc1_*T*T)/(n*(n - 1))) ;
+    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 4*n*pData.dc1_*T + 4*pData.dc1_*T + 6*pData.ddc1_*T*T)/(n*(n - 1))) ;
+    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 3*n*pData.dc1_*T + 3*pData.dc1_*T + 3*pData.ddc1_*T*T)/(n*(n - 1))) ; // * T ??
+    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1))) ; // * T ??
+    pts.push_back((-pData.dc1_ * T / n) + pData.c1_); // * T ?
+    pts.push_back(pData.c1_);
+
+    return pts;
+}
+
+std::vector<bezier_t::point_t> computeConstantWaypoints(const ProblemData& pData,double T,double n){
+    std::vector<bezier_t::point_t> pts;
+
+    if(n<=6){
+        point_t p0,p1,p2,p3,p4,p5;
+        computeConstantWaypoints(pData,T,n,p0,p1,p2,p3,p4,p5);
+        pts.push_back(p0);
+        pts.push_back(p1);
+        pts.push_back(p2);
+        pts.push_back(p3);
+        pts.push_back(p4);
+        pts.push_back(p5);
+    }else if(n<=8){
+        point_t p0,p1,p2,p3,p4,p5,p6,p7;
+        computeConstantWaypoints(pData,T,n,p0,p1,p2,p3,p4,p5,p6,p7);
+        pts.push_back(p0);
+        pts.push_back(p1);
+        pts.push_back(p2);
+        pts.push_back(p3);
+        pts.push_back(p4);
+        pts.push_back(p5);
+        pts.push_back(p6);
+        pts.push_back(p7);
+    }else if (n<=10){
+        point_t p0,p1,p2,p3,p4,p5,p6,p7,p8,p9;
+        computeConstantWaypoints(pData,T,n,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9);
+        pts.push_back(p0);
+        pts.push_back(p1);
+        pts.push_back(p2);
+        pts.push_back(p3);
+        pts.push_back(p4);
+        pts.push_back(p5);
+        pts.push_back(p6);
+        pts.push_back(p7);
+        pts.push_back(p8);
+        pts.push_back(p9);
+    }else if (n<=12){
+        point_t p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11;
+        computeConstantWaypoints(pData,T,n,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11);
+        pts.push_back(p0);
+        pts.push_back(p1);
+        pts.push_back(p2);
+        pts.push_back(p3);
+        pts.push_back(p4);
+        pts.push_back(p5);
+        pts.push_back(p6);
+        pts.push_back(p7);
+        pts.push_back(p8);
+        pts.push_back(p9);
+        pts.push_back(p10);
+        pts.push_back(p11);
+    }
+    return pts;
+}
+
+
+std::vector<waypoint_t> createEndEffectorJerkWaypoints(double T,const ProblemData& pData){
+    // create the waypoint from the analytical expressions :
+    std::vector<waypoint_t> wps;
+    point_t p0,p1,p2,p3,p5,p6,p7,p8;
+    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
+    double alpha = 1. / (T*T*T);
+
+    waypoint_t w = initwp<waypoint_t>();
+    // assign w0:
+    w.second= 336*(-p0 +3*p1 - 3*p2 + p3)*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint_t>();
+    // assign w1:
+    w.first = 336*alpha*Matrix3::Identity();
+    w.second= 336*(-p1 + 3*p2 - 3*p3)*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint_t>();
+    // assign w2:
+    w.first = -3*336*alpha*Matrix3::Identity();
+    w.second = 336*(-p2 + 3*p3 + p5)*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint_t>();
+    // assign w3:
+    w.first = 3*336*alpha*Matrix3::Identity();
+    w.second = 336*(-p3 - 3*p5 + p6)*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint_t>();
+    // assign w4:
+    w.first = -336*alpha*Matrix3::Identity();
+    w.second =  336*(3*p5 - 3*p6 + p7)*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint_t>();
+    // assign w5:
+    w.second= 336*(-p5 + 3*p6 - 3*p7 + p8)*alpha;
+    wps.push_back(w);
+    return wps;
+}
 
 std::vector<waypoint_t> createEndEffectorAccelerationWaypoints(double T,const ProblemData& pData){
     // create the waypoint from the analytical expressions :
@@ -158,11 +317,14 @@ std::vector<waypoint_t> createEndEffectorVelocityWaypoints(double T,const Proble
 }
 
 
-void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoint_t>& wps_acc,const std::vector<waypoint_t>& wps_vel,const VectorX& acc_bounds,const VectorX& vel_bounds,MatrixXX& A,VectorX& b){
+void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoint_t>& wps_acc,const std::vector<waypoint_t>& wps_vel,const VectorX& acc_bounds,const VectorX& vel_bounds,MatrixXX& A,VectorX& b,const std::vector<waypoint_t>& wps_jerk = std::vector<waypoint_t>(),const VectorX& jerk_bounds=VectorX(DIM_POINT)  ){
     assert(acc_bounds.size() == DIM_POINT && "Acceleration bounds should have the same dimension as the points");
     assert(vel_bounds.size() == DIM_POINT && "Velocity bounds should have the same dimension as the points");
+    assert(jerk_bounds.size() == DIM_POINT && "Jerk bounds should have the same dimension as the points");
+
     int empty_acc=0;
     int empty_vel=0;
+    int empty_jerk=0;
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
     {
         if(wpcit->first.isZero(std::numeric_limits<double>::epsilon()))
@@ -173,8 +335,13 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
         if(wpcit->first.isZero(std::numeric_limits<double>::epsilon()))
             empty_vel++;
     }
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps_jerk.begin(); wpcit != wps_jerk.end(); ++wpcit)
+    {
+        if(wpcit->first.isZero(std::numeric_limits<double>::epsilon()))
+            empty_jerk++;
+    }
 
-    A = MatrixXX::Zero(2*DIM_POINT*(wps_acc.size()-empty_acc+wps_vel.size()-empty_vel)+DIM_POINT,DIM_POINT); // *2 because we have to put the lower and upper bound for each one, +DIM_POINT for the constraint on x[z]
+    A = MatrixXX::Zero(2*DIM_POINT*(wps_acc.size()-empty_acc+wps_vel.size()-empty_vel+wps_jerk.size() - empty_jerk)+DIM_POINT,DIM_POINT); // *2 because we have to put the lower and upper bound for each one, +DIM_POINT for the constraint on x[z]
     b = VectorX::Zero(A.rows());
     int i = 0;
     //upper acc bounds
@@ -210,6 +377,25 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
         if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
             A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
             b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds + wpcit->second;
+            ++i;
+        }
+    }
+
+    //upper jerk bounds
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
+    {
+        if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
+            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
+            b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds - wpcit->second;
+            ++i;
+        }
+    }
+    //lower jerk bounds
+    for (std::vector<waypoint_t>::const_iterator wpcit = wps_jerk.begin(); wpcit != wps_jerk.end(); ++wpcit)
+    {
+        if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
+            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
+            b.segment<DIM_POINT>(i*DIM_POINT)   = jerk_bounds + wpcit->second;
             ++i;
         }
     }
@@ -311,6 +497,32 @@ coefs_t evaluateCurve(const ProblemData& pData,double T, double t){
     return coefs;
 }
 
+
+/**
+ * @brief evaluateAccCurve Evaluate the acceleration at a given parameter
+ * @param pData
+ * @param T
+ * @param param Normalized : between 0 and 1
+ * @return
+ */
+coefs_t evaluateVelCurve(const ProblemData& pData, double T, double t){
+    point_t p0,p1,p2,p3,p5,p6,p7,p8;
+    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
+    coefs_t coefs;
+    const double alpha = 1./(T);
+    const double t2 = t*t;
+    const double t3 = t2*t;
+    const double t4 = t3*t;
+    const double t5 = t4*t;
+    const double t6 = t5*t;
+    const double t7 = t6*t;
+    //equations found with sympy
+    coefs.first= (560.0*t7 - 1960.0*t6 + 2520.0*t5 - 1400.0*t4 + 280.0*t3)*alpha;
+    coefs.second=(8.0*p0*t7 - 56.0*p0*t6 + 168.0*p0*t5 - 280.0*p0*t4 + 280.0*p0*t3 - 168.0*p0*t2 + 56.0*p0*t - 8.0*p0 - 64.0*p1*t7 + 392.0*p1*t6 - 1008.0*p1*t5 + 1400.0*p1*t4 - 1120.0*p1*t3 + 504.0*p1*t2 - 112.0*p1*t + 8.0*p1 + 224.0*p2*t7 - 1176.0*p2*t6 + 2520.0*p2*t5 - 2800.0*p2*t4 + 1680.0*p2*t3 - 504.0*p2*t2 + 56.0*p2*t - 448.0*p3*t7 + 1960.0*p3*t6 - 3360.0*p3*t5 + 2800.0*p3*t4 - 1120.0*p3*t3 + 168.0*p3*t2 - 448.0*p5*t7 + 1176.0*p5*t6 - 1008.0*p5*t5 + 280.0*p5*t4 + 224.0*p6*t7 - 392.0*p6*t6 + 168.0*p6*t5 - 64.0*p7*t7 + 56.0*p7*t6 + 8.0*p8*t7)*alpha;
+    return coefs;
+}
+
+
 /**
  * @brief evaluateAccCurve Evaluate the acceleration at a given parameter
  * @param pData
@@ -322,10 +534,34 @@ coefs_t evaluateAccCurve(const ProblemData& pData, double T, double t){
     point_t p0,p1,p2,p3,p5,p6,p7,p8;
     computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
     coefs_t coefs;
-    double alpha = 1./(T*T);
+    const double alpha = 1./(T*T);
     //equations found with sympy
     coefs.first= ((3920.0*pow(t,6) - 11760.0*pow(t,5) + 12600.0*pow(t,4) - 5600.0*pow(t,3) + 840.0*pow(t,2)))*alpha;
     coefs.second=(56.0*p0*pow(t,6) - 336.0*p0*pow(t,5) + 840.0*p0*pow(t,4) - 1120.0*p0*pow(t,3) + 840.0*p0*pow(t,2) - 336.0*p0*t + 56.0*p0 - 448.0*p1*pow(t,6) + 2352.0*p1*pow(t,5) - 5040.0*p1*pow(t,4) + 5600.0*p1*pow(t,3) - 3360.0*p1*pow(t,2) + 1008.0*p1*t - 112.0*p1 + 1568.0*p2*pow(t,6) - 7056.0*p2*pow(t,5) + 12600.0*p2*pow(t,4) - 11200.0*p2*pow(t,3) + 5040.0*p2*pow(t,2) - 1008.0*p2*t + 56.0*p2 - 3136.0*p3*pow(t,6) + 11760.0*p3*pow(t,5) - 16800.0*p3*pow(t,4) + 11200.0*p3*pow(t,3) - 3360.0*p3*pow(t,2)+ 336.0*p3*t - 3136.0*p5*pow(t,6) + 7056.0*p5*pow(t,5) - 5040.0*p5*pow(t,4) + 1120.0*p5*pow(t,3) + 1568.0*p6*pow(t,6) - 2352.0*p6*pow(t,5) + 840.0*p6*pow(t,4) - 448.0*p7*pow(t,6) + 336.0*p7*pow(t,5) + 56.0*p8*pow(t,6))*alpha;
+    return coefs;
+}
+
+
+/**
+ * @brief evaluateAccCurve Evaluate the acceleration at a given parameter
+ * @param pData
+ * @param T
+ * @param param Normalized : between 0 and 1
+ * @return
+ */
+coefs_t evaluateJerkCurve(const ProblemData& pData, double T, double t){
+    point_t p0,p1,p2,p3,p5,p6,p7,p8;
+    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
+    coefs_t coefs;
+    const double t2 = t*t;
+    const double t3 = t2*t;
+    const double t4 = t3*t;
+    const double t5 = t4*t;
+    const double alpha = 1./(T*T*T);
+
+    //equations found with sympy
+    coefs.first= (23520.0*t5 - 58800.0*t4 + 50400.0*t3 - 16800.0*t2 + 1680.0*t)*alpha;
+    coefs.second= 1.0*(336.0*p0*t5 - 1680.0*p0*t4 + 3360.0*p0*t3 - 3360.0*p0*t2 + 1680.0*p0*t - 336.0*p0 - 2688.0*p1*t5 + 11760.0*p1*t4 - 20160.0*p1*t3 + 16800.0*p1*t2 - 6720.0*p1*t + 1008.0*p1 + 9408.0*p2*t5 - 35280.0*p2*t4 + 50400.0*p2*t3 - 33600.0*p2*t2 + 10080.0*p2*t - 1008.0*p2 - 18816.0*p3*t5 + 58800.0*p3*t4 - 67200.0*p3*t3 + 33600.0*p3*t2 - 6720.0*p3*t + 336.0*p3 - 18816.0*p5*t5 + 35280.0*p5*t4 - 20160.0*p5*t3 + 3360.0*p5*t2 + 9408.0*p6*t5 - 11760.0*p6*t4 + 3360.0*p6*t3 - 2688.0*p7*t5 + 1680.0*p7*t4 + 336.0*p8*t5)*alpha;
     return coefs;
 }
 
@@ -349,6 +585,9 @@ void computeDistanceCostFunction(int numPoints,const ProblemData& pData, double 
         g += (ckcit->first * ckcit->second) - (pk * ckcit->first);
         i++;
     }
+    double norm=H(0,0); // because H is always diagonal.
+    H /= norm;
+    g /= norm;
 }
 
 void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
@@ -368,6 +607,27 @@ void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
     std::cout<<"bezier curve created, size = "<<res.c_of_t_.size_<<std::endl;
 }
 
+void computeVelCostFunction(int numPoints,const ProblemData& pData,double T, MatrixXX& H,VectorX& g){
+    double step = 1./(numPoints-1);
+    H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
+    g  = VectorX::Zero(DIM_POINT);
+    std::vector<coefs_t> cks;
+    for(int i = 0 ; i < numPoints ; ++i){
+        cks.push_back(evaluateVelCurve(pData,T,i*step));
+    }
+    for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
+        H+=(ckcit->first * ckcit->first * Matrix3::Identity());
+        g+=ckcit->first*ckcit->second;
+    }
+    //TEST : don't consider z axis for minimum acceleration cost
+    //H(2,2) = 1e-6;
+    //g[2] = 1e-6 ;
+    //normalize :
+    double norm=H(0,0); // because H is always diagonal
+    H /= norm;
+    g /= norm;
+}
+
 void computeAccelerationCostFunction(int numPoints,const ProblemData& pData,double T, MatrixXX& H,VectorX& g){
     double step = 1./(numPoints-1);
     H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
@@ -381,12 +641,33 @@ void computeAccelerationCostFunction(int numPoints,const ProblemData& pData,doub
         g+=ckcit->first*ckcit->second;
     }
     //TEST : don't consider z axis for minimum acceleration cost
-    H(2,2) = 1e-6;
-    g[2] = 1e-6 ;
+    //H(2,2) = 1e-6;
+    //g[2] = 1e-6 ;
     //normalize :
-  //  double norm=H(0,0); // because H is always diagonal
-  //  H /= norm;
-  //  g /= norm;
+    double norm=H(0,0); // because H is always diagonal
+    H /= norm;
+    g /= norm;
+}
+
+void computeJerkCostFunction(int numPoints,const ProblemData& pData,double T, MatrixXX& H,VectorX& g){
+    double step = 1./(numPoints-1);
+    H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
+    g  = VectorX::Zero(DIM_POINT);
+    std::vector<coefs_t> cks;
+    for(int i = 0 ; i < numPoints ; ++i){
+        cks.push_back(evaluateJerkCurve(pData,T,i*step));
+    }
+    for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
+        H+=(ckcit->first * ckcit->first * Matrix3::Identity());
+        g+=ckcit->first*ckcit->second;
+    }
+    //TEST : don't consider z axis for minimum acceleration cost
+    //H(2,2) = 1e-6;
+    //g[2] = 1e-6 ;
+    //normalize :
+    double norm=H(0,0); // because H is always diagonal
+    H /= norm;
+    g /= norm;
 }
 
 
@@ -395,32 +676,36 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     std::cout<<"solve end effector, T = "<<T<<std::endl;
     assert (weightDistance>=0. && weightDistance<=1. && "WeightDistance must be between 0 and 1");
     double weightAcc = 1. - weightDistance;
+    std::vector<waypoint_t> wps_jerk=createEndEffectorJerkWaypoints(T,pData);
     std::vector<waypoint_t> wps_acc=createEndEffectorAccelerationWaypoints(T,pData);
     std::vector<waypoint_t> wps_vel=createEndEffectorVelocityWaypoints(T,pData);
     // stack the constraint for each waypoint :
     MatrixXX A;
     VectorX b;
-    Vector3 acc_bounds(1000,1000,1000);
-    Vector3 vel_bounds(500,500,500);
-    computeConstraintsMatrix(pData,wps_acc,wps_vel,acc_bounds,vel_bounds,A,b);
+    Vector3 jerk_bounds(500,500,500);
+    Vector3 acc_bounds(30,30,30);
+    Vector3 vel_bounds(20,20,20);
+    computeConstraintsMatrix(pData,wps_acc,wps_vel,acc_bounds,vel_bounds,A,b,wps_jerk,jerk_bounds);
   //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
  //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
     // compute cost function (discrete integral under the curve defined by 'path')
-    MatrixXX H_rrt=MatrixXX::Zero(DIM_POINT,DIM_POINT),H_acc,H;
-    VectorX g_rrt=VectorX::Zero(DIM_POINT),g_acc,g;
+    MatrixXX H_rrt=MatrixXX::Zero(DIM_POINT,DIM_POINT),H_acc,H_jerk,H_vel,H;
+    VectorX g_rrt=VectorX::Zero(DIM_POINT),g_acc,g_jerk,g_vel,g;
     if(weightDistance>0)
-        computeDistanceCostFunction<Path>(20,pData,T,path,H_rrt,g_rrt);
-    computeAccelerationCostFunction(50,pData,T,H_acc,g_acc);
+        computeDistanceCostFunction<Path>(50,pData,T,path,H_rrt,g_rrt);
+    computeVelCostFunction(50,pData,T,H_vel,g_vel);
+   // computeJerkCostFunction(50,pData,T,H_jerk,g_jerk);
   /*  std::cout<<"End eff H_rrt = "<<std::endl<<H_rrt<<std::endl;
     std::cout<<"End eff g_rrt = "<<std::endl<<g_rrt<<std::endl;
     std::cout<<"End eff H_acc = "<<std::endl<<H_acc<<std::endl;
     std::cout<<"End eff g_acc = "<<std::endl<<g_acc<<std::endl;
 */
+
     // add the costs :
     H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
     g  = VectorX::Zero(DIM_POINT);
-    H = weightAcc*H_acc + weightDistance*H_rrt;
-    g = weightAcc*g_acc + weightDistance*g_rrt;
+    H = weightAcc*(/*H_jerk+*/H_vel) + weightDistance*H_rrt;
+    g = weightAcc*(/*g_jerk+*/g_vel) + weightDistance*g_rrt;
     std::cout<<"End eff H = "<<std::endl<<H<<std::endl;
     std::cout<<"End eff g = "<<std::endl<<g<<std::endl;
 

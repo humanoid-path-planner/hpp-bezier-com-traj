@@ -84,14 +84,16 @@ namespace bezier_com_traj
             : c0_ (point_t::Zero())
             ,dc0_ (point_t::Zero())
             ,ddc0_(point_t::Zero())
+            ,j0_(point_t::Zero())
             , c1_ (point_t::Zero())
             ,dc1_ (point_t::Zero())
             ,ddc1_(point_t::Zero())
+            ,j1_(point_t::Zero())
             ,useAngularMomentum_(false)
             ,costFunction_(ACCELERATION) {}
 
         std::vector<ContactData> contacts_;
-        point_t  c0_,dc0_,ddc0_,c1_,dc1_,ddc1_;
+        point_t  c0_,dc0_,ddc0_,j0_,c1_,dc1_,ddc1_,j1_;
         point_t  l0_;
         bool useAngularMomentum_;
         Constraints constraints_;
@@ -146,7 +148,6 @@ namespace bezier_com_traj
           , dL_of_t_(bezier_t::zero())
           , dc1_(point_t::Zero())
           , ddc1_(point_t::Zero()) {}
-
         ~ResultDataCOMTraj(){}
 
         bezier_t c_of_t_; // center of mass trajectory
