@@ -33,10 +33,10 @@ eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_A
 #~ eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_LP)
 
 # setting up optimization problem
-c0 = matrix([0.,0.,1.]) 
+c0 = matrix([0.,0.,1.]).T 
 #~ dc0 = matrix(np.random.uniform(-1, 1, size=3)); 
-dc0 =  matrix([0.1,0.,0.]) 
-l0 = matrix([0.,0.,0.]) 
+dc0 =  matrix([0.1,0.,0.]).T
+l0 = matrix([0.,0.,0.]).T
 T = 1.2
 tstep = -1.
 
@@ -57,3 +57,94 @@ assert(np.asarray(a.x[2])[0][0] <=0.5)
 
 
 a = zeroStepCapturability(eq,c0,dc0,l0,True,T,tstep,Kin,matrix(kin))
+
+#testing contactData
+cData = ContactData(Equilibrium("test", 54., 4) )
+ceq = cData.contactPhase_
+ceq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_PP)
+assert cData.contactPhase_.getAlgorithm() == EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_PP, "modifying ceq should modify cData.contactPhase_"
+
+Id = matrix([[ 1.,  0.,  0.],
+             [ 0.,  1.,  0.],
+             [ 0.,  0.,  1.]])
+             
+excep = False
+try:
+    cData.Kin_
+except RuntimeError,e:
+    excep = True
+assert excep, "No kin assigned should have raised exception"
+cData.setKinematicConstraints(Id, matrix([0.,0.,1.]).T )
+cData.Kin_
+
+excep = False
+try:
+    cData.setKinematicConstraints(Id, matrix([0.,0.,0.,1.]).T )
+except RuntimeError,e:
+    excep = True
+assert excep, "Miss matching matrix and vector should raise an error"
+
+excep = False
+try:
+    cData.Ang_
+except RuntimeError,e:
+    excep = True
+assert excep, "No Ang_ assigned should have raised exception"
+cData.setAngularConstraints(Id, matrix([0.,0.,1.]).T )
+cData.Ang_
+
+
+excep = False
+try:
+    cData.setAngularConstraints(Id, matrix([0.,0.,0.,1.]).T )
+except RuntimeError,e:
+    excep = True
+assert excep, "Miss matching matrix and vector should raise an error"
+
+
+#testing constraints
+c = Constraints()
+old = c.constrainAcceleration_; c.constrainAcceleration_ = not old; assert c.constrainAcceleration_ != old
+old = c.flag_; assert  c.flag_ == ConstraintFlag.INIT_POS | ConstraintFlag.INIT_VEL | ConstraintFlag.END_VEL | ConstraintFlag.END_POS;
+c.flag_ = ConstraintFlag.INIT_POS | ConstraintFlag.INIT_VEL; assert c.flag_ != old
+old = c.maxAcceleration_; c.maxAcceleration_ = .235; assert c.maxAcceleration_ != old
+old = c.reduce_h_       ; c.reduce_h_ = .235; assert c.reduce_h_ != old
+
+#testing problem data
+c  = ProblemData() 
+
+nv = matrix([0.,0.,10.]).T
+old = c.c0_; c.c0_ = nv;            assert (c.c0_  != old).any()
+old = c.dc0_; c.dc0_ = nv;          assert (c.dc0_ != old).any()
+old = c.ddc0_; c.ddc0_ = nv;        assert (c.ddc0_!= old).any()
+old = c.c1_; c.c1_ = nv;            assert (c.c0_  != old).any()
+old = c.dc1_; c.dc1_ = nv;          assert (c.dc1_ != old).any()
+old = c.ddc1_; c.ddc1_ = nv;        assert (c.ddc1_!= old).any()
+old = c.useAngularMomentum_; c.useAngularMomentum_ = not old; assert c.useAngularMomentum_ != old
+pD = c
+c = pD.constraints_
+old = c.flag_; c.flag_ = ConstraintFlag.INIT_POS | ConstraintFlag.INIT_VEL; assert pD.constraints_.flag_ != old
+
+
+pD = ProblemData() 
+pD.constraints_.flag_ = ConstraintFlag.INIT_POS | ConstraintFlag.INIT_VEL  | ConstraintFlag.END_VEL
+
+def initContactData(pD):
+    cData = ContactData(Equilibrium("test", 54., 4) )
+    cData.contactPhase_.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_PP)
+    pD.addContact(cData)
+    
+[initContactData(pD) for i in range(3)]
+
+pD.c0_ = c0
+pD.dc0_ = dc0
+res = computeCOMTraj(pD,matrix([0.4,0.4,0.4]).T,0.05)
+assert np.linalg.norm(res.c_of_t.derivate(1.2, 1)) < 0.00000001
+
+# non matching time step and contact phases
+excep = False
+try:
+    res = computeCOMTraj(pD,matrix([0.4,0.4]).T,0.05)
+except RuntimeError,e:
+    excep = True
+assert excep, "computeCOMTraj should have raised exception"

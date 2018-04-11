@@ -33,6 +33,20 @@ namespace bezier_com_traj
             , kin_(VectorX::Zero(0))
             , Ang_(Eigen::Matrix3d::Zero())
             , ang_(VectorX::Zero(0)) {}
+
+        ContactData(const ContactData& other)
+            : contactPhase_(new centroidal_dynamics::Equilibrium(*(other.contactPhase_)))
+            , Kin_(other.Kin_)
+            , kin_(other.kin_)
+            , Ang_(other.Ang_)
+            , ang_(other.ang_){}
+
+        ContactData(centroidal_dynamics::Equilibrium* contactPhase)
+            : contactPhase_(contactPhase)
+            , Kin_(Eigen::Matrix3d::Zero())
+            , kin_(VectorX::Zero(0))
+            , Ang_(Eigen::Matrix3d::Zero())
+            , ang_(VectorX::Zero(0)) {}
        ~ContactData(){}
 
        centroidal_dynamics::Equilibrium* contactPhase_;
