@@ -97,16 +97,16 @@ void computeConstantWaypoints(const ProblemData& pData,double T,double n,point_t
 std::vector<bezier_t::point_t> computeConstantWaypointsInitPredef(const ProblemData& pData,double T){
     const double n = 8;
     std::vector<bezier_t::point_t> pts;
-    pts.push_back(pData.c0_);
-    pts.push_back((pData.dc0_ * T / n )+  pData.c0_);
-    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1))); // * T because derivation make a T appear
-    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 3*n*pData.dc0_*T - 3*pData.dc0_*T + 3*pData.ddc0_*T*T)/(n*(n - 1)));
-    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 4*n*pData.dc0_*T - 4*pData.dc0_ *T+ 6*pData.ddc0_*T*T)/(n*(n - 1))) ;
-    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 5*n*pData.dc0_*T - 5*pData.dc0_ *T+ 10*pData.ddc0_*T*T)/(n*(n - 1))) ;
+    pts.push_back(pData.c0_); // c0
+    pts.push_back((pData.dc0_ * T / n )+  pData.c0_); //dc0
+    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1)));//ddc0 // * T because derivation make a T appear
+    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 3*n*pData.dc0_*T - 3*pData.dc0_*T + 3*pData.ddc0_*T*T)/(n*(n - 1))); //j0
+    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 4*n*pData.dc0_*T - 4*pData.dc0_ *T+ 6*pData.ddc0_*T*T)/(n*(n - 1))) ; //dj0
+    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 5*n*pData.dc0_*T - 5*pData.dc0_ *T+ 10*pData.ddc0_*T*T)/(n*(n - 1))) ; //ddj0
 
-    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1))) ; // * T ??
-    pts.push_back((-pData.dc1_ * T / n) + pData.c1_); // * T ?
-    pts.push_back(pData.c1_);
+    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1))) ; //ddc1 // * T ??
+    pts.push_back((-pData.dc1_ * T / n) + pData.c1_); // dc1
+    pts.push_back(pData.c1_); //c1
 
     return pts;
 }
@@ -116,16 +116,16 @@ std::vector<bezier_t::point_t> computeConstantWaypointsInitPredef(const ProblemD
 std::vector<bezier_t::point_t> computeConstantWaypointsGoalPredef(const ProblemData& pData,double T){
     const double n = 8;
     std::vector<bezier_t::point_t> pts;
-    pts.push_back(pData.c0_);
-    pts.push_back((pData.dc0_ * T / n )+  pData.c0_);
-    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1))); // * T because derivation make a T appear
+    pts.push_back(pData.c0_); //c0
+    pts.push_back((pData.dc0_ * T / n )+  pData.c0_); //dc0
+    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1))); //ddc0 // * T because derivation make a T appear
 
-    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 5*n*pData.dc1_*T + 5*pData.dc1_*T + 10*pData.ddc1_*T*T)/(n*(n - 1))) ;
-    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 4*n*pData.dc1_*T + 4*pData.dc1_*T + 6*pData.ddc1_*T*T)/(n*(n - 1))) ;
-    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 3*n*pData.dc1_*T + 3*pData.dc1_*T + 3*pData.ddc1_*T*T)/(n*(n - 1))) ; // * T ??
-    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1))) ; // * T ??
-    pts.push_back((-pData.dc1_ * T / n) + pData.c1_); // * T ?
-    pts.push_back(pData.c1_);
+    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 5*n*pData.dc1_*T + 5*pData.dc1_*T + 10*pData.ddc1_*T*T)/(n*(n - 1))) ; //ddj1
+    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 4*n*pData.dc1_*T + 4*pData.dc1_*T + 6*pData.ddc1_*T*T)/(n*(n - 1))) ; //dj1
+    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 3*n*pData.dc1_*T + 3*pData.dc1_*T + 3*pData.ddc1_*T*T)/(n*(n - 1))) ; // j1
+    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1))) ; //ddc1 * T ??
+    pts.push_back((-pData.dc1_ * T / n) + pData.c1_); // dc1
+    pts.push_back(pData.c1_); //c1
 
     return pts;
 }
@@ -682,9 +682,9 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     // stack the constraint for each waypoint :
     MatrixXX A;
     VectorX b;
-    Vector3 jerk_bounds(1000,1000,1000);
-    Vector3 acc_bounds(100,100,100);
-    Vector3 vel_bounds(100,100,100);
+    Vector3 jerk_bounds(5000,5000,5000);
+    Vector3 acc_bounds(5000,5000,5000);
+    Vector3 vel_bounds(5000,5000,5000);
     computeConstraintsMatrix(pData,wps_acc,wps_vel,acc_bounds,vel_bounds,A,b,wps_jerk,jerk_bounds);
   //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
  //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
@@ -694,7 +694,7 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     if(weightDistance>0)
         computeDistanceCostFunction<Path>(50,pData,T,path,H_rrt,g_rrt);
     computeVelCostFunction(50,pData,T,H_vel,g_vel);
-   // computeJerkCostFunction(50,pData,T,H_jerk,g_jerk);
+    //computeJerkCostFunction(50,pData,T,H_jerk,g_jerk);
   /*  std::cout<<"End eff H_rrt = "<<std::endl<<H_rrt<<std::endl;
     std::cout<<"End eff g_rrt = "<<std::endl<<g_rrt<<std::endl;
     std::cout<<"End eff H_acc = "<<std::endl<<H_acc<<std::endl;
