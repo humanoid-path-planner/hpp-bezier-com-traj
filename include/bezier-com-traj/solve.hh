@@ -35,9 +35,7 @@ namespace bezier_com_traj
      * @param timeStep time step used by the discretization
      * @return ResultData a struct containing the resulting trajectory, if success is true.
      */
-    BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
-                                                          const Vector3& init_guess,const int pointsPerPhase = 3,
-                                                          const double feasability_treshold = 0.);
+    BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj computeCOMTrajFixedSize(const ProblemData& pData, const VectorX& Ts,const unsigned int pointsPerPhase = 3);
 
 
     /**

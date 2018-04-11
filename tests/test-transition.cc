@@ -63,11 +63,10 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
     for(long int i = 0 ; i < Ts.size() ; ++i)
         t_total += Ts[i];
 
-    Vector3 init = (pData.c1_ - pData.c0_)/2.;
     int pointsPerPhase = 5;
 
     // check if transition is feasible (should be)
-    bezier_com_traj::ResultDataCOMTraj res = bezier_com_traj::computeCOMTraj(pData,Ts,init,pointsPerPhase);
+    bezier_com_traj::ResultDataCOMTraj res = bezier_com_traj::computeCOMTrajFixedSize(pData,Ts,pointsPerPhase);
     if(shouldFail){
         BOOST_CHECK(!res.success_);
         return;
