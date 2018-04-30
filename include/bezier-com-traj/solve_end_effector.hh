@@ -140,6 +140,7 @@ std::vector<bezier_t::point_t> computeConstantWaypoints(const ProblemData& pData
         pts.push_back(p0);
         pts.push_back(p1);
         pts.push_back(p2);
+        pts.push_back(bezier_t::point_t());
         pts.push_back(p3);
         pts.push_back(p4);
         pts.push_back(p5);
@@ -150,6 +151,7 @@ std::vector<bezier_t::point_t> computeConstantWaypoints(const ProblemData& pData
         pts.push_back(p1);
         pts.push_back(p2);
         pts.push_back(p3);
+        pts.push_back(bezier_t::point_t());
         pts.push_back(p4);
         pts.push_back(p5);
         pts.push_back(p6);
@@ -162,6 +164,7 @@ std::vector<bezier_t::point_t> computeConstantWaypoints(const ProblemData& pData
         pts.push_back(p2);
         pts.push_back(p3);
         pts.push_back(p4);
+        pts.push_back(bezier_t::point_t());
         pts.push_back(p5);
         pts.push_back(p6);
         pts.push_back(p7);
@@ -176,6 +179,7 @@ std::vector<bezier_t::point_t> computeConstantWaypoints(const ProblemData& pData
         pts.push_back(p3);
         pts.push_back(p4);
         pts.push_back(p5);
+        pts.push_back(bezier_t::point_t());
         pts.push_back(p6);
         pts.push_back(p7);
         pts.push_back(p8);
@@ -187,132 +191,133 @@ std::vector<bezier_t::point_t> computeConstantWaypoints(const ProblemData& pData
 }
 
 
-std::vector<waypoint_t> createEndEffectorJerkWaypoints(double T,const ProblemData& pData){
+std::vector<waypoint_t> createEndEffectorJerkWaypoints(double T,const ProblemData& pData,const std::vector<bezier_t::point_t> pi){
     // create the waypoint from the analytical expressions :
     std::vector<waypoint_t> wps;
-    point_t p0,p1,p2,p3,p5,p6,p7,p8;
-    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
+    assert(pi.size() == 9);
     double alpha = 1. / (T*T*T);
 
     waypoint_t w = initwp<waypoint_t>();
     // assign w0:
-    w.second= 336*(-p0 +3*p1 - 3*p2 + p3)*alpha;
+    w.second= 336*(-pi[0] +3*pi[1] - 3*pi[2] + pi[3])*alpha;
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w1:
     w.first = 336*alpha*Matrix3::Identity();
-    w.second= 336*(-p1 + 3*p2 - 3*p3)*alpha;
+    w.second= 336*(-pi[1] + 3*pi[2] - 3*pi[3])*alpha;
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w2:
     w.first = -3*336*alpha*Matrix3::Identity();
-    w.second = 336*(-p2 + 3*p3 + p5)*alpha;
+    w.second = 336*(-pi[2] + 3*pi[3] + pi[5])*alpha;
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w3:
     w.first = 3*336*alpha*Matrix3::Identity();
-    w.second = 336*(-p3 - 3*p5 + p6)*alpha;
+    w.second = 336*(-pi[3] - 3*pi[5] + pi[6])*alpha;
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w4:
     w.first = -336*alpha*Matrix3::Identity();
-    w.second =  336*(3*p5 - 3*p6 + p7)*alpha;
+    w.second =  336*(3*pi[5] - 3*pi[6] + pi[7])*alpha;
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w5:
-    w.second= 336*(-p5 + 3*p6 - 3*p7 + p8)*alpha;
+    w.second= 336*(-pi[5] + 3*pi[6] - 3*pi[7] + pi[8])*alpha;
     wps.push_back(w);
     return wps;
 }
 
-std::vector<waypoint_t> createEndEffectorAccelerationWaypoints(double T,const ProblemData& pData){
+std::vector<waypoint_t> createEndEffectorAccelerationWaypoints(double T,const ProblemData& pData,const std::vector<bezier_t::point_t> pi){
     // create the waypoint from the analytical expressions :
     std::vector<waypoint_t> wps;
-    point_t p0,p1,p2,p3,p5,p6,p7,p8;
-    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
-    std::cout<<"Create end eff waypoints, constant waypoints = :"<<std::endl<<
-               "p0 = "<<p0.transpose()<<std::endl<<"p1 = "<<p1.transpose()<<std::endl<<"p2 = "<<p2.transpose()<<std::endl<<
-               "p3 = "<<p3.transpose()<<std::endl<<"p5 = "<<p5.transpose()<<std::endl<<"p6 = "<<p6.transpose()<<std::endl<<"p7 = "<<p7.transpose()<<"p8 = "<<p8.transpose()<<std::endl;
+    assert(pi.size() == 9);
+
+    if(verbose){
+      std::cout<<"Create end eff waypoints, constant waypoints = :"<<std::endl<<
+                 "p0 = "<<pi[0].transpose()<<std::endl<<"p1 = "<<pi[1].transpose()<<std::endl<<"p2 = "<<pi[2].transpose()<<std::endl<<
+                 "p3 = "<<pi[3].transpose()<<std::endl<<"pi[5] = "<<pi[5].transpose()<<std::endl<<"pi[6] = "<<pi[6].transpose()<<std::endl<<"pi[7] = "<<pi[7].transpose()<<"pi[8] = "<<pi[8].transpose()<<std::endl;
+    }
     double alpha = 1. / (T*T);
 
     waypoint_t w = initwp<waypoint_t>();
     // assign w0:
-    w.second= 56*alpha*(p0 - 2*p1 + p2);
+    w.second= 56*alpha*(pi[0] - 2*pi[1] + pi[2]);
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w1:
-    w.second= 56*alpha*(p1 - 2*p2 + p3);
+    w.second= 56*alpha*(pi[1] - 2*pi[2] + pi[3]);
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w2:
     w.first = 56*alpha*Matrix3::Identity();
-    w.second = (56*p2 - 112*p3)*alpha;
+    w.second = (56*pi[2] - 112*pi[3])*alpha;
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w3:
     w.first = -112*alpha*Matrix3::Identity();
-    w.second = (56*p3 +56*p8)*alpha;
+    w.second = (56*pi[3] +56*pi[8])*alpha;
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w4:
     w.first = 56*alpha*Matrix3::Identity();
-    w.second = (-112*p5 + 56*p6)*alpha;
+    w.second = (-112*pi[5] + 56*pi[6])*alpha;
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w5:
-    w.second=56*alpha*(p5-2*p6+p7);
+    w.second=56*alpha*(pi[5]-2*pi[6]+pi[7]);
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w5:
-    w.second=56*alpha*(p6-2*p7+p8);
+    w.second=56*alpha*(pi[6]-2*pi[7]+pi[8]);
     wps.push_back(w);
     return wps;
 }
 
 
-std::vector<waypoint_t> createEndEffectorVelocityWaypoints(double T,const ProblemData& pData){
+std::vector<waypoint_t> createEndEffectorVelocityWaypoints(double T,const ProblemData& pData,const std::vector<bezier_t::point_t> pi){
     // create the waypoint from the analytical expressions :
     std::vector<waypoint_t> wps;
-    point_t p0,p1,p2,p3,p5,p6,p7,p8;
-    computeConstantWaypoints(pData,T,8,p0,p1,p2,p3,p5,p6,p7,p8);
+    assert(pi.size() == 9);
+
    /* std::cout<<"Create end eff waypoints, constant waypoints = :"<<std::endl<<
                "p0 = "<<p0.transpose()<<std::endl<<"p1 = "<<p1.transpose()<<std::endl<<"p2 = "<<p2.transpose()<<std::endl<<
-               "p4 = "<<p4.transpose()<<std::endl<<"p5 = "<<p5.transpose()<<std::endl<<"p6 = "<<p6.transpose()<<std::endl;*/
+               "p4 = "<<p4.transpose()<<std::endl<<"p5 = "<<p5.transpose()<<std::endl<<"pi[6] = "<<pi[6].transpose()<<std::endl;*/
     double alpha = 1. / (T);
 
     waypoint_t w = initwp<waypoint_t>();
     // assign w0:
-    w.second= alpha*8*(-p0+p1);
+    w.second= alpha*8*(-pi[0]+pi[1]);
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w1:
-    w.second = alpha*8*(-p1+p2);
+    w.second = alpha*8*(-pi[1]+pi[2]);
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w2:
-    w.second = alpha*8*(-p2+p3);
+    w.second = alpha*8*(-pi[2]+pi[3]);
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w3:
     w.first = 8*alpha*Matrix3::Identity();
-    w.second = alpha*-8*p3;
+    w.second = alpha*-8*pi[3];
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w4:
     w.first = -8*alpha*Matrix3::Identity();
-    w.second = alpha*8*p5;
+    w.second = alpha*8*pi[5];
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w5:
-    w.second=alpha*8*(-p5+p6);
+    w.second=alpha*8*(-pi[5]+pi[6]);
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w6:
-    w.second=alpha*8*(-p6+p7);
+    w.second=alpha*8*(-pi[6]+pi[7]);
     wps.push_back(w);
     w = initwp<waypoint_t>();
     // assign w7:
-    w.second=alpha*8*(-p7+p8);
+    w.second=alpha*8*(-pi[7]+pi[8]);
     wps.push_back(w);
     return wps;
 }
@@ -679,10 +684,11 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     if(verbose)
       std::cout<<"solve end effector, T = "<<T<<std::endl;
     assert (weightDistance>=0. && weightDistance<=1. && "WeightDistance must be between 0 and 1");
-    double weightAcc = 1. - weightDistance;
-    std::vector<waypoint_t> wps_jerk=createEndEffectorJerkWaypoints(T,pData);
-    std::vector<waypoint_t> wps_acc=createEndEffectorAccelerationWaypoints(T,pData);
-    std::vector<waypoint_t> wps_vel=createEndEffectorVelocityWaypoints(T,pData);
+    double weightSmooth = 1. - weightDistance;
+    std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,T,8);
+    std::vector<waypoint_t> wps_jerk=createEndEffectorJerkWaypoints(T,pData,pi);
+    std::vector<waypoint_t> wps_acc=createEndEffectorAccelerationWaypoints(T,pData,pi);
+    std::vector<waypoint_t> wps_vel=createEndEffectorVelocityWaypoints(T,pData,pi);
     // stack the constraint for each waypoint :
     MatrixXX A;
     VectorX b;
