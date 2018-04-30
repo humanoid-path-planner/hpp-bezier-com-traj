@@ -29,7 +29,7 @@ const bool verbose = false;
 * @return ResultData a struct containing the resulting trajectory, if success is true.
 */
 template<typename Path>
-ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, const double T, const double timeStep);
+ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, const double T, const double weightDistance, bool useVelCost = true);
 
 
 coefs_t initCoefs(){
@@ -674,8 +674,10 @@ void computeJerkCostFunction(int numPoints,const ProblemData& pData,double T, Ma
 
 
 template <typename Path>
-ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, const double T, const double weightDistance){
-    std::cout<<"solve end effector, T = "<<T<<std::endl;
+ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, const double T, const double weightDistance, bool useVelCost){
+
+    if(verbose)
+      std::cout<<"solve end effector, T = "<<T<<std::endl;
     assert (weightDistance>=0. && weightDistance<=1. && "WeightDistance must be between 0 and 1");
     double weightAcc = 1. - weightDistance;
     std::vector<waypoint_t> wps_jerk=createEndEffectorJerkWaypoints(T,pData);
@@ -691,12 +693,14 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
   //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
  //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
     // compute cost function (discrete integral under the curve defined by 'path')
-    MatrixXX H_rrt=MatrixXX::Zero(DIM_POINT,DIM_POINT),H_acc,H_jerk,H_vel,H;
-    VectorX g_rrt=VectorX::Zero(DIM_POINT),g_acc,g_jerk,g_vel,g;
+    MatrixXX H_rrt=MatrixXX::Zero(DIM_POINT,DIM_POINT),H_acc,H_jerk,H_smooth,H;
+    VectorX g_rrt=VectorX::Zero(DIM_POINT),g_acc,g_jerk,g_smooth,g;
     if(weightDistance>0)
         computeDistanceCostFunction<Path>(50,pData,T,path,H_rrt,g_rrt);
-    computeVelCostFunction(50,pData,T,H_vel,g_vel);
-    //computeJerkCostFunction(50,pData,T,H_jerk,g_jerk);
+    if(useVelCost)
+        computeVelCostFunction(50,pData,T,H_smooth,g_smooth);
+    else
+        computeJerkCostFunction(50,pData,T,H_smooth,g_smooth);
   /*  std::cout<<"End eff H_rrt = "<<std::endl<<H_rrt<<std::endl;
     std::cout<<"End eff g_rrt = "<<std::endl<<g_rrt<<std::endl;
     std::cout<<"End eff H_acc = "<<std::endl<<H_acc<<std::endl;
@@ -706,11 +710,12 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     // add the costs :
     H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
     g  = VectorX::Zero(DIM_POINT);
-    H = weightAcc*(/*H_jerk+*/H_vel) + weightDistance*H_rrt;
-    g = weightAcc*(/*g_jerk+*/g_vel) + weightDistance*g_rrt;
-    std::cout<<"End eff H = "<<std::endl<<H<<std::endl;
-    std::cout<<"End eff g = "<<std::endl<<g<<std::endl;
-
+    H = weightSmooth*(H_smooth) + weightDistance*H_rrt;
+    g = weightSmooth*(g_smooth) + weightDistance*g_rrt;
+    if(verbose){
+      std::cout<<"End eff H = "<<std::endl<<H<<std::endl;
+      std::cout<<"End eff g = "<<std::endl<<g<<std::endl;
+    }
     // call the solver
     VectorX init = VectorX(DIM_POINT);
     init = (pData.c0_ + pData.c1_)/2.;
