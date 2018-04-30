@@ -15,6 +15,7 @@ typedef waypoint3_t waypoint_t;
 typedef std::pair<double,point3_t> coefs_t;
 const int DIM_POINT=3;
 const int NUM_DISCRETIZATION = 11;
+const bool verbose = false;
 
 /**
 * @brief solveEndEffector Tries to produce a trajectory represented as a bezier curve
@@ -604,7 +605,8 @@ void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
     wps.push_back(p7);
     wps.push_back(p8);
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
-    std::cout<<"bezier curve created, size = "<<res.c_of_t_.size_<<std::endl;
+    if(verbose)
+      std::cout<<"bezier curve created, size = "<<res.c_of_t_.size_<<std::endl;
 }
 
 void computeVelCostFunction(int numPoints,const ProblemData& pData,double T, MatrixXX& H,VectorX& g){
@@ -713,7 +715,8 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     VectorX init = VectorX(DIM_POINT);
     init = (pData.c0_ + pData.c1_)/2.;
    // init =pData.c0_;
-    std::cout<<"Init = "<<std::endl<<init.transpose()<<std::endl;
+    if(verbose)
+      std::cout<<"Init = "<<std::endl<<init.transpose()<<std::endl;
     ResultData resQp = solve(A,b,H,g, init);
 
     ResultDataCOMTraj res;
@@ -725,8 +728,10 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
         computeC_of_T (pData,T,res);
        // computedL_of_T(pData,Ts,res);
     }
-   std::cout<<"Solved, success = "<<res.success_<<" x = "<<res.x.transpose()<<std::endl;
-   std::cout<<"Final cost : "<<resQp.cost_<<std::endl;
+   if(verbose){
+     std::cout<<"Solved, success = "<<res.success_<<" x = "<<res.x.transpose()<<std::endl;
+     std::cout<<"Final cost : "<<resQp.cost_<<std::endl;
+    }
    return res;
 }
 
