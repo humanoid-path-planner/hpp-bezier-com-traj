@@ -96,38 +96,36 @@ void computeConstantWaypoints(const ProblemData& pData,double T,double n,point_t
 
 // up to jerk second derivativ constraints for init, pos vel and acc constraint for goal
 std::vector<bezier_t::point_t> computeConstantWaypointsInitPredef(const ProblemData& pData,double T){
-    const double n = 8;
+    const double n = 4;
     std::vector<bezier_t::point_t> pts;
     pts.push_back(pData.c0_); // c0
     pts.push_back((pData.dc0_ * T / n )+  pData.c0_); //dc0
     pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1)));//ddc0 // * T because derivation make a T appear
     pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 3*n*pData.dc0_*T - 3*pData.dc0_*T + 3*pData.ddc0_*T*T)/(n*(n - 1))); //j0
-    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 4*n*pData.dc0_*T - 4*pData.dc0_ *T+ 6*pData.ddc0_*T*T)/(n*(n - 1))) ; //dj0
-    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 5*n*pData.dc0_*T - 5*pData.dc0_ *T+ 10*pData.ddc0_*T*T)/(n*(n - 1))) ; //ddj0
+  //  pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 4*n*pData.dc0_*T - 4*pData.dc0_ *T+ 6*pData.ddc0_*T*T)/(n*(n - 1))) ; //dj0
+ //   pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 5*n*pData.dc0_*T - 5*pData.dc0_ *T+ 10*pData.ddc0_*T*T)/(n*(n - 1))) ; //ddj0
 
-    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1))) ; //ddc1 // * T ??
-    pts.push_back((-pData.dc1_ * T / n) + pData.c1_); // dc1
+   // pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1))) ; //ddc1 // * T ??
+   // pts.push_back((-pData.dc1_ * T / n) + pData.c1_); // dc1
     pts.push_back(pData.c1_); //c1
-
     return pts;
 }
 
 
 // up to jerk second derivativ constraints for goal, pos vel and acc constraint for init
 std::vector<bezier_t::point_t> computeConstantWaypointsGoalPredef(const ProblemData& pData,double T){
-    const double n = 8;
+    const double n = 4;
     std::vector<bezier_t::point_t> pts;
     pts.push_back(pData.c0_); //c0
-    pts.push_back((pData.dc0_ * T / n )+  pData.c0_); //dc0
-    pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1))); //ddc0 // * T because derivation make a T appear
+   // pts.push_back((pData.dc0_ * T / n )+  pData.c0_); //dc0
+   // pts.push_back((n*n*pData.c0_ - n*pData.c0_ + 2*n*pData.dc0_*T - 2*pData.dc0_*T + pData.ddc0_*T*T)/(n*(n - 1))); //ddc0 // * T because derivation make a T appear
 
-    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 5*n*pData.dc1_*T + 5*pData.dc1_*T + 10*pData.ddc1_*T*T)/(n*(n - 1))) ; //ddj1
-    pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 4*n*pData.dc1_*T + 4*pData.dc1_*T + 6*pData.ddc1_*T*T)/(n*(n - 1))) ; //dj1
+  //  pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 5*n*pData.dc1_*T + 5*pData.dc1_*T + 10*pData.ddc1_*T*T)/(n*(n - 1))) ; //ddj1
+  //  pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 4*n*pData.dc1_*T + 4*pData.dc1_*T + 6*pData.ddc1_*T*T)/(n*(n - 1))) ; //dj1
     pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 3*n*pData.dc1_*T + 3*pData.dc1_*T + 3*pData.ddc1_*T*T)/(n*(n - 1))) ; // j1
     pts.push_back((n*n*pData.c1_ - n*pData.c1_ - 2*n*pData.dc1_*T + 2*pData.dc1_*T + pData.ddc1_*T*T)/(n*(n - 1))) ; //ddc1 * T ??
     pts.push_back((-pData.dc1_ * T / n) + pData.c1_); // dc1
     pts.push_back(pData.c1_); //c1
-
     return pts;
 }
 
