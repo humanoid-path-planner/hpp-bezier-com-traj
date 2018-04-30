@@ -690,9 +690,9 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     // stack the constraint for each waypoint :
     MatrixXX A;
     VectorX b;
-    Vector3 jerk_bounds(5000,5000,5000);
-    Vector3 acc_bounds(5000,5000,5000);
-    Vector3 vel_bounds(5000,5000,5000);
+    Vector3 jerk_bounds(10000,10000,10000);
+    Vector3 acc_bounds(500,500,500);
+    Vector3 vel_bounds(500,500,500);
     computeConstraintsMatrix(pData,wps_acc,wps_vel,acc_bounds,vel_bounds,A,b,wps_jerk,jerk_bounds);
   //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
  //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
