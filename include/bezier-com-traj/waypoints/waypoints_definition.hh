@@ -24,6 +24,14 @@ namespace bezier_com_traj{
  */
 coefs_t evaluateCurveAtTime(const ProblemData& pData, const std::vector<point_t>& pi,double t);
 
+/** @brief evaluateVelocityCurveAtTime compute the expression of the point on the curve dc at t,
+ * defined by the waypoint pi and one free waypoint (x)
+ * @param pi constant waypoints of the curve
+ * @param t param (normalized !)
+ * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
+ */
+coefs_t evaluateVelocityCurveAtTime(const ProblemData& pData, const std::vector<point_t>& pi,double T,double t);
+
 /** @brief evaluateAccelerationCurveAtTime compute the expression of the point on the curve ddc at t,
 * defined by the waypoint pi and one free waypoint (x)
 * @param pi constant waypoints of the curve
@@ -31,6 +39,15 @@ coefs_t evaluateCurveAtTime(const ProblemData& pData, const std::vector<point_t>
 * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
 */
 coefs_t evaluateAccelerationCurveAtTime(const ProblemData& pData, const std::vector<point_t>& pi,double T,double t);
+
+/** @brief evaluateAccelerationCurveAtTime compute the expression of the point on the curve ddc at t,
+* defined by the waypoint pi and one free waypoint (x)
+* @param pi constant waypoints of the curve
+* @param t param (normalized !)
+* @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
+*/
+coefs_t evaluateJerkCurveAtTime(const ProblemData& pData, const std::vector<point_t>& pi,double T,double t);
+
 
 /**
  * @brief computeConstantWaypoints compute the constant waypoints of c(t)
@@ -42,13 +59,43 @@ coefs_t evaluateAccelerationCurveAtTime(const ProblemData& pData, const std::vec
 std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T);
 
 /**
- * @brief computeWwaypoints compute the constant waypoints of w(t)
+ * @brief computeWwaypoints compute the constant waypoints of dc(t)
+ * defined by the constraints on initial and final states
+ * @param pData
+ * @param T
+ * @return
+ */
+std::vector<waypoint3_t> computeVelocityWaypoints(const ProblemData& pData,const double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
+
+
+/**
+ * @brief computeWwaypoints compute the constant waypoints of ddc(t)
+ * defined by the constraints on initial and final states
+ * @param pData
+ * @param T
+ * @return
+ */
+std::vector<waypoint3_t> computeAccelerationWaypoints(const ProblemData& pData,const double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
+
+/**
+ * @brief computeWwaypoints compute the constant waypoints of dddc(t)
+ * defined by the constraints on initial and final states
+ * @param pData
+ * @param T
+ * @return
+ */
+std::vector<waypoint3_t> computeJerkWaypoints(const ProblemData& pData,const double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
+
+
+/**
+ * @brief computeConstantWaypoints compute the constant waypoints of w(t)
  * defined by the constraints on initial and final states
  * @param pData
  * @param T
  * @return
  */
 std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T);
+
 
 coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T);
 

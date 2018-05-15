@@ -13,52 +13,88 @@ namespace c0_dc0_ddc0_j0_j1_ddc1_dc1_c1{
 
 static const ConstraintFlag flag = INIT_POS | INIT_VEL | INIT_ACC | END_ACC | END_VEL | END_POS | INIT_JERK | END_JERK;
 
-/// ### EQUATION FOR CONSTRAINTS ON INIT AND FINAL POSITION AND VELOCITY AND ACCELERATION (DEGREE = 6)
+/// ### EQUATION FOR CONSTRAINTS ON INIT AND FINAL POSITION AND VELOCITY AND ACCELERATION AND JERK (DEGREE = 8)
 ///
 /**
  * @brief evaluateCurveAtTime compute the expression of the point on the curve at t, defined by the waypoint pi and one free waypoint (x)
- * @param pi constant waypoints of the curve, assume p0 p1 p2 x p3 p4 p5
+ * @param pi constant waypoints of the curve, assume pi[8] pi[1] pi[2] pi[3] x pi[4] pi[5] pi[6] pi[7]
  * @param t param (normalized !)
  * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
  */
 inline coefs_t evaluateCurveAtTime(const std::vector<point_t>& pi,double t){
     coefs_t wp;
-    double t2 = t*t;
-    double t3 = t2*t;
-    double t4 = t3*t;
-    double t5 = t4*t;
-    double t6 = t5*t;
+    const double t2 = t*t;
+    const double t3 = t2*t;
+    const double t4 = t3*t;
+    const double t5 = t4*t;
+    const double t6 = t5*t;
+    const double t7 = t6*t;
+    const double t8 = t7*t;
     // equation found with sympy
-    wp.first = -20.0*t6 + 60.0*t5 - 60.0*t4 + 20.0*t3;
-    wp.second = 1.0*pi[0]*t6 - 6.0*pi[0]*t5 + 15.0*pi[0]*t4 - 20.0*pi[0]*t3 + 15.0*pi[0]*t2 - 6.0*pi[0]*t + 1.0*pi[0] - 6.0*pi[1]*t6 + 30.0*pi[1]*t5 - 60.0*pi[1]*t4 + 60.0*pi[1]*t3 - 30.0*pi[1]*t2 + 6.0*pi[1]*t + 15.0*pi[2]*t6 - 60.0*pi[2]*t5 + 90.0*pi[2]*t4 - 60.0*pi[2]*t3 + 15.0*pi[2]*t2 + 15.0*pi[4]*t6 - 30.0*pi[4]*t5 + 15.0*pi[4]*t4 - 6.0*pi[5]*t6 + 6.0*pi[5]*t5 + 1.0*pi[6]*t6;
+    wp.first = 70.0*t8 - 280.0*t7 + 420.0*t6 - 280.0*t5 + 70.0*t4;
+    wp.second = 1.0*pi[8]*t8 - 8.0*pi[8]*t7 + 28.0*pi[8]*t6 - 56.0*pi[8]*t5 + 70.0*pi[8]*t4 - 56.0*pi[8]*t3 + 28.0*pi[8]*t2 - 8.0*pi[8]*t + 1.0*pi[8] - 8.0*pi[1]*t8 + 56.0*pi[1]*t7 - 168.0*pi[1]*t6 + 280.0*pi[1]*t5 - 280.0*pi[1]*t4 + 168.0*pi[1]*t3 - 56.0*pi[1]*t2 + 8.0*pi[1]*t + 28.0*pi[2]*t8 - 168.0*pi[2]*t7 + 420.0*pi[2]*t6 - 560.0*pi[2]*t5 + 420.0*pi[2]*t4 - 168.0*pi[2]*t3 + 28.0*pi[2]*t2 - 56.0*pi[3]*pow(t,8 )+ 280.0*pi[3]*t7 - 560.0*pi[3]*t6 + 560.0*pi[3]*t5 - 280.0*pi[3]*t4 + 56.0*pi[3]*t3 - 56.0*pi[5]*t8 + 168.0*pi[5]*t7 - 168.0*pi[5]*t6 + 56.0*pi[5]*pow(t,5 )+ 28.0*pi[6]*t8 - 56.0*pi[6]*t7 + 28.0*pi[6]*t6 - 8.0*pi[7]*t8 + 8.0*pi[7]*t7 + 1.0*pi[8]*t8;
     return wp;
 }
 
+inline coefs_t evaluateVelocityCurveAtTime(const std::vector<point_t>& pi,double T,double t){
+    coefs_t wp;
+    const double alpha = 1./(T);
+    const double t2 = t*t;
+    const double t3 = t2*t;
+    const double t4 = t3*t;
+    const double t5 = t4*t;
+    const double t6 = t5*t;
+    const double t7 = t6*t;
+    // equation found with sympy
+    wp.first = (560.0*t7 - 1960.0*t6 + 2520.0*t5 - 1400.0*t4 + 280.0*t3)*alpha;
+    wp.second = (8.0*pi[8]*t7 - 56.0*pi[8]*t6 + 168.0*pi[8]*t5 - 280.0*pi[8]*t4 + 280.0*pi[8]*t3 - 168.0*pi[8]*t2 + 56.0*pi[8]*t - 8.0*pi[8] - 64.0*pi[1]*t7 + 392.0*pi[1]*t6 - 1008.0*pi[1]*t5 + 1400.0*pi[1]*t4 - 1120.0*pi[1]*t3 + 504.0*pi[1]*t2 - 112.0*pi[1]*t + 8.0*pi[1] + 224.0*pi[2]*t7 - 1176.0*pi[2]*t6 + 2520.0*pi[2]*t5 - 2800.0*pi[2]*t4 + 1680.0*pi[2]*t3 - 504.0*pi[2]*t2 + 56.0*pi[2]*t - 448.0*pi[3]*t7 + 1960.0*pi[3]*t6 - 3360.0*pi[3]*t5 + 2800.0*pi[3]*t4 - 1120.0*pi[3]*t3 + 168.0*pi[3]*t2 - 448.0*pi[5]*t7 + 1176.0*pi[5]*t6 - 1008.0*pi[5]*t5 + 280.0*pi[5]*t4 + 224.0*pi[6]*t7 - 392.0*pi[6]*t6 + 168.0*pi[6]*t5 - 64.0*pi[7]*t7 + 56.0*pi[7]*t6 + 8.0*pi[8]*t7)*alpha;
+    return wp;
+}
+
+
+
 inline coefs_t evaluateAccelerationCurveAtTime(const std::vector<point_t>& pi,double T,double t){
     coefs_t wp;
-    double alpha = 1./(T*T);
-    double t2 = t*t;
-    double t3 = t2*t;
-    double t4 = t3*t;
+    const double alpha = 1./(T*T);
+    const double t2 = t*t;
+    const double t3 = t2*t;
+    const double t4 = t3*t;
+    const double t5 = t4*t;
+    const double t6 = t5*t;
     // equation found with sympy
-    wp.first = 1.0*(-600.0*t4 + 1200.0*t3 - 720.0*t2 + 120.0*t)*alpha;
-    wp.second = 1.0*(30.0*pi[0]*t4 - 120.0*pi[0]*t3 + 180.0*pi[0]*t2 - 120.0*pi[0]*t + 30.0*pi[0] - 180.0*pi[1]*t4 + 600.0*pi[1]*t3 - 720.0*pi[1]*t2 + 360.0*pi[1]*t - 60.0*pi[1] + 450.0*pi[2]*t4 - 1200.0*pi[2]*t3 + 1080.0*pi[2]*t2 - 360.0*pi[2]*t + 30.0*pi[2] + 450.0*pi[4]*t4 - 600.0*pi[4]*t3 + 180.0*pi[4]*t2 - 180.0*pi[5]*t4 + 120.0*pi[5]*t3 + 30.0*pi[6]*t4)*alpha;
+    wp.first = ((3920.0*t6 - 11760.0*t5 + 12600.0*t4 - 5600.0*t3 + 840.0*t2))*alpha;
+    wp.second = (56.0*pi[8]*t6 - 336.0*pi[8]*t5 + 840.0*pi[8]*t4 - 1120.0*pi[8]*t3 + 840.0*pi[8]*t2 - 336.0*pi[8]*t + 56.0*pi[8] - 448.0*pi[1]*t6 + 2352.0*pi[1]*t5 - 5040.0*pi[1]*t4 + 5600.0*pi[1]*t3 - 3360.0*pi[1]*t2 + 1008.0*pi[1]*t - 112.0*pi[1] + 1568.0*pi[2]*t6 - 7056.0*pi[2]*t5 + 12600.0*pi[2]*t4 - 11200.0*pi[2]*t3 + 5040.0*pi[2]*t2 - 1008.0*pi[2]*t + 56.0*pi[2] - 3136.0*pi[3]*t6 + 11760.0*pi[3]*t5 - 16800.0*pi[3]*t4 + 11200.0*pi[3]*t3 - 3360.0*pi[3]*t2+ 336.0*pi[3]*t - 3136.0*pi[5]*t6 + 7056.0*pi[5]*t5 - 5040.0*pi[5]*t4 + 1120.0*pi[5]*t3 + 1568.0*pi[6]*t6 - 2352.0*pi[6]*t5 + 840.0*pi[6]*t4 - 448.0*pi[7]*t6 + 336.0*pi[7]*t5 + 56.0*pi[8]*t6)*alpha;
+    return wp;
+}
+
+inline coefs_t evaluateJerkCurveAtTime(const std::vector<point_t>& pi,double T,double t){
+    coefs_t wp;
+    const double alpha = 1./(T*T*T);
+    const double t2 = t*t;
+    const double t3 = t2*t;
+    const double t4 = t3*t;
+    const double t5 = t4*t;
+    // equation found with sympy
+    wp.first = (23520.0*t5 - 58800.0*t4 + 50400.0*t3 - 16800.0*t2 + 1680.0*t)*alpha;
+    wp.second = 1.0*(336.0*pi[0]*t5 - 1680.0*pi[0]*t4 + 3360.0*pi[0]*t3 - 3360.0*pi[0]*t2 + 1680.0*pi[0]*t - 336.0*pi[0] - 2688.0*pi[1]*t5 + 11760.0*pi[1]*t4 - 20160.0*pi[1]*t3 + 16800.0*pi[1]*t2 - 6720.0*pi[1]*t + 1008.0*pi[1] + 9408.0*pi[2]*t5 - 35280.0*pi[2]*t4 + 50400.0*pi[2]*t3 - 33600.0*pi[2]*t2 + 10080.0*pi[2]*t - 1008.0*pi[2] - 18816.0*pi[3]*t5 + 58800.0*pi[3]*t4 - 67200.0*pi[3]*t3 + 33600.0*pi[3]*t2 - 6720.0*pi[3]*t + 336.0*pi[3] - 18816.0*pi[5]*t5 + 35280.0*pi[5]*t4 - 20160.0*pi[5]*t3 + 3360.0*pi[5]*t2 + 9408.0*pi[6]*t5 - 11760.0*pi[6]*t4 + 3360.0*pi[6]*t3 - 2688.0*pi[7]*t5 + 1680.0*pi[7]*t4 + 336.0*pi[8]*t5)*alpha;
     return wp;
 }
 
 
 inline std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T){
-    // equation for constraint on initial and final position and velocity and initial acceleration(degree 5, 5 constant waypoint and one free (p3))
+    // equation for constraint on initial and final position and velocity and initial acceleration(degree 5, 5 constant waypoint and one free (pi[3]))
     // first, compute the constant waypoints that only depend on pData :
-    double n = 6.;
+    double n = 8.;
     std::vector<point_t> pi;
-    pi.push_back(pData.c0_); //p0
-    pi.push_back((pData.dc0_ * T / n )+  pData.c0_); // p1
-    pi.push_back((pData.ddc0_*T*T/(n*(n-1))) + (2.*pData.dc0_ *T / n) + pData.c0_); // p2
-    pi.push_back(point_t::Zero()); // x
-    pi.push_back((pData.ddc1_*T*T/(n*(n-1))) - (2*pData.dc1_*T/n) + pData.c1_) ;
-    pi.push_back((-pData.dc1_ * T / n) + pData.c1_); // p4
-    pi.push_back(pData.c1_); // p5
+    pi.push_back(pData.c0_);
+    pi.push_back((pData.dc0_ * T / n )+  pData.c0_);
+    pi.push_back((pData.ddc0_*T*T/(n*(n-1))) + (2*pData.dc0_ *T / n) + pData.c0_); // * T because derivation make a T appear
+    pi.push_back((pData.j0_*T*T*T/(n*(n-1)*(n-2)))+ (3*pData.ddc0_*T*T/(n*(n-1))) + (3*pData.dc0_ *T / n) + pData.c0_);
+    pi.push_back(point_t::Zero());
+    pi.push_back((-pData.j1_*T*T*T/(n*(n-1)*(n-2))) + (3*pData.ddc1_ *T*T / (n*(n-1))) - (3 * pData.dc1_ *T / n) + pData.c1_ ); // * T ??
+    pi.push_back((pData.ddc1_ *T*T / (n*(n-1))) - (2 * pData.dc1_ *T / n) + pData.c1_ ); // * T ??
+    pi.push_back((-pData.dc1_ * T / n) + pData.c1_); // * T ?
+    pi.push_back(pData.c1_);
     return pi;
 }
 
@@ -131,6 +167,134 @@ inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,doubl
     w9.second.head<3>() = (30*pi[4] - 60*pi[5] + 30*pi[6])*alpha;
     w9.second.tail<3>() = 1.0*(1.0*Cg*T2*pi[6] - 30.0*Cpi[4]*pi[6] + 60.0*Cpi[5]*pi[6])*alpha;
     wps.push_back(w9);
+    return wps;
+}
+
+std::vector<waypoint3_t> computeVelocityWaypoints(const ProblemData& pData,const double T, std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>()){
+    if(pi.size() == 0)
+        pi = computeConstantWaypoints(pData,T);
+
+    std::vector<waypoint3_t> wps;
+    assert(pi.size() == 9);
+
+    double alpha = 1. / (T);
+    waypoint3_t w = initwp<waypoint3_t>();
+    // assign w0:
+    w.second= alpha*8*(-pi[0]+pi[1]);
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w1:
+    w.second = alpha*8*(-pi[1]+pi[2]);
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w2:
+    w.second = alpha*8*(-pi[2]+pi[3]);
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w3:
+    w.first = 8*alpha*Matrix3::Identity();
+    w.second = alpha*-8*pi[3];
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w4:
+    w.first = -8*alpha*Matrix3::Identity();
+    w.second = alpha*8*pi[5];
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w5:
+    w.second=alpha*8*(-pi[5]+pi[6]);
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w6:
+    w.second=alpha*8*(-pi[6]+pi[7]);
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w7:
+    w.second=alpha*8*(-pi[7]+pi[8]);
+    wps.push_back(w);
+    return wps;
+}
+
+std::vector<waypoint3_t> computeAccelerationWaypoints(const ProblemData& pData,const double T, std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>()){
+    if(pi.size() == 0)
+        pi = computeConstantWaypoints(pData,T);
+
+    std::vector<waypoint3_t> wps;
+    assert(pi.size() == 9);
+    double alpha = 1. / (T*T);
+
+    waypoint3_t w = initwp<waypoint3_t>();
+    // assign w0:
+    w.second= 56*alpha*(pi[0] - 2*pi[1] + pi[2]);
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w1:
+    w.second= 56*alpha*(pi[1] - 2*pi[2] + pi[3]);
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w2:
+    w.first = 56*alpha*Matrix3::Identity();
+    w.second = (56*pi[2] - 112*pi[3])*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w3:
+    w.first = -112*alpha*Matrix3::Identity();
+    w.second = (56*pi[3] +56*pi[8])*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w4:
+    w.first = 56*alpha*Matrix3::Identity();
+    w.second = (-112*pi[5] + 56*pi[6])*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w5:
+    w.second=56*alpha*(pi[5]-2*pi[6]+pi[7]);
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w5:
+    w.second=56*alpha*(pi[6]-2*pi[7]+pi[8]);
+    wps.push_back(w);
+    return wps;
+}
+
+
+std::vector<waypoint3_t> computeJerkWaypoints(const ProblemData& pData,const double T, std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>()){
+    if(pi.size() == 0)
+        pi = computeConstantWaypoints(pData,T);
+
+    std::vector<waypoint3_t> wps;
+    assert(pi.size() == 9);
+
+    double alpha = 1. / (T*T*T);
+
+    waypoint3_t w = initwp<waypoint3_t>();
+    // assign w0:
+    w.second= 336*(-pi[0] +3*pi[1] - 3*pi[2] + pi[3])*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w1:
+    w.first = 336*alpha*Matrix3::Identity();
+    w.second= 336*(-pi[1] + 3*pi[2] - 3*pi[3])*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w2:
+    w.first = -3*336*alpha*Matrix3::Identity();
+    w.second = 336*(-pi[2] + 3*pi[3] + pi[5])*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w3:
+    w.first = 3*336*alpha*Matrix3::Identity();
+    w.second = 336*(-pi[3] - 3*pi[5] + pi[6])*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w4:
+    w.first = -336*alpha*Matrix3::Identity();
+    w.second =  336*(3*pi[5] - 3*pi[6] + pi[7])*alpha;
+    wps.push_back(w);
+    w = initwp<waypoint3_t>();
+    // assign w5:
+    w.second= 336*(-pi[5] + 3*pi[6] - 3*pi[7] + pi[8])*alpha;
+    wps.push_back(w);
     return wps;
 }
 

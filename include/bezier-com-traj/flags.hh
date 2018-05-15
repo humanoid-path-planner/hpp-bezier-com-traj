@@ -26,7 +26,10 @@ namespace bezier_com_traj
         END_ACC   = 0x00020,
         INIT_JERK = 0x00040,
         END_JERK  = 0x00080,
-        UNKNOWN   = 0x00100
+        ONE_FREE_VAR   = 0x00000,
+        TWO_FREE_VAR   = 0x00100,
+        THREE_FREE_VAR = 0x00200,
+        UNKNOWN   = 0x01000
       };
 
     inline ConstraintFlag operator~(ConstraintFlag a)
