@@ -65,7 +65,7 @@ std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T)
  * @param T
  * @return
  */
-std::vector<waypoint3_t> computeVelocityWaypoints(const ProblemData& pData,const double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
+std::vector<waypoint_t> computeVelocityWaypoints(const ProblemData& pData,const double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
 
 
 /**
@@ -75,7 +75,7 @@ std::vector<waypoint3_t> computeVelocityWaypoints(const ProblemData& pData,const
  * @param T
  * @return
  */
-std::vector<waypoint3_t> computeAccelerationWaypoints(const ProblemData& pData,const double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
+std::vector<waypoint_t> computeAccelerationWaypoints(const ProblemData& pData,const double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
 
 /**
  * @brief computeWwaypoints compute the constant waypoints of dddc(t)
@@ -84,7 +84,7 @@ std::vector<waypoint3_t> computeAccelerationWaypoints(const ProblemData& pData,c
  * @param T
  * @return
  */
-std::vector<waypoint3_t> computeJerkWaypoints(const ProblemData& pData,const double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
+std::vector<waypoint_t> computeJerkWaypoints(const ProblemData& pData,const double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
 
 
 /**

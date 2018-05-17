@@ -8,12 +8,11 @@
 #include <bezier-com-traj/common_solve_methods.hh>
 
 using namespace bezier_com_traj;
-typedef waypoint6_t waypoint_t;
 namespace bezier_com_traj
 {
-waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
+waypoint6_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
-    waypoint_t w = initwp<waypoint_t>();
+    waypoint6_t w = initwp<waypoint6_t>();
     w.first.block<3,3>(0,0) = 6*alpha* Matrix3::Identity();
     w.first.block<3,3>(3,0) = 6*alpha*p0X;
     w.second.head(3) = 6*alpha*(p0 - 2*p1);
@@ -21,9 +20,9 @@ waypoint_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, co
     return w;
 }
 
-waypoint_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& gX, const double alpha)
+waypoint6_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& gX, const double alpha)
 {
-    waypoint_t w = initwp<waypoint_t>();
+    waypoint6_t w = initwp<waypoint6_t>();
     w.first.block<3,3>(0,0) = 3*alpha*Matrix3::Identity();
     w.first.block<3,3>(3,0) = skew(1.5 * (3*p1 - p0))*alpha;
     w.second.head(3) = 1.5 *alpha* (3*p0 - 5*p1);
@@ -31,9 +30,9 @@ waypoint_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, const Matrix3& /*p
     return w;
 }
 
-waypoint_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& gX, const double alpha)
+waypoint6_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& gX, const double alpha)
 {
-    waypoint_t w = initwp<waypoint_t>();
+    waypoint6_t w = initwp<waypoint6_t>();
     // w.first.block<3,3>(0,0) = 0;
     w.first.block<3,3>(3,0) = skew(0.5*g - 3*alpha* p0 + 3*alpha*p1);
     w.second.head(3) = 3*alpha*(p0 - p1);
@@ -41,9 +40,9 @@ waypoint_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/
     return w;
 }
 
-waypoint_t w3 (point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
+waypoint6_t w3 (point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
-    waypoint_t w = initwp<waypoint_t>();
+    waypoint6_t w = initwp<waypoint6_t>();
     w.first.block<3,3>(0,0) = -3*alpha*Matrix3::Identity();
     w.first.block<3,3>(3,0) = skew(g - 1.5 *alpha* (p1 + p0));
     w.second.head(3) = 1.5*alpha * (p1 + p0);
@@ -51,9 +50,9 @@ waypoint_t w3 (point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*
     return w;
 }
 
-waypoint_t w4 (point_t_tC /*p0*/, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
+waypoint6_t w4 (point_t_tC /*p0*/, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/, const Matrix3& /*gX*/, const double alpha)
 {
-    waypoint_t w = initwp<waypoint_t>();
+    waypoint6_t w = initwp<waypoint6_t>();
     w.first.block<3,3>(0,0) = -6*alpha * Matrix3::Identity();
     w.first.block<3,3>(3,0) = skew(g - 6*alpha* p1);
     w.second.head(3) = 6*alpha*p1;
@@ -61,9 +60,9 @@ waypoint_t w4 (point_t_tC /*p0*/, point_t_tC p1, point_t_tC g, const Matrix3& /*
     return w;
 }
 
-waypoint_t u0 (point_t_tC l0, const double alpha)
+waypoint6_t u0 (point_t_tC l0, const double alpha)
 {
-    waypoint_t w = initwp<waypoint_t>();
+    waypoint6_t w = initwp<waypoint6_t>();
     //w.first.block<3,3>(0,0) = 0;
     w.first.block<3,3>(3,0) = 3*alpha * Matrix3::Identity();
     //w.second.head(3) = 0;
@@ -71,9 +70,9 @@ waypoint_t u0 (point_t_tC l0, const double alpha)
     return w;
 }
 
-waypoint_t u1 (point_t_tC l0, const double alpha)
+waypoint6_t u1 (point_t_tC l0, const double alpha)
 {
-    waypoint_t w = initwp<waypoint_t>();
+    waypoint6_t w = initwp<waypoint6_t>();
     //w.first.block<3,3>(0,0) = 0;
     //w.first.block<3,3>(3,0) = 0;
     //w.second.head(3) = 0;
@@ -81,9 +80,9 @@ waypoint_t u1 (point_t_tC l0, const double alpha)
     return w;
 }
 
-waypoint_t u2 (point_t_tC l0, const double alpha)
+waypoint6_t u2 (point_t_tC l0, const double alpha)
 {
-    waypoint_t w = initwp<waypoint_t>();
+    waypoint6_t w = initwp<waypoint6_t>();
     //w.first.block<3,3>(0,0) = 0;
     w.first.block<3,3>(3,0) = -1.5*alpha * Matrix3::Identity();
     //w.second.head(3) = 0;
@@ -91,9 +90,9 @@ waypoint_t u2 (point_t_tC l0, const double alpha)
     return w;
 }
 
-waypoint_t u3 (point_t_tC /*l0*/, const double alpha)
+waypoint6_t u3 (point_t_tC /*l0*/, const double alpha)
 {
-    waypoint_t w = initwp<waypoint_t>();
+    waypoint6_t w = initwp<waypoint6_t>();
     w.first.block<3,3>(3,0) = -1.5*alpha * Matrix3::Identity();
     //w.second.head(3) = 0;
     //w.second.tail(3) = 0.;
@@ -101,9 +100,9 @@ waypoint_t u3 (point_t_tC /*l0*/, const double alpha)
 }
 
 
-waypoint_t u4 (point_t_tC /*l0*/, const double /*alpha*/)
+waypoint6_t u4 (point_t_tC /*l0*/, const double /*alpha*/)
 {
-    waypoint_t w = initwp<waypoint_t>();
+    waypoint6_t w = initwp<waypoint6_t>();
     //w.first.block<3,3>(0,0) = 0;
     //w.first.block<3,3>(3,0) = 0;
     //w.second.head(3) = 0;
@@ -117,7 +116,7 @@ int computeNumSteps(const double T, const double timeStep)
     return timeStep > 0. ? int(T / timeStep) : -1;
 }
 
-std::vector<waypoint_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, point_t_tC g, const double T, const double timeStep)
+std::vector<waypoint6_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, point_t_tC g, const double T, const double timeStep)
 {
     int numSteps = computeNumSteps(T, timeStep);
     static const double  n = 3.; //degree
@@ -126,7 +125,7 @@ std::vector<waypoint_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, point
     Matrix3 p1X = skew(p1);
     Matrix3  gX = skew( g);
     double alpha = 1. / (T*T);
-    std::vector<waypoint_t> wps;
+    std::vector<waypoint6_t> wps;
     wps.push_back(w0(p0, p1, g, p0X, p1X, gX, alpha));
     wps.push_back(w1(p0, p1, g, p0X, p1X, gX, alpha));
     wps.push_back(w2(p0, p1, g, p0X, p1X, gX, alpha));
@@ -140,11 +139,11 @@ std::vector<waypoint_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, point
     return wps;
 }
 
-std::vector<waypoint_t> ComputeAllWaypointsAngularMomentum(point_t_tC l0, const double T, const double timeStep)
+std::vector<waypoint6_t> ComputeAllWaypointsAngularMomentum(point_t_tC l0, const double T, const double timeStep)
 {
     int numSteps = computeNumSteps(T, timeStep);
     double alpha = 1. / (T);
-    std::vector<waypoint_t> wps;
+    std::vector<waypoint6_t> wps;
     wps.push_back(u0(l0, alpha));
     wps.push_back(u1(l0, alpha));
     wps.push_back(u2(l0, alpha));
@@ -170,7 +169,7 @@ On the 6d curves, Ain x <= Aub
 */
 std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, point_t_tC c0, point_t_tC dc0, point_t_tC l0, const bool useAngMomentum, const double T, const double timeStep, bool& fail)
 {
-    std::vector<waypoint_t> wps, wpL;
+    std::vector<waypoint6_t> wps, wpL;
     wps = ComputeAllWaypoints(c0, dc0, cData.contactPhase_->m_gravity, T, timeStep);
     if (useAngMomentum)
         wpL = ComputeAllWaypointsAngularMomentum(l0, T, timeStep);

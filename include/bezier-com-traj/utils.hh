@@ -17,6 +17,7 @@
 namespace bezier_com_traj
 {
 template<typename T> T initwp();
+waypoint_t initwp(const size_t rows, const size_t cols);
 
 /**
  * @brief Compute the Bernstein polynoms for a given degree

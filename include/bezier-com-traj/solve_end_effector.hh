@@ -12,7 +12,6 @@ using namespace bezier_com_traj;
 
 namespace bezier_com_traj
 {
-typedef waypoint3_t waypoint_t;
 typedef std::pair<double,point3_t> coefs_t;
 const int DIM_POINT=3;
 const int NUM_DISCRETIZATION = 11;

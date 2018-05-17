@@ -16,6 +16,7 @@ namespace bezier_com_traj
 typedef double value_type;
 typedef Eigen::Matrix <value_type, 3, 3>                           Matrix3;
 typedef Eigen::Matrix <value_type, 6, 3>                           Matrix63;
+typedef Eigen::Matrix <value_type, 3, 9>                           Matrix39;
 typedef Eigen::Matrix <value_type, Eigen::Dynamic, 3>              MatrixX3;
 typedef Eigen::Matrix <value_type, Eigen::Dynamic, Eigen::Dynamic> MatrixXX;
 typedef centroidal_dynamics::Vector3 Vector3;
@@ -52,8 +53,11 @@ typedef T_time::const_iterator CIT_time;
 * on the variable x, and of a 6d vector independent of x, such that
 * each control point of the target bezier curve is given by pi = wix * x + wis
 */
+typedef std::pair<MatrixXX, VectorX> waypoint_t;
 typedef std::pair<matrix6_t, point6_t> waypoint6_t;
 typedef std::pair<matrix3_t, point3_t> waypoint3_t;
+typedef std::pair<Matrix39, point3_t> waypoint9_t;
+
 typedef std::pair<double,point3_t> coefs_t;
 
 } // end namespace bezier_com_traj

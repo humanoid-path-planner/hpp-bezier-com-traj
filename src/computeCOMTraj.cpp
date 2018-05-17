@@ -22,7 +22,6 @@ const int numCol = 3;
 
 namespace bezier_com_traj
 {
-typedef waypoint3_t waypoint_t;
 typedef std::pair<double,point3_t> coefs_t;
 
 std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,double T, const T_time& timeArray)
