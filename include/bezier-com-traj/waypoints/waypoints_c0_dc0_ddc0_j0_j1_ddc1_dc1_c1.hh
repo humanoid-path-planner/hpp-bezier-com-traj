@@ -80,6 +80,39 @@ inline coefs_t evaluateJerkCurveAtTime(const std::vector<point_t>& pi,double T,d
     wp.second = 1.0*(336.0*pi[0]*t5 - 1680.0*pi[0]*t4 + 3360.0*pi[0]*t3 - 3360.0*pi[0]*t2 + 1680.0*pi[0]*t - 336.0*pi[0] - 2688.0*pi[1]*t5 + 11760.0*pi[1]*t4 - 20160.0*pi[1]*t3 + 16800.0*pi[1]*t2 - 6720.0*pi[1]*t + 1008.0*pi[1] + 9408.0*pi[2]*t5 - 35280.0*pi[2]*t4 + 50400.0*pi[2]*t3 - 33600.0*pi[2]*t2 + 10080.0*pi[2]*t - 1008.0*pi[2] - 18816.0*pi[3]*t5 + 58800.0*pi[3]*t4 - 67200.0*pi[3]*t3 + 33600.0*pi[3]*t2 - 6720.0*pi[3]*t + 336.0*pi[3] - 18816.0*pi[5]*t5 + 35280.0*pi[5]*t4 - 20160.0*pi[5]*t3 + 3360.0*pi[5]*t2 + 9408.0*pi[6]*t5 - 11760.0*pi[6]*t4 + 3360.0*pi[6]*t3 - 2688.0*pi[7]*t5 + 1680.0*pi[7]*t4 + 336.0*pi[8]*t5)*alpha;
     return wp;
 }
+inline waypoint_t evaluateCurveWaypointAtTime(const std::vector<point_t>& pi,double t){
+    coefs_t coef = evaluateCurveAtTime(pi,t);
+    waypoint_t wp;
+    wp.first = Matrix3::Identity()*coef.first;
+    wp.second = coef.second;
+    return wp;
+
+}
+inline waypoint_t evaluateVelocityCurveWaypointAtTime(const std::vector<point_t>& pi,double T,double t){
+    coefs_t coef = evaluateVelocityCurveAtTime(pi,T,t);
+    waypoint_t wp;
+    wp.first = Matrix3::Identity()*coef.first;
+    wp.second = coef.second;
+    return wp;
+
+}
+inline waypoint_t evaluateAccelerationCurveWaypointAtTime(const std::vector<point_t>& pi,double T,double t){
+    coefs_t coef = evaluateAccelerationCurveAtTime(pi,T,t);
+    waypoint_t wp;
+    wp.first = Matrix3::Identity()*coef.first;
+    wp.second = coef.second;
+    return wp;
+
+}
+
+inline waypoint_t evaluateJerkCurveWaypointAtTime(const std::vector<point_t>& pi,double T,double t){
+    coefs_t coef = evaluateJerkCurveAtTime(pi,T,t);
+    waypoint_t wp;
+    wp.first = Matrix3::Identity()*coef.first;
+    wp.second = coef.second;
+    return wp;
+}
+
 
 
 inline std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T){

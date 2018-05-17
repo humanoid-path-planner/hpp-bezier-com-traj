@@ -86,6 +86,12 @@ std::vector<waypoint_t> computeAccelerationWaypoints(const ProblemData& pData,co
  */
 std::vector<waypoint_t> computeJerkWaypoints(const ProblemData& pData,const double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
 
+waypoint_t evaluateCurveWaypointAtTime(const ProblemData& pData, const std::vector<point_t>& pi,double t);
+waypoint_t evaluateVelocityCurveWaypointAtTime(const ProblemData& pData, const double T, const std::vector<point_t>& pi,double t);
+waypoint_t evaluateAccelerationCurveWaypointAtTime(const ProblemData& pData, const double T, const std::vector<point_t>& pi,double t);
+waypoint_t evaluateJerkCurveWaypointAtTime(const ProblemData& pData, const double T, const std::vector<point_t>& pi,double t);
+
+
 
 /**
  * @brief computeConstantWaypoints compute the constant waypoints of w(t)

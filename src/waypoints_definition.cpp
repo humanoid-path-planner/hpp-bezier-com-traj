@@ -38,8 +38,7 @@ static const T_evalCurveAtTime evalCurveAtTimes = boost::assign::map_list_of
         (c0_dc0_ddc0_c1::flag                , c0_dc0_ddc0_c1::evaluateCurveAtTime)
         (c0_dc0_ddc0_dc1_c1::flag            , c0_dc0_ddc0_dc1_c1::evaluateCurveAtTime)
         (c0_dc0_ddc0_ddc1_dc1_c1::flag       , c0_dc0_ddc0_ddc1_dc1_c1::evaluateCurveAtTime)
-        (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateCurveAtTime)
-        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateCurveAtTime);
+        (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateCurveAtTime);
 
 /** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t, defined by the waypoint pi and one free waypoint (x)
  * @param pi constant waypoints of the curve
@@ -60,29 +59,6 @@ static const T_evalCurveAtTime evalCurveAtTimes = boost::assign::map_list_of
 }
 
 
- typedef coefs_t (*evalAccCurveAtTime) (const std::vector<point_t>& pi,double T,double t);
- typedef std::map<ConstraintFlag,evalAccCurveAtTime > T_evalAccCurveAtTime;
- typedef T_evalAccCurveAtTime::const_iterator         CIT_evalAccCurveAtTime;
- static const T_evalAccCurveAtTime EvalVelCurveAtTimes = boost::assign::map_list_of
-         (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateVelocityCurveAtTime)
-         (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateVelocityCurveAtTime);
-
- /** @brief EvalVelCurveAtTimes compute the expression of the point on the curve dc at t, defined by the waypoint pi and one free waypoint (x)
-      * @param pi constant waypoints of the curve
-      * @param t param (normalized !)
-      * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
-      */
-  coefs_t evaluateVelocityCurveAtTime(const ProblemData& pData, const std::vector<point_t>& pi,double T,double t)
- {
-     CIT_evalAccCurveAtTime cit = EvalVelCurveAtTimes.find(pData.constraints_.flag_);
-     if(cit != EvalVelCurveAtTimes.end())
-         return cit->second(pi,T,t);
-     else
-     {
-         std::cout<<"Current constraints set are not implemented"<<std::endl;
-         throw std::runtime_error("Current constraints set are not implemented");
-     }
- }
 
 typedef coefs_t (*evalAccCurveAtTime) (const std::vector<point_t>& pi,double T,double t);
 typedef std::map<ConstraintFlag,evalAccCurveAtTime > T_evalAccCurveAtTime;
@@ -94,8 +70,7 @@ static const T_evalAccCurveAtTime evalAccCurveAtTimes = boost::assign::map_list_
         (c0_dc0_ddc0_c1::flag           , c0_dc0_ddc0_c1::evaluateAccelerationCurveAtTime)
         (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::evaluateAccelerationCurveAtTime)
         (c0_dc0_ddc0_ddc1_dc1_c1::flag  , c0_dc0_ddc0_ddc1_dc1_c1::evaluateAccelerationCurveAtTime)
-        (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateAccelerationCurveAtTime)
-        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateAccelerationCurveAtTime);
+        (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateAccelerationCurveAtTime);
 
 
 /** @brief evaluateAccelerationCurveAtTime compute the expression of the point on the curve ddc at t, defined by the waypoint pi and one free waypoint (x)
@@ -116,30 +91,102 @@ static const T_evalAccCurveAtTime evalAccCurveAtTimes = boost::assign::map_list_
 }
 
 
- typedef coefs_t (*evalAccCurveAtTime) (const std::vector<point_t>& pi,double T,double t);
- typedef std::map<ConstraintFlag,evalAccCurveAtTime > T_evalAccCurveAtTime;
- typedef T_evalAccCurveAtTime::const_iterator         CIT_evalAccCurveAtTime;
- static const T_evalAccCurveAtTime evalJerkCurveAtTimes = boost::assign::map_list_of
-         (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateJerkCurveAtTime)
-         (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateJerkCurveAtTime);
+ typedef waypoint_t (*evalCurveWaypointAtTime) (const std::vector<point_t>& pi,double t);
+ typedef std::map<ConstraintFlag,evalCurveWaypointAtTime > T_evalCurveWaypointAtTime;
+ typedef T_evalCurveWaypointAtTime::const_iterator         CIT_evalCurveWaypointAtTime;
+ static const T_evalCurveWaypointAtTime evalCurveWaypointAtTimes = boost::assign::map_list_of
+         (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateCurveWaypointAtTime)
+         (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateCurveWaypointAtTime);
 
-
- /** @brief evaluateAccelerationCurveAtTime compute the expression of the point on the curve ddc at t, defined by the waypoint pi and one free waypoint (x)
-      * @param pi constant waypoints of the curve
-      * @param t param (normalized !)
-      * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
-      */
-  coefs_t evaluateJerkCurveAtTime(const ProblemData& pData, const std::vector<point_t>& pi,double T,double t)
+ /** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t, defined by the waypoint pi and one free waypoint (x)
+  * @param pi constant waypoints of the curve
+  * @param t param (normalized !)
+  * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
+  */
+ // TODOin C++ 10, all these methods could be just one function :)
+  waypoint_t evaluateCurveWaypointAtTime(const ProblemData& pData, const std::vector<point_t>& pi, double t)
  {
-     CIT_evalAccCurveAtTime cit = evalJerkCurveAtTimes.find(pData.constraints_.flag_);
-     if(cit != evalJerkCurveAtTimes.end())
-         return cit->second(pi,T,t);
+     CIT_evalCurveWaypointAtTime cit = evalCurveWaypointAtTimes.find(pData.constraints_.flag_);
+     if(cit != evalCurveWaypointAtTimes.end())
+         return cit->second(pi,t);
      else
      {
          std::cout<<"Current constraints set are not implemented"<<std::endl;
          throw std::runtime_error("Current constraints set are not implemented");
      }
  }
+  typedef waypoint_t (*evalVelCurveWaypointAtTime) (const std::vector<point_t>& pi, const double T,double t);
+  typedef std::map<ConstraintFlag,evalVelCurveWaypointAtTime > T_evalVelCurveWaypointAtTime;
+  typedef T_evalVelCurveWaypointAtTime::const_iterator         CIT_evalVelCurveWaypointAtTime;
+  static const T_evalVelCurveWaypointAtTime evalVelCurveWaypointAtTimes = boost::assign::map_list_of
+          (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateVelocityCurveWaypointAtTime)
+          (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateVelocityCurveWaypointAtTime);
+
+  /** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t, defined by the waypoint pi and one free waypoint (x)
+   * @param pi constant waypoints of the curve
+   * @param t param (normalized !)
+   * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
+   */
+  // TODOin C++ 10, all these methods could be just one function :)
+   waypoint_t evaluateVelocityCurveWaypointAtTime(const ProblemData& pData,  const double T,const std::vector<point_t>& pi,double t)
+  {
+      CIT_evalVelCurveWaypointAtTime cit = evalVelCurveWaypointAtTimes.find(pData.constraints_.flag_);
+      if(cit != evalVelCurveWaypointAtTimes.end())
+          return cit->second(pi,T,t);
+      else
+      {
+          std::cout<<"Current constraints set are not implemented"<<std::endl;
+          throw std::runtime_error("Current constraints set are not implemented");
+      }
+  }
+   typedef waypoint_t (*evalAccCurveWaypointAtTime) (const std::vector<point_t>& pi, const double T,double t);
+   typedef std::map<ConstraintFlag,evalAccCurveWaypointAtTime > T_evalAccCurveWaypointAtTime;
+   typedef T_evalAccCurveWaypointAtTime::const_iterator         CIT_evalAccCurveWaypointAtTime;
+   static const T_evalAccCurveWaypointAtTime evalAccCurveWaypointAtTimes = boost::assign::map_list_of
+           (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateAccelerationCurveWaypointAtTime)
+           (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateAccelerationCurveWaypointAtTime);
+
+   /** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t, defined by the waypoint pi and one free waypoint (x)
+    * @param pi constant waypoints of the curve
+    * @param t param (normalized !)
+    * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
+    */
+   // TODOin C++ 10, all these methods could be just one function :)
+    waypoint_t evaluateAccelerationCurveWaypointAtTime(const ProblemData& pData, const double T, const std::vector<point_t>& pi,double t)
+   {
+       CIT_evalAccCurveWaypointAtTime cit = evalAccCurveWaypointAtTimes.find(pData.constraints_.flag_);
+       if(cit != evalAccCurveWaypointAtTimes.end())
+           return cit->second(pi,T,t);
+       else
+       {
+           std::cout<<"Current constraints set are not implemented"<<std::endl;
+           throw std::runtime_error("Current constraints set are not implemented");
+       }
+   }
+typedef waypoint_t (*evalJerkCurveWaypointAtTime) (const std::vector<point_t>& pi, const double T,double t);
+typedef std::map<ConstraintFlag,evalJerkCurveWaypointAtTime > T_evalJerkCurveWaypointAtTime;
+typedef T_evalJerkCurveWaypointAtTime::const_iterator         CIT_evalJerkCurveWaypointAtTime;
+static const T_evalJerkCurveWaypointAtTime evalJerkCurveWaypointAtTimes = boost::assign::map_list_of
+        (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateJerkCurveWaypointAtTime)
+        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateJerkCurveWaypointAtTime);
+
+/** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t, defined by the waypoint pi and one free waypoint (x)
+ * @param pi constant waypoints of the curve
+ * @param t param (normalized !)
+ * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
+ */
+// TODOin C++ 10, all these methods could be just one function :)
+ waypoint_t evaluateJerkCurveWaypointAtTime(const ProblemData& pData, const double T, const std::vector<point_t>& pi,double t)
+{
+    CIT_evalJerkCurveWaypointAtTime cit = evalJerkCurveWaypointAtTimes.find(pData.constraints_.flag_);
+    if(cit != evalJerkCurveWaypointAtTimes.end())
+        return cit->second(pi,T,t);
+    else
+    {
+        std::cout<<"Current constraints set are not implemented"<<std::endl;
+        throw std::runtime_error("Current constraints set are not implemented");
+    }
+}
 
 typedef std::vector<point_t> (*compConsWp) (const ProblemData& pData,double T);
 typedef std::map<ConstraintFlag,compConsWp > T_compConsWp;

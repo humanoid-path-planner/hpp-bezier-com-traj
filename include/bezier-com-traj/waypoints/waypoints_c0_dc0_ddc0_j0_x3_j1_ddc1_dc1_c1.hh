@@ -23,8 +23,70 @@ static const size_t DIM_POINT = 3;
  * @return the expression of the waypoint such that wp.first . x + wp.second = point on curve
  */
 //TODO
-inline coefs_t evaluateCurveAtTime(const std::vector<point_t>& pi,double t){
-    coefs_t wp;
+inline waypoint_t evaluateCurveWaypointAtTime(const std::vector<point_t>& pi,double t){
+    waypoint_t wp = initwp(DIM_POINT,DIM_VAR);
+    const double t2 = t*t;
+    const double t3 = t2*t;
+    const double t4 = t3*t;
+    const double t5 = t4*t;
+    const double t6 = t5*t;
+    const double t7 = t6*t;
+    const double t8 = t7*t;
+    const double t9 = t8*t;
+    const double t10 = t9*t;
+
+    // equation found with sympy
+    wp.first.block<3,3>(0,0) = Matrix3::Identity()*(210.0*t10 - 1260.0*t9 + 3150.0*t8 - 4200.0*t7 + 3150.0*t6 - 1260.0*t5 + 210.0*t4); // x0
+    wp.first.block<3,3>(0,3) = Matrix3::Identity()*(-252.0*t10 + 1260.0*t9 - 2520.0*t8 + 2520.0*t7 - 1260.0*t6 + 252.0*t5); //x1
+    wp.first.block<3,3>(0,6) = Matrix3::Identity()*(210.0*t10 - 840.0*t9 + 1260.0*t8 - 840.0*t7 + 210.0*t6) ; // x2
+    wp.second = 1.0*pi[0]
+            + t*(-10.0*pi[0] + 10.0*pi[1])
+            + t2*(45.0*pi[0] - 90.0*pi[1] + 45.0*pi[2])
+            + t3*(45.0*pi[0] - 360.0*pi[1] + 1260.0*pi[2] - 2520.0*pi[3] - 360.0*pi[7] + 45.0*pi[8])
+            + t4*(-120.0*pi[0] + 360.0*pi[1] - 360.0*pi[2] + 120.0*pi[3])
+            + t5*(-10.0*pi[0] + 90.0*pi[1] - 360.0*pi[2] + 840.0*pi[3] + 360.0*pi[7] - 90.0*pi[8] + 10.0*pi[9])
+            + t6*(210.0*pi[0] - 840.0*pi[1] + 1260.0*pi[2] - 840.0*pi[3])
+            + t7*(1.0*pi[0] + 1.0*pi[10] - 10.0*pi[1] + 45.0*pi[2] - 120.0*pi[3] - 120.0*pi[7] + 45.0*pi[8] - 10.0*pi[9])
+            + t8*(-252.0*pi[0] + 1260.0*pi[1] - 2520.0*pi[2] + 2520.0*pi[3])
+            + t9*(210.0*pi[0] - 1260.0*pi[1] + 3150.0*pi[2] - 4200.0*pi[3])
+            + t10*(-120.0*pi[0] + 840.0*pi[1] - 2520.0*pi[2] + 4200.0*pi[3] + 120.0*pi[7]);
+    return wp;
+}
+
+//TODO
+inline waypoint_t evaluateVelocityCurveWaypointAtTime(const std::vector<point_t>& pi,double T,double t){
+    waypoint_t wp = initwp(DIM_POINT,DIM_VAR);
+    const double alpha = 1./(T);
+    const double t2 = t*t;
+    const double t3 = t2*t;
+    const double t4 = t3*t;
+    const double t5 = t4*t;
+    const double t6 = t5*t;
+    const double t7 = t6*t;
+    const double t8 = t7*t;
+    const double t9 = t8*t;
+    // equation found with sympy
+    wp.first.block<3,3>(0,0) = Matrix3::Identity()*alpha*(1.0*(2100.0*t9 - 11340.0*t8 + 25200.0*t7 - 29400.0*t6 + 18900.0*t5 - 6300.0*t4 + 840.0*t3)); // x0
+    wp.first.block<3,3>(0,3) = Matrix3::Identity()*alpha*( 1.0*(-2520.0*t9 + 11340.0*t8 - 20160.0*t7 + 17640.0*t6 - 7560.0*t5 + 1260.0*t4)); //x1
+    wp.first.block<3,3>(0,6) = Matrix3::Identity()*alpha*(1.0*(2100.0*t9 - 7560.0*t8 + 10080.0*t7 - 5880.0*t6 + 1260.0*t5)); // x2
+    wp.second = (1.0*(-10.0*pi[0] + 10.0*pi[1])
+            + t*(1.0*(90.0*pi[0] - 180.0*pi[1] + 90.0*pi[2]))
+            + t2*(1.0*(-360.0*pi[0] + 1080.0*pi[1] - 1080.0*pi[2] + 360.0*pi[3]))
+            + t3*(1.0*(-90.0*pi[0] + 810.0*pi[1] - 3240.0*pi[2] + 7560.0*pi[3] + 3240.0*pi[7] - 810.0*pi[8] + 90.0*pi[9]))
+            + t4*(1.0*(840.0*pi[0] - 3360.0*pi[1] + 5040.0*pi[2] - 3360.0*pi[3]))
+            + t5*(1.0*(10.0*pi[0] + 10.0*pi[10] - 100.0*pi[1] + 450.0*pi[2] - 1200.0*pi[3] - 1200.0*pi[7] + 450.0*pi[8] - 100.0*pi[9]))
+            + t6*(1.0*(-1260.0*pi[0] + 6300.0*pi[1] - 12600.0*pi[2] + 12600.0*pi[3]))
+            + t7*(1.0*(1260.0*pi[0] - 7560.0*pi[1] + 18900.0*pi[2] - 25200.0*pi[3]))
+            + t8*(1.0*(-840.0*pi[0] + 5880.0*pi[1] - 17640.0*pi[2] + 29400.0*pi[3] + 840.0*pi[7]))
+            + t9*(1.0*(360.0*pi[0] - 2880.0*pi[1] + 10080.0*pi[2] - 20160.0*pi[3] - 2880.0*pi[7] + 360.0*pi[8])))*alpha;
+    return wp;
+}
+
+
+//TODO
+inline waypoint_t evaluateAccelerationCurveWaypointAtTime(const std::vector<point_t>& pi,double T,double t){
+    waypoint_t wp = initwp(DIM_POINT,DIM_VAR);
+    const double alpha = 1./(T*T);
     const double t2 = t*t;
     const double t3 = t2*t;
     const double t4 = t3*t;
@@ -33,15 +95,25 @@ inline coefs_t evaluateCurveAtTime(const std::vector<point_t>& pi,double t){
     const double t7 = t6*t;
     const double t8 = t7*t;
     // equation found with sympy
-    wp.first = 70.0*t8 - 280.0*t7 + 420.0*t6 - 280.0*t5 + 70.0*t4;
-    wp.second = 1.0*pi[8]*t8 - 8.0*pi[8]*t7 + 28.0*pi[8]*t6 - 56.0*pi[8]*t5 + 70.0*pi[8]*t4 - 56.0*pi[8]*t3 + 28.0*pi[8]*t2 - 8.0*pi[8]*t + 1.0*pi[8] - 8.0*pi[1]*t8 + 56.0*pi[1]*t7 - 168.0*pi[1]*t6 + 280.0*pi[1]*t5 - 280.0*pi[1]*t4 + 168.0*pi[1]*t3 - 56.0*pi[1]*t2 + 8.0*pi[1]*t + 28.0*pi[2]*t8 - 168.0*pi[2]*t7 + 420.0*pi[2]*t6 - 560.0*pi[2]*t5 + 420.0*pi[2]*t4 - 168.0*pi[2]*t3 + 28.0*pi[2]*t2 - 56.0*pi[3]*pow(t,8 )+ 280.0*pi[3]*t7 - 560.0*pi[3]*t6 + 560.0*pi[3]*t5 - 280.0*pi[3]*t4 + 56.0*pi[3]*t3 - 56.0*pi[5]*t8 + 168.0*pi[5]*t7 - 168.0*pi[5]*t6 + 56.0*pi[5]*pow(t,5 )+ 28.0*pi[6]*t8 - 56.0*pi[6]*t7 + 28.0*pi[6]*t6 - 8.0*pi[7]*t8 + 8.0*pi[7]*t7 + 1.0*pi[8]*t8;
+    wp.first.block<3,3>(0,0) = Matrix3::Identity()*alpha*( 1.0*(18900.0*t8 - 90720.0*t7 + 176400.0*t6 - 176400.0*t5 + 94500.0*t4 - 25200.0*t3 + 2520.0*t2)); // x0
+    wp.first.block<3,3>(0,3) = Matrix3::Identity()*alpha*(1.0*(-22680.0*t8 + 90720.0*t7 - 141120.0*t6 + 105840.0*t5 - 37800.0*t4 + 5040.0*t3)); //x1
+    wp.first.block<3,3>(0,6) = Matrix3::Identity()*alpha*(1.0*(18900.0*t8 - 60480.0*t7 + 70560.0*t6 - 35280.0*t5 + 6300.0*t4)); // x2
+    wp.second = (1.0*(90.0*pi[0] - 180.0*pi[1] + 90.0*pi[2])
+            + t*(1.0*(-720.0*pi[0] + 2160.0*pi[1] - 2160.0*pi[2] + 720.0*pi[3]))
+            + t2*(1.0*(2520.0*pi[0] - 10080.0*pi[1] + 15120.0*pi[2] - 10080.0*pi[3]))
+            + t3*(1.0*(90.0*pi[0] + 90.0*pi[10] - 900.0*pi[1] + 4050.0*pi[2] - 10800.0*pi[3] - 10800.0*pi[7] + 4050.0*pi[8] - 900.0*pi[9]))
+            + t4*(1.0*(-5040.0*pi[0] + 25200.0*pi[1] - 50400.0*pi[2] + 50400.0*pi[3]))
+            + t5*(1.0*(6300.0*pi[0] - 37800.0*pi[1] + 94500.0*pi[2] - 126000.0*pi[3]))
+            + t6*(1.0*(-5040.0*pi[0] + 35280.0*pi[1] - 105840.0*pi[2] + 176400.0*pi[3] + 5040.0*pi[7]))
+            + t7*(1.0*(2520.0*pi[0] - 20160.0*pi[1] + 70560.0*pi[2] - 141120.0*pi[3] - 20160.0*pi[7] + 2520.0*pi[8]))
+            + t8*(1.0*(-720.0*pi[0] + 6480.0*pi[1] - 25920.0*pi[2] + 60480.0*pi[3] + 25920.0*pi[7] - 6480.0*pi[8] + 720.0*pi[9])))*alpha;
     return wp;
 }
 
 //TODO
-inline coefs_t evaluateVelocityCurveAtTime(const std::vector<point_t>& pi,double T,double t){
-    coefs_t wp;
-    const double alpha = 1./(T);
+inline waypoint_t evaluateJerkCurveWaypointAtTime(const std::vector<point_t>& pi,double T,double t){
+    waypoint_t wp = initwp(DIM_POINT,DIM_VAR);
+    const double alpha = 1./(T*T*T);
     const double t2 = t*t;
     const double t3 = t2*t;
     const double t4 = t3*t;
@@ -49,38 +121,17 @@ inline coefs_t evaluateVelocityCurveAtTime(const std::vector<point_t>& pi,double
     const double t6 = t5*t;
     const double t7 = t6*t;
     // equation found with sympy
-    wp.first = (560.0*t7 - 1960.0*t6 + 2520.0*t5 - 1400.0*t4 + 280.0*t3)*alpha;
-    wp.second = (8.0*pi[8]*t7 - 56.0*pi[8]*t6 + 168.0*pi[8]*t5 - 280.0*pi[8]*t4 + 280.0*pi[8]*t3 - 168.0*pi[8]*t2 + 56.0*pi[8]*t - 8.0*pi[8] - 64.0*pi[1]*t7 + 392.0*pi[1]*t6 - 1008.0*pi[1]*t5 + 1400.0*pi[1]*t4 - 1120.0*pi[1]*t3 + 504.0*pi[1]*t2 - 112.0*pi[1]*t + 8.0*pi[1] + 224.0*pi[2]*t7 - 1176.0*pi[2]*t6 + 2520.0*pi[2]*t5 - 2800.0*pi[2]*t4 + 1680.0*pi[2]*t3 - 504.0*pi[2]*t2 + 56.0*pi[2]*t - 448.0*pi[3]*t7 + 1960.0*pi[3]*t6 - 3360.0*pi[3]*t5 + 2800.0*pi[3]*t4 - 1120.0*pi[3]*t3 + 168.0*pi[3]*t2 - 448.0*pi[5]*t7 + 1176.0*pi[5]*t6 - 1008.0*pi[5]*t5 + 280.0*pi[5]*t4 + 224.0*pi[6]*t7 - 392.0*pi[6]*t6 + 168.0*pi[6]*t5 - 64.0*pi[7]*t7 + 56.0*pi[7]*t6 + 8.0*pi[8]*t7)*alpha;
-    return wp;
-}
-
-
-//TODO
-inline coefs_t evaluateAccelerationCurveAtTime(const std::vector<point_t>& pi,double T,double t){
-    coefs_t wp;
-    const double alpha = 1./(T*T);
-    const double t2 = t*t;
-    const double t3 = t2*t;
-    const double t4 = t3*t;
-    const double t5 = t4*t;
-    const double t6 = t5*t;
-    // equation found with sympy
-    wp.first = ((3920.0*t6 - 11760.0*t5 + 12600.0*t4 - 5600.0*t3 + 840.0*t2))*alpha;
-    wp.second = (56.0*pi[8]*t6 - 336.0*pi[8]*t5 + 840.0*pi[8]*t4 - 1120.0*pi[8]*t3 + 840.0*pi[8]*t2 - 336.0*pi[8]*t + 56.0*pi[8] - 448.0*pi[1]*t6 + 2352.0*pi[1]*t5 - 5040.0*pi[1]*t4 + 5600.0*pi[1]*t3 - 3360.0*pi[1]*t2 + 1008.0*pi[1]*t - 112.0*pi[1] + 1568.0*pi[2]*t6 - 7056.0*pi[2]*t5 + 12600.0*pi[2]*t4 - 11200.0*pi[2]*t3 + 5040.0*pi[2]*t2 - 1008.0*pi[2]*t + 56.0*pi[2] - 3136.0*pi[3]*t6 + 11760.0*pi[3]*t5 - 16800.0*pi[3]*t4 + 11200.0*pi[3]*t3 - 3360.0*pi[3]*t2+ 336.0*pi[3]*t - 3136.0*pi[5]*t6 + 7056.0*pi[5]*t5 - 5040.0*pi[5]*t4 + 1120.0*pi[5]*t3 + 1568.0*pi[6]*t6 - 2352.0*pi[6]*t5 + 840.0*pi[6]*t4 - 448.0*pi[7]*t6 + 336.0*pi[7]*t5 + 56.0*pi[8]*t6)*alpha;
-    return wp;
-}
-
-//TODO
-inline coefs_t evaluateJerkCurveAtTime(const std::vector<point_t>& pi,double T,double t){
-    coefs_t wp;
-    const double alpha = 1./(T*T*T);
-    const double t2 = t*t;
-    const double t3 = t2*t;
-    const double t4 = t3*t;
-    const double t5 = t4*t;
-    // equation found with sympy
-    wp.first = (23520.0*t5 - 58800.0*t4 + 50400.0*t3 - 16800.0*t2 + 1680.0*t)*alpha;
-    wp.second = 1.0*(336.0*pi[0]*t5 - 1680.0*pi[0]*t4 + 3360.0*pi[0]*t3 - 3360.0*pi[0]*t2 + 1680.0*pi[0]*t - 336.0*pi[0] - 2688.0*pi[1]*t5 + 11760.0*pi[1]*t4 - 20160.0*pi[1]*t3 + 16800.0*pi[1]*t2 - 6720.0*pi[1]*t + 1008.0*pi[1] + 9408.0*pi[2]*t5 - 35280.0*pi[2]*t4 + 50400.0*pi[2]*t3 - 33600.0*pi[2]*t2 + 10080.0*pi[2]*t - 1008.0*pi[2] - 18816.0*pi[3]*t5 + 58800.0*pi[3]*t4 - 67200.0*pi[3]*t3 + 33600.0*pi[3]*t2 - 6720.0*pi[3]*t + 336.0*pi[3] - 18816.0*pi[5]*t5 + 35280.0*pi[5]*t4 - 20160.0*pi[5]*t3 + 3360.0*pi[5]*t2 + 9408.0*pi[6]*t5 - 11760.0*pi[6]*t4 + 3360.0*pi[6]*t3 - 2688.0*pi[7]*t5 + 1680.0*pi[7]*t4 + 336.0*pi[8]*t5)*alpha;
+    wp.first.block<3,3>(0,0) = Matrix3::Identity()*alpha*( 1.0*(151200.0*t7 - 635040.0*t6 + 1058400.0*t5 - 882000.0*t4 + 378000.0*t3 - 75600.0*t2 + 5040.0*t)); // x0
+    wp.first.block<3,3>(0,3) = Matrix3::Identity()*alpha*(1.0*(-181440.0*t7 + 635040.0*t6 - 846720.0*t5 + 529200.0*t4 - 151200.0*t3 + 15120.0*t2)); //x1
+    wp.first.block<3,3>(0,6) = Matrix3::Identity()*alpha*(1.0*(151200.0*t7 - 423360.0*t6 + 423360.0*t5 - 176400.0*t4 + 25200.0*t3)); // x2
+    wp.second = (1.0*(-720.0*pi[0] + 2160.0*pi[1] - 2160.0*pi[2] + 720.0*pi[3])
+            + t*(1.0*(5040.0*pi[0] - 20160.0*pi[1] + 30240.0*pi[2] - 20160.0*pi[3]))
+            + t2*(1.0*(-15120.0*pi[0] + 75600.0*pi[1] - 151200.0*pi[2] + 151200.0*pi[3]))
+            + t3*(1.0*(25200.0*pi[0] - 151200.0*pi[1] + 378000.0*pi[2] - 504000.0*pi[3]))
+            + t4*(1.0*(-25200.0*pi[0] + 176400.0*pi[1] - 529200.0*pi[2] + 882000.0*pi[3] + 25200.0*pi[7]))
+            + t5*(1.0*(15120.0*pi[0] - 120960.0*pi[1] + 423360.0*pi[2] - 846720.0*pi[3] - 120960.0*pi[7] + 15120.0*pi[8]))
+            + t6*(1.0*(-5040.0*pi[0] + 45360.0*pi[1] - 181440.0*pi[2] + 423360.0*pi[3] + 181440.0*pi[7] - 45360.0*pi[8] + 5040.0*pi[9]))
+            + t7*(1.0*(720.0*pi[0] + 720.0*pi[10] - 7200.0*pi[1] + 32400.0*pi[2] - 86400.0*pi[3] - 86400.0*pi[7] + 32400.0*pi[8] - 7200.0*pi[9])))*alpha;
     return wp;
 }
 
