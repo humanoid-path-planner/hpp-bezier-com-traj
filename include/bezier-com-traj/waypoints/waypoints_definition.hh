@@ -105,6 +105,9 @@ std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T);
 
 coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T);
 
+size_t dimVar(const ProblemData& pData);
+
+
 }
 
 #endif

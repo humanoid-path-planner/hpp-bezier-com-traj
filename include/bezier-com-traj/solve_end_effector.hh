@@ -17,6 +17,7 @@ const int DIM_POINT=3;
 const int NUM_DISCRETIZATION = 11;
 const bool verbose = false;
 
+
 /**
 * @brief solveEndEffector Tries to produce a trajectory represented as a bezier curve
 * that satisfy position, velocity and acceleration constraint for the initial and final point
@@ -81,7 +82,7 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
     assert(acc_bounds.size() == DIM_POINT && "Acceleration bounds should have the same dimension as the points");
     assert(vel_bounds.size() == DIM_POINT && "Velocity bounds should have the same dimension as the points");
     assert(jerk_bounds.size() == DIM_POINT && "Jerk bounds should have the same dimension as the points");
-
+    const int DIM_VAR = dimVar(pData);
     int empty_acc=0;
     int empty_vel=0;
     int empty_jerk=0;
@@ -108,7 +109,7 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
     {
         if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
-            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
+            A.block(i*DIM_POINT,0,DIM_POINT,DIM_VAR) = wpcit->first;
             b.segment<DIM_POINT>(i*DIM_POINT)   = acc_bounds - wpcit->second;
             ++i;
         }
@@ -117,7 +118,7 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
     {
         if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
-            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
+            A.block(i*DIM_POINT,0,DIM_POINT,DIM_VAR) = -wpcit->first;
             b.segment<DIM_POINT>(i*DIM_POINT)   = acc_bounds + wpcit->second;
             ++i;
         }
@@ -126,7 +127,7 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
     {
         if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
-            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
+            A.block(i*DIM_POINT,0,DIM_POINT,DIM_VAR) = wpcit->first;
             b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds - wpcit->second;
             ++i;
         }
@@ -135,7 +136,7 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
     {
         if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
-            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
+            A.block(i*DIM_POINT,0,DIM_POINT,DIM_VAR) = -wpcit->first;
             b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds + wpcit->second;
             ++i;
         }
@@ -145,7 +146,7 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
     {
         if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
-            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = wpcit->first;
+            A.block(i*DIM_POINT,0,DIM_POINT,DIM_VAR) = wpcit->first;
             b.segment<DIM_POINT>(i*DIM_POINT)   = vel_bounds - wpcit->second;
             ++i;
         }
@@ -154,7 +155,7 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_jerk.begin(); wpcit != wps_jerk.end(); ++wpcit)
     {
         if(! wpcit->first.isZero(std::numeric_limits<double>::epsilon())){
-            A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = -wpcit->first;
+            A.block(i*DIM_POINT,0,DIM_POINT,DIM_VAR) = -wpcit->first;
             b.segment<DIM_POINT>(i*DIM_POINT)   = jerk_bounds + wpcit->second;
             ++i;
         }
@@ -162,12 +163,16 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
 
     // test : constraint x[z] to be always higher than init[z] and goal[z].
     // TODO replace z with the direction of the contact normal ... need to change the API
-    MatrixXX mxz = MatrixXX::Zero(DIM_POINT,DIM_POINT);
-    mxz(DIM_POINT-1,DIM_POINT-1) = -1;
-    VectorX nxz = VectorX::Zero(DIM_POINT);
-    nxz[2]= - std::min(pData.c0_[2],pData.c1_[2]);
-    A.block<DIM_POINT,DIM_POINT>(i*DIM_POINT,0) = mxz;
-    b.segment<DIM_POINT>(i*DIM_POINT)   = nxz;
+    MatrixXX mxz = MatrixXX::Zero(DIM_VAR,DIM_VAR);
+    size_t j = DIM_POINT-1;
+    VectorX nxz = VectorX::Zero(DIM_VAR);
+    while(j < (DIM_VAR)){
+        mxz(j,j) = -1;
+        nxz[j]= - std::min(pData.c0_[2],pData.c1_[2]);
+        j += DIM_POINT;
+    }
+    A.block(i*DIM_POINT,0,DIM_VAR,DIM_VAR) = mxz;
+    b.segment(i*DIM_POINT,DIM_VAR)   = nxz;
 
 
     //TEST :
@@ -181,33 +186,40 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
 
 template <typename Path>
 void computeDistanceCostFunction(int numPoints,const ProblemData& pData, double T,const Path& path, MatrixXX& H,VectorX& g){
-    H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
-    g  = VectorX::Zero(DIM_POINT);
     double step = 1./(numPoints-1);
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    std::vector<coefs_t> cks;
+    std::vector<waypoint_t> cks;
     for(size_t i = 0 ; i < numPoints ; ++i){
-        cks.push_back(evaluateCurveAtTime(pData,pi,i*step));
+        cks.push_back(evaluateCurveWaypointAtTime(pData,pi,i*step));
     }
+    H = MatrixXX::Zero(cks[0].first.cols(),cks[0].first.cols());
+    g  = VectorX::Zero(cks[0].first.cols());
     point3_t pk;
     size_t i = 0;
-    for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
+    for (std::vector<waypoint_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
         pk=path(i*step);
       //  std::cout<<"pk = "<<pk.transpose()<<std::endl;
       //  std::cout<<"coef First : "<<ckcit->first<<std::endl;
       //  std::cout<<"coef second : "<<ckcit->second.transpose()<<std::endl;
-        H += (ckcit->first * ckcit->first * Matrix3::Identity());
-        g += (ckcit->first * ckcit->second) - (pk * ckcit->first);
+        H += (ckcit->first.transpose() * ckcit->first);
+        g += (ckcit->first.transpose() * ckcit->second) - (ckcit->first.transpose() * pk);
         i++;
     }
-    double norm=H(0,0); // because H is always diagonal.
+    double norm=H.norm(); // because H is always diagonal.
     H /= norm;
     g /= norm;
 }
 
+//TODO
 void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
     std::vector<Vector3> wps = computeConstantWaypoints(pData,T);
-    wps[4] = res.x; //FIXME : compute id from constraints
+    if(dimVar(pData) == 3 )
+        wps[4] = res.x; //FIXME : compute id from constraints
+    else if(dimVar(pData) == 9){
+        wps[4] = res.x.segment<3>(0);
+        wps[5] = res.x.segment<3>(3);
+        wps[6] = res.x.segment<3>(6);
+    }
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
     if(verbose)
       std::cout<<"bezier curve created, size = "<<res.c_of_t_.size_<<std::endl;
@@ -215,66 +227,67 @@ void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
 
 void computeVelCostFunction(int numPoints,const ProblemData& pData,double T, MatrixXX& H,VectorX& g){
     double step = 1./(numPoints-1);
-    H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
-    g  = VectorX::Zero(DIM_POINT);
-    std::vector<coefs_t> cks;
+    std::vector<waypoint_t> cks;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     for(int i = 0 ; i < numPoints ; ++i){
-        cks.push_back(evaluateVelocityCurveAtTime(pData,pi,T,i*step));
+        cks.push_back(evaluateVelocityCurveWaypointAtTime(pData,T,pi,i*step));
     }
-    for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
-        H+=(ckcit->first * ckcit->first * Matrix3::Identity());
-        g+=ckcit->first*ckcit->second;
+    H = MatrixXX::Zero(cks[0].first.cols(),cks[0].first.cols());
+    g  = VectorX::Zero(cks[0].first.cols());
+    for (std::vector<waypoint_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
+        H+=(ckcit->first.transpose() * ckcit->first);
+        g+=ckcit->first.transpose()*ckcit->second;
     }
     //TEST : don't consider z axis for minimum acceleration cost
     //H(2,2) = 1e-6;
     //g[2] = 1e-6 ;
     //normalize :
-    double norm=H(0,0); // because H is always diagonal
+    double norm=H.norm(); // because H is always diagonal
     H /= norm;
     g /= norm;
 }
 
 void computeAccelerationCostFunction(int numPoints,const ProblemData& pData,double T, MatrixXX& H,VectorX& g){
     double step = 1./(numPoints-1);
-    H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
-    g  = VectorX::Zero(DIM_POINT);
-    std::vector<coefs_t> cks;
+    std::vector<waypoint_t> cks;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     for(int i = 0 ; i < numPoints ; ++i){
-        cks.push_back(evaluateAccelerationCurveAtTime(pData,pi,T,i*step));
+        cks.push_back(evaluateAccelerationCurveWaypointAtTime(pData,T,pi,i*step));
     }
-    for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
-        H+=(ckcit->first * ckcit->first * Matrix3::Identity());
-        g+=ckcit->first*ckcit->second;
+    H = MatrixXX::Zero(cks[0].first.cols(),cks[0].first.cols());
+    g  = VectorX::Zero(cks[0].first.cols());
+    for (std::vector<waypoint_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
+        H+=(ckcit->first.transpose() * ckcit->first);
+        g+=ckcit->first.transpose()*ckcit->second;
     }
     //TEST : don't consider z axis for minimum acceleration cost
     //H(2,2) = 1e-6;
     //g[2] = 1e-6 ;
     //normalize :
-    double norm=H(0,0); // because H is always diagonal
+    double norm=H.norm(); // because H is always diagonal
     H /= norm;
     g /= norm;
 }
 
 void computeJerkCostFunction(int numPoints,const ProblemData& pData,double T, MatrixXX& H,VectorX& g){
     double step = 1./(numPoints-1);
-    H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
-    g  = VectorX::Zero(DIM_POINT);
-    std::vector<coefs_t> cks;
+
+    std::vector<waypoint_t> cks;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     for(int i = 0 ; i < numPoints ; ++i){
-        cks.push_back(evaluateJerkCurveAtTime(pData,pi,T,i*step));
+        cks.push_back(evaluateJerkCurveWaypointAtTime(pData,T,pi,i*step));
     }
-    for (std::vector<coefs_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
-        H+=(ckcit->first * ckcit->first * Matrix3::Identity());
-        g+=ckcit->first*ckcit->second;
+    H = MatrixXX::Zero(cks[0].first.cols(),cks[0].first.cols());
+    g  = VectorX::Zero(cks[0].first.cols());
+    for (std::vector<waypoint_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
+        H+=(ckcit->first.transpose() * ckcit->first);
+        g+=ckcit->first.transpose()*ckcit->second;
     }
     //TEST : don't consider z axis for minimum acceleration cost
     //H(2,2) = 1e-6;
     //g[2] = 1e-6 ;
     //normalize :
-    double norm=H(0,0); // because H is always diagonal
+    double norm=H.norm(); // because H is always diagonal
     H /= norm;
     g /= norm;
 }
@@ -302,8 +315,8 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
   //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
  //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
     // compute cost function (discrete integral under the curve defined by 'path')
-    MatrixXX H_rrt=MatrixXX::Zero(DIM_POINT,DIM_POINT),H_acc,H_jerk,H_smooth,H;
-    VectorX g_rrt=VectorX::Zero(DIM_POINT),g_acc,g_jerk,g_smooth,g;
+    MatrixXX H_rrt,H_smooth,H;
+    VectorX g_rrt,g_smooth,g;
     if(weightDistance>0)
         computeDistanceCostFunction<Path>(50,pData,T,path,H_rrt,g_rrt);
     if(useVelCost)
@@ -317,8 +330,8 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
 */
 
     // add the costs :
-    H = MatrixXX::Zero(DIM_POINT,DIM_POINT);
-    g  = VectorX::Zero(DIM_POINT);
+    H = MatrixXX::Zero(dimVar(pData),dimVar(pData));
+    g  = VectorX::Zero(dimVar(pData));
     H = weightSmooth*(H_smooth) + weightDistance*H_rrt;
     g = weightSmooth*(g_smooth) + weightDistance*g_rrt;
     if(verbose){
@@ -326,8 +339,8 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
       std::cout<<"End eff g = "<<std::endl<<g<<std::endl;
     }
     // call the solver
-    VectorX init = VectorX(DIM_POINT);
-    init = (pData.c0_ + pData.c1_)/2.;
+    VectorX init = VectorX(dimVar(pData));
+   // init = (pData.c0_ + pData.c1_)/2.;
    // init =pData.c0_;
     if(verbose)
       std::cout<<"Init = "<<std::endl<<init.transpose()<<std::endl;

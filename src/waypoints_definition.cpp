@@ -356,6 +356,16 @@ static const T_compFinalVelP compFinalVelPs = boost::assign::map_list_of
     }
 }
 
+int dimVar(const ProblemData& pData){
+    if(pData.constraints_.flag_ & THREE_FREE_VAR)
+        return 9;
+    else if(pData.constraints_.flag_ & TWO_FREE_VAR)
+        return 6;
+    else
+        return 3;
+}
+
+
 }
 
 #endif
