@@ -351,6 +351,32 @@ inline coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
     return v;
 }
 
+
+inline std::pair<MatrixXX,VectorX> computeVelocityCost(const ProblemData& pData,double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>()){
+    MatrixXX H = MatrixXX::Zero(9,9);
+    VectorX g  = VectorX::Zero(9);
+    if(pi.size() == 0)
+        pi = computeConstantWaypoints(pData,T);
+
+    g.segment<3>(0) =  (-12.352941184069*pi[0] - 2.03619909502433*pi[10] - 10.5882353430148*pi[1] + 1.2217194516605*pi[2] + 12.2171947000329*pi[3] - 4.66474701697538*pi[7] - 7.21925133730399*pi[8] - 5.42986425333795*pi[9])/(2*T); // x0
+    g.segment<3>(3) = (-5.29411764601331*pi[0] - 5.29411764705762*pi[10] - 8.95927605247282*pi[1] - 6.10859723220821*pi[2] + 2.2213080007358*pi[3] + 2.22130810120924*pi[7] - 6.10859728485633*pi[8] - 8.95927601808432*pi[9] )/(2*T); // x1
+    g.segment<3>(6) = (-2.03619909557297*pi[0] - 12.3529411764706*pi[10] - 5.42986425052241*pi[1] - 7.21925133714926*pi[2] - 4.66474700749421*pi[3] + 12.2171945706055*pi[7] + 1.22171945695766*pi[8] - 10.5882352941172*pi[9] )/(2*T); // x2
+
+    H.block<3,3>(0,0) = Matrix3::Identity() *  7.77457833646806 / (T); // x0^2
+    H.block<3,3>(3,3) = Matrix3::Identity() *  7.25627312788583 / (T); // x1^2
+    H.block<3,3>(6,6) = Matrix3::Identity() *  7.77457836216558 / (T); // x2^2
+    H.block<3,3>(0,3) = Matrix3::Identity() *   10.8844097406652/ (2*T); // x0*x1 / 2
+    H.block<3,3>(3,0) = Matrix3::Identity() *   10.8844097406652/ (2*T); // x0*x1 / 2
+    H.block<3,3>(0,6) = Matrix3::Identity() *   2.41875768460934/ (2*T); // x0*x2 / 2
+    H.block<3,3>(6,0) = Matrix3::Identity() *   2.41875768460934/ (2*T); // x0*x2 / 2
+    H.block<3,3>(3,6) = Matrix3::Identity() *   10.8844097036619/ (2*T); // x1*x2 / 2
+    H.block<3,3>(6,3) = Matrix3::Identity() *   10.8844097036619/ (2*T); // x1*x2 / 2
+
+    return std::make_pair(H,g);
+}
+
+
+
 }
 
 }

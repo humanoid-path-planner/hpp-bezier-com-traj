@@ -107,6 +107,8 @@ coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T);
 
 size_t dimVar(const ProblemData& pData);
 
+std::pair<MatrixXX,VectorX> computeVelocityCost(const ProblemData& pData,double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>());
+
 
 }
 

@@ -366,6 +366,33 @@ int dimVar(const ProblemData& pData){
 }
 
 
+typedef std::pair<MatrixXX,VectorX> (*compVelCost) (const ProblemData& pData,double T,std::vector<bezier_t::point_t> pi);
+typedef std::map<ConstraintFlag,compVelCost > T_compVelCost;
+typedef T_compVelCost::const_iterator         CIT_compVelCost;
+static const T_compVelCost compVelCosts = boost::assign::map_list_of
+       (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::computeVelocityCost)
+        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeVelocityCost);
+
+
+/**
+* @brief computeVelocityCost the matrices H and g defining a cost that minimise the integral of the squared velocity
+* @param pData
+* @param T
+* @return
+*/
+std::pair<MatrixXX,VectorX> computeVelocityCost(const ProblemData& pData,double T,std::vector<bezier_t::point_t> pi )
+{
+   CIT_compVelCost cit = compVelCosts.find(pData.constraints_.flag_);
+   if(cit != compVelCosts.end())
+       return cit->second(pData,T,pi);
+   else
+   {
+       std::cout<<"Current constraints set are not implemented"<<std::endl;
+       throw std::runtime_error("Current constraints set are not implemented");
+   }
+}
+
+
 }
 
 #endif

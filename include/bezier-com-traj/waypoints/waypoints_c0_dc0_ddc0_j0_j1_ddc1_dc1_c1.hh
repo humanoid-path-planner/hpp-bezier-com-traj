@@ -343,6 +343,18 @@ inline coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T){
     return v;
 }
 
+
+inline std::pair<MatrixXX,VectorX> computeVelocityCost(const ProblemData& pData,double T,std::vector<bezier_t::point_t> pi = std::vector<bezier_t::point_t>()){
+    MatrixXX H = MatrixXX::Zero(3,3);
+    VectorX g  = VectorX::Zero(3);
+    if(pi.size() == 0)
+        pi = computeConstantWaypoints(pData,T);
+
+    g =  (-7.8321678321748*pi[0] - 7.83216783237586*pi[1] + 9.13752913728184*pi[3] + 9.13752913758454*pi[5]  - 7.83216783216697*pi[7] - 7.83216783216777*pi[8])/(2*T);
+    H = Matrix3::Identity() *  6.52680652684107 / (T);
+    return std::make_pair(H,g);
+}
+
 }
 
 }
