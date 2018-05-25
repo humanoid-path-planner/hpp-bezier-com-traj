@@ -14,6 +14,22 @@ waypoint_t initwp(const size_t rows, const size_t cols){
     return w;
 }
 
+waypoint_t operator+(const waypoint_t& w1, const waypoint_t& w2){
+    if(w1.second.rows() != w2.second.rows() || w1.first.rows() != w2.first.rows() || w1.first.cols() != w2.first.cols())
+        throw std::runtime_error("You cannot add waypoint_t of different size.");
+    return std::make_pair<MatrixXX,VectorX>(w1.first + w2.first, w1.second + w2.second);
+}
+
+waypoint_t operator-(const waypoint_t& w1, const waypoint_t& w2){
+    if(w1.second.rows() != w2.second.rows() || w1.first.rows() != w2.first.rows() || w1.first.cols() != w2.first.cols())
+        throw std::runtime_error("You cannot add waypoint_t of different size.");
+    return std::make_pair<MatrixXX,VectorX>(w1.first - w2.first, w1.second - w2.second);
+}
+
+waypoint_t operator*(const double k, const waypoint_t& w){
+    return std::make_pair<MatrixXX,VectorX>(k*w.first,k*w.second);
+}
+
 template<> waypoint9_t initwp<waypoint9_t>()
 {
     waypoint9_t w;
