@@ -28,6 +28,19 @@ namespace bezier_com_traj{
   */
 
 
+int dimVar(const ProblemData& pData){
+    if(pData.constraints_.flag_ & FIVE_FREE_VAR)
+        return 15;
+    else if(pData.constraints_.flag_ & FOUR_FREE_VAR)
+        return 12;
+    else if(pData.constraints_.flag_ & THREE_FREE_VAR)
+        return 9;
+    else if(pData.constraints_.flag_ & TWO_FREE_VAR)
+        return 6;
+    else
+        return 3;
+}
+
 typedef std::pair<double,point3_t> coefs_t;
 typedef coefs_t (*evalCurveAtTime) (const std::vector<point_t>& pi,double t);
 typedef std::map<ConstraintFlag,evalCurveAtTime > T_evalCurveAtTime;
@@ -227,6 +240,24 @@ static const T_compConsWp compConsWps = boost::assign::map_list_of
     }
 }
 
+bezier_wp_t::t_point_t computeConstantWaypointsSymbolic(const ProblemData& pData,double T)
+{
+    const int DIM_POINT = 3; // FIXME : always true ??
+    const int DIM_VAR = dimVar(pData);
+    std::vector<point_t> pts = computeConstantWaypoints(pData,T);
+    bezier_wp_t::t_point_t wps;
+    for(std::vector<point_t>::const_iterator pit = pts.begin() ; pit != pts.end() ; ++pit ){
+        waypoint_t w = initwp(DIM_POINT,DIM_VAR);
+        if(*pit == bezier_t::point_t::Zero()){
+            w.first = MatrixXX::Identity(DIM_POINT,DIM_VAR);
+        }else{
+            w.second = *pit;
+        }
+        wps.push_back(w);
+    }
+    return wps;
+}
+
 
  typedef std::vector<waypoint_t> (*compVelWp) (const ProblemData& pData,double T,std::vector<bezier_t::point_t> pi);
  typedef std::map<ConstraintFlag,compVelWp > T_compVelWp;
@@ -368,18 +399,7 @@ static const T_compFinalVelP compFinalVelPs = boost::assign::map_list_of
     }
 }
 
-int dimVar(const ProblemData& pData){
-    if(pData.constraints_.flag_ & FIVE_FREE_VAR)
-        return 15;
-    else if(pData.constraints_.flag_ & FOUR_FREE_VAR)
-        return 12;
-    else if(pData.constraints_.flag_ & THREE_FREE_VAR)
-        return 9;
-    else if(pData.constraints_.flag_ & TWO_FREE_VAR)
-        return 6;
-    else
-        return 3;
-}
+
 
 
 typedef std::pair<MatrixXX,VectorX> (*compVelCost) (const ProblemData& pData,double T,std::vector<bezier_t::point_t> pi);

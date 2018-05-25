@@ -59,21 +59,7 @@ std::vector<point_t> generate_wps(){
 
 bezier_wp_t::t_point_t generate_wps_symbolic(){
 
-    const int DIM_VAR = 3;
-    const int DIM_POINT = 3;
-
-    std::vector<point_t> pts = generate_wps();
-    bezier_wp_t::t_point_t wps;
-    for(std::vector<point_t>::const_iterator pit = pts.begin() ; pit != pts.end() ; ++pit ){
-        waypoint_t w = initwp(DIM_POINT,DIM_VAR);
-        if(*pit == bezier_t::point_t::Zero()){
-            w.first = MatrixXX::Identity(DIM_POINT,DIM_VAR);
-        }else{
-            w.second = *pit;
-        }
-        wps.push_back(w);
-    }
-    return wps;
+    return computeConstantWaypointsSymbolic(buildPData(),T);
 }
 
 VectorX eval(const waypoint_t& w, const point_t& x){

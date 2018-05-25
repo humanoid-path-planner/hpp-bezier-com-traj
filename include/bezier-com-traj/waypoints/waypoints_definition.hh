@@ -58,6 +58,16 @@ coefs_t evaluateJerkCurveAtTime(const ProblemData& pData, const std::vector<poin
  */
 std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,double T);
 
+
+/**
+ * @brief computeConstantWaypointsSymbolic compute the constant waypoints of c(t)
+ * defined by the constraints on initial and final states
+ * @param pData
+ * @param T
+ * @return the waypoints expressed as a polynom of the free waypoint
+ */
+bezier_wp_t::t_point_t computeConstantWaypointsSymbolic(const ProblemData& pData,double T);
+
 /**
  * @brief computeWwaypoints compute the constant waypoints of dc(t)
  * defined by the constraints on initial and final states
