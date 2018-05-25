@@ -16,8 +16,30 @@
 
 namespace bezier_com_traj
 {
+
 template<typename T> T initwp();
 waypoint_t initwp(const size_t rows, const size_t cols);
+waypoint_t operator+(const waypoint_t& w1, const waypoint_t& w2);
+waypoint_t operator-(const waypoint_t& w1, const waypoint_t& w2);
+waypoint_t operator*(const double k, const waypoint_t& w);
+waypoint_t operator*(const waypoint_t& w,const double k);
+
+struct waypoint_t{
+    MatrixXX first;
+    VectorX second;
+
+    waypoint_t():first(MatrixXX()),second(VectorX())
+    {}
+
+    waypoint_t(MatrixXX A,VectorX b):first(A),second(b)
+    {}
+
+    static waypoint_t Zero(size_t dim){
+        return initwp(dim,dim);
+    }
+
+};
+
 
 /**
  * @brief Compute the Bernstein polynoms for a given degree
@@ -77,6 +99,8 @@ BEZIER_COM_TRAJ_DLLAPI Matrix3 skew(point_t_tC x);
  */
 int Normalize(Ref_matrixXX A, Ref_vectorX b);
 
+
+
 } // end namespace bezier_com_traj
 
 template<typename Bezier, typename Point>
@@ -123,6 +147,8 @@ Bezier bezier_com_traj::computeBezierCurve(const ConstraintFlag& flag, const dou
     }
     return Bezier (wps.begin(), wps.end(),T);
 }
+
+
 
 
 #endif

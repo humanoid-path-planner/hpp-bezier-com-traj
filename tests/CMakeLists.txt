@@ -36,6 +36,8 @@ ENDMACRO(ADD_TESTCASE)
 
 ADD_TESTCASE (test-transition-quasiStatic False)
 ADD_TESTCASE (test-transition False)
+ADD_TESTCASE (test-bezier-symbolic False)
+
 
 if ( MSVC )
         SET(CMAKE_DEBUG_POSTFIX d)

@@ -42,21 +42,25 @@ typedef Vector3 point3_t;
 typedef Eigen::Vector3d point_t;
 typedef const Eigen::Ref<const point_t>& point_t_tC;
 
-typedef spline::bezier_curve  <double, double, 3, true, point_t > bezier_t;
-typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
-
-typedef std::vector< std::pair<double, int> > T_time;
-typedef T_time::const_iterator CIT_time;
-
 /**
 * @brief waypoint_t a waypoint is composed of a  6*3 matrix that depend
 * on the variable x, and of a 6d vector independent of x, such that
 * each control point of the target bezier curve is given by pi = wix * x + wis
 */
-typedef std::pair<MatrixXX, VectorX> waypoint_t;
 typedef std::pair<matrix6_t, point6_t> waypoint6_t;
 typedef std::pair<matrix3_t, point3_t> waypoint3_t;
 typedef std::pair<Matrix39, point3_t> waypoint9_t;
+struct waypoint_t; // forward declaration
+
+
+typedef spline::bezier_curve  <double, double, 3, true, point_t > bezier_t;
+typedef spline::bezier_curve  <double, double, 3, true, waypoint_t > bezier_wp_t;
+typedef spline::bezier_curve  <double, double, 6, true, point6_t> bezier6_t;
+
+typedef std::vector< std::pair<double, int> > T_time;
+typedef T_time::const_iterator CIT_time;
+
+
 
 typedef std::pair<double,point3_t> coefs_t;
 
