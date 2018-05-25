@@ -410,6 +410,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
         }
     }
     assert(id_rows == (A.rows()) && "The constraints matrices were not fully filled.");
+    assert(id_rows == (b.rows()) && "The constraints matrices were not fully filled.");
 
     return std::make_pair(A,b);
 }
@@ -417,9 +418,17 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
 ResultDataCOMTraj computeCOMTrajContinuous(const ProblemData& pData, const VectorX& Ts){
     if(Ts.size() != pData.contacts_.size())
         throw std::runtime_error("Time phase vector has different size than the number of contact phases");
-
+    const double T = Ts.sum();
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsContinuous(pData,Ts);
 
+    T_time timeArray = computeDiscretizedTimeFixed(Ts,50);
+    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
+    VectorX x = VectorX::Zero(numCol);
+    ResultData resQp = solve(Ab,Hg, x);
+#if QHULL
+    if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
+#endif
+    return genTraj(resQp, pData, T);
 
 }
 
