@@ -24,15 +24,16 @@ namespace bezier_com_traj
 {
 typedef std::pair<double,point3_t> coefs_t;
 
-std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,double T, const T_time& timeArray)
+bezier_wp_t::t_point_t computeDiscretizedWwaypoints(const ProblemData& pData,double T, const T_time& timeArray)
 {
     bezier_wp_t::t_point_t wps = computeWwaypoints(pData,T);
-    std::vector<waypoint6_t> res;
+    bezier_wp_t::t_point_t res;
+    const int DIM_VAR = dimVar(pData);
     std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms((int)wps.size()-1);
     double t, b;
     for (CIT_time cit = timeArray.begin(); cit != timeArray.end(); ++cit)
     {
-        waypoint6_t w = initwp<waypoint6_t>();
+        waypoint_t w = initwp(6,DIM_VAR);
         t = std::min(cit->first / T, 1.);
         for (std::size_t j = 0 ; j < wps.size() ; ++j)
         {
@@ -61,7 +62,7 @@ std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,d
      return std::make_pair<MatrixXX,VectorX>(A,b);
 }
 
-std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const VectorX& h,const Vector3& g,const waypoint6_t& w){
+std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const VectorX& h,const Vector3& g,const waypoint_t& w){
     int dimH = (int)(mH.rows());
     MatrixXX A(dimH,numCol);
     VectorX b(dimH);
@@ -127,7 +128,7 @@ void updateH(const ProblemData& pData, const ContactData& phase, MatrixXX& mH, V
         h -= VectorX::Ones(h.rows())*pData.constraints_.reduce_h_;
 }
 
-void assignStabilityConstraintsForTimeStep(MatrixXX& mH, VectorX& h, const waypoint6_t& wp_w, const int dimH, long int& id_rows,
+void assignStabilityConstraintsForTimeStep(MatrixXX& mH, VectorX& h, const waypoint_t& wp_w, const int dimH, long int& id_rows,
               MatrixXX& A, VectorX& b, const Vector3& g)
 {
     std::pair<MatrixXX,VectorX> Ab_stab = dynamicStabilityConstraints(mH,h,g,wp_w);
@@ -139,7 +140,7 @@ void assignStabilityConstraintsForTimeStep(MatrixXX& mH, VectorX& h, const waypo
 void switchContactPhase(const ProblemData& pData,
                         MatrixXX& A, VectorX& b,
                         MatrixXX& mH, VectorX& h,
-                        const waypoint6_t& wp_w,  ContactData& phase,
+                        const waypoint_t& wp_w,  ContactData& phase,
                         const long int id_phase, long int& id_rows, int& dimH)
 {
     phase = pData.contacts_[id_phase];
@@ -154,7 +155,7 @@ long int assignStabilityConstraints(const ProblemData& pData, MatrixXX& A, Vecto
                                     const double t_total, const std::vector<int>& stepIdForPhase)
 {
     long int id_rows = 0;
-    std::vector<waypoint6_t> wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
+    bezier_wp_t::t_point_t wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
 
     std::size_t id_phase = 0;
     ContactData phase = pData.contacts_[id_phase];
@@ -335,6 +336,91 @@ ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
 #endif
     return genTraj(resQp, pData, T);
+}
+
+long int computeNumIneqContinuous(const ProblemData& pData, const VectorX& Ts,const int degree){
+    long int num_ineq = 0;
+    centroidal_dynamics::MatrixXX Hrow; VectorX h;
+    for(std::vector<ContactData>::const_iterator it = pData.contacts_.begin() ; it != pData.contacts_.end() ; ++it){
+        //kinematics :
+        num_ineq += it->kin_.rows()*(degree+1);
+        //stability :
+        it->contactPhase_->getPolytopeInequalities(Hrow,h);
+        num_ineq += Hrow.rows()*(degree*2 - 2);
+    }
+    // acceleration constraints : 6 per points
+    num_ineq += (degree-1)*6*Ts.size();
+    return num_ineq;
+}
+
+
+std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pData, const VectorX& Ts){
+
+    double T = Ts.sum();
+    const int n_phases = pData.contacts_.size();
+
+    // create the curves for c and w with symbolic waypoints (ie. depend on y)
+    bezier_wp_t::t_point_t wps_c = computeConstantWaypointsSymbolic(pData,T);
+    bezier_wp_t::t_point_t wps_w = computeWwaypoints(pData,T);
+    bezier_wp_t c(wps_c.begin(),wps_c.end(),T);
+    bezier_wp_t ddc = c.compute_derivate(2);
+    bezier_wp_t w(wps_w.begin(),wps_w.end(),T);
+
+
+    // for each splitted curves : add the constraints for each waypoints
+    const long int num_ineq = computeNumIneqContinuous(pData,Ts,c.degree_);
+    long int id_rows = 0;
+    MatrixXX A = MatrixXX::Zero(num_ineq,numCol);
+    VectorX b = VectorX::Zero(num_ineq);
+
+    double current_t = 0;
+    ContactData phase;
+    int size_kin;
+    MatrixXX mH; VectorX h; int dimH;
+    Vector3 acc_bounds = Vector3::Ones()*pData.constraints_.maxAcceleration_;
+
+    // for each phases, split the curve and compute the waypoints of the splitted curves
+    for(size_t id_phase = 0 ; id_phase < Ts.size() ; ++id_phase){
+        bezier_wp_t cs = c.extract(current_t , Ts[id_phase]);
+        bezier_wp_t ddcs = ddc.extract(current_t , Ts[id_phase]);
+        bezier_wp_t ws = w.extract(current_t , Ts[id_phase]);
+        current_t += Ts[id_phase];
+
+        phase = pData.contacts_[id_phase];
+
+        // add kinematics constraints :
+        size_kin = phase.kin_.rows();
+        for(bezier_wp_t::cit_point_t wpit = cs.waypoints().begin() ; wpit != cs.waypoints().end() ; ++wpit){
+            A.block(id_rows,0,size_kin,3) = (phase.Kin_ * wpit->first);
+            b.segment(id_rows,size_kin) = phase.kin_ - (phase.Kin_*wpit->second);
+            id_rows += size_kin;
+        }
+        // add stability constraints
+        updateH(pData, phase, mH, h, dimH);
+        for(bezier_wp_t::cit_point_t wpit = ws.waypoints().begin() ; wpit != ws.waypoints().end() ; ++wpit){
+            assignStabilityConstraintsForTimeStep(mH, h, *wpit, dimH, id_rows, A, b, phase.contactPhase_->m_gravity);
+        }
+        // add acceleration constraints :
+        for(bezier_wp_t::cit_point_t wpit = ddcs.waypoints().begin() ; wpit != ddcs.waypoints().end() ; ++wpit){
+            A.block(id_rows,0,3,3) =  wpit->first; // upper
+            b.segment(id_rows,3) = acc_bounds - wpit->second;
+            A.block(id_rows+3,0,3,3) = - wpit->first; // lower
+            b.segment(id_rows+3,3) = acc_bounds + wpit->second;
+            id_rows += 6;
+        }
+    }
+    assert(id_rows == (A.rows()) && "The constraints matrices were not fully filled.");
+
+    return std::make_pair(A,b);
+}
+
+ResultDataCOMTraj computeCOMTrajContinuous(const ProblemData& pData, const VectorX& Ts){
+    if(Ts.size() != pData.contacts_.size())
+        throw std::runtime_error("Time phase vector has different size than the number of contact phases");
+
+    std::pair<MatrixXX, VectorX> Ab = computeConstraintsContinuous(pData,Ts);
+
+
 }
 
 
