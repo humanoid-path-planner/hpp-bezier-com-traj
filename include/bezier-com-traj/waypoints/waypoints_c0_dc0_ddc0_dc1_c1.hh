@@ -60,8 +60,10 @@ inline std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,do
     return pi;
 }
 
-inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
-    std::vector<waypoint6_t> wps;
+inline bezier_wp_t::t_point_t computeWwaypoints(const ProblemData& pData,double T){
+    bezier_wp_t::t_point_t wps;
+    const int DIM_POINT = 6;
+    const int DIM_VAR = 3;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     std::vector<Matrix3> Cpi;
     for(std::size_t i = 0 ; i < pi.size() ; ++i){
@@ -73,47 +75,47 @@ inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,doubl
     const double alpha = 1/(T2);
 
     // equation of waypoints for curve w found with sympy
-    waypoint6_t w0 = initwp<waypoint6_t>();
+    waypoint_t w0 = initwp(DIM_POINT,DIM_VAR);
     w0.second.head<3>() = (20*pi[0] - 40*pi[1] + 20*pi[2])*alpha;
     w0.second.tail<3>() = 1.0*(1.0*Cg*T2*pi[0] - 40.0*Cpi[0]*pi[1] + 20.0*Cpi[0]*pi[2])*alpha;
     wps.push_back(w0);
-    waypoint6_t w1 = initwp<waypoint6_t>();
+    waypoint_t w1 = initwp(DIM_POINT,DIM_VAR);
     w1.first.block<3,3>(0,0) = 8.57142857142857*alpha*Matrix3::Identity();
     w1.first.block<3,3>(3,0) = 8.57142857142857*Cpi[0]*alpha;
     w1.second.head<3>() = 1.0*(11.4285714285714*pi[0] - 14.2857142857143*pi[1] - 5.71428571428572*pi[2])*alpha;
     w1.second.tail<3>() = 1.0*(0.285714285714286*Cg*T2*pi[0] + 0.714285714285714*Cg*T2*pi[1] - 20.0*Cpi[0]*pi[2] + 14.2857142857143*Cpi[1]*pi[2])*alpha;
     wps.push_back(w1);
-    waypoint6_t w2 = initwp<waypoint6_t>();
+    waypoint_t w2 = initwp(DIM_POINT,DIM_VAR);
     w2.first.block<3,3>(0,0) = 5.71428571428571*alpha*Matrix3::Identity();
     w2.first.block<3,3>(3,0) = 1.0*(-8.57142857142857*Cpi[0] + 14.2857142857143*Cpi[1])*alpha;
     w2.second.head<3>() = 1.0*(5.71428571428571*pi[0] - 14.2857142857143*pi[2] + 2.85714285714286*pi[4])*alpha;
     w2.second.tail<3>() = 1.0*(0.0476190476190479*Cg*T2*pi[0] + 0.476190476190476*Cg*T2*pi[1] + 0.476190476190476*Cg*T2*pi[2] + 2.85714285714286*Cpi[0]*pi[4] - 14.2857142857143*Cpi[1]*pi[2])*alpha;
     wps.push_back(w2);
-    waypoint6_t w3 = initwp<waypoint6_t>();
+    waypoint_t w3 = initwp(DIM_POINT,DIM_VAR);
     w3.first.block<3,3>(0,0) = -2.85714285714286*alpha*Matrix3::Identity();
     w3.first.block<3,3>(3,0) = 1.0*(0.285714285714286*Cg*T2 - 14.2857142857143*Cpi[1] + 11.4285714285714*Cpi[2])*alpha;
     w3.second.head<3>() = 1.0*(2.28571428571429*pi[0] + 5.71428571428571*pi[1] - 11.4285714285714*pi[2] + 5.71428571428571*pi[4] + 0.571428571428571*pi[5])*alpha;
     w3.second.tail<3>() = 1.0*(0.142857142857143*Cg*T2*pi[1] + 0.571428571428571*Cg*T2*pi[2] - 2.85714285714286*Cpi[0]*pi[4] + 0.571428571428571*Cpi[0]*pi[5] + 8.57142857142857*Cpi[1]*pi[4])*alpha;
     wps.push_back(w3);
-    waypoint6_t w4 = initwp<waypoint6_t>();
+    waypoint_t w4 = initwp(DIM_POINT,DIM_VAR);
     w4.first.block<3,3>(0,0) = -11.4285714285714*alpha*Matrix3::Identity();
     w4.first.block<3,3>(3,0) = 1.0*(0.571428571428571*Cg*T2 - 11.4285714285714*Cpi[2])*alpha;
     w4.second.head<3>() = 1.0*(0.571428571428571*pi[0] + 5.71428571428571*pi[1] - 2.85714285714286*pi[2] + 5.71428571428571*pi[4] + 2.28571428571429*pi[5])*alpha;
     w4.second.tail<3>() = 1.0*(0.285714285714286*Cg*T2*pi[2] + 0.142857142857143*Cg*T2*pi[4] - 0.571428571428572*Cpi[0]*pi[5] - 8.57142857142857*Cpi[1]*pi[4] + 2.85714285714286*Cpi[1]*pi[5] + 14.2857142857143*Cpi[2]*pi[4])*alpha;
     wps.push_back(w4);
-    waypoint6_t w5 = initwp<waypoint6_t>();
+    waypoint_t w5 = initwp(DIM_POINT,DIM_VAR);
     w5.first.block<3,3>(0,0) = -14.2857142857143*alpha*Matrix3::Identity();
     w5.first.block<3,3>(3,0) = 1.0*(0.476190476190476*Cg*T2 - 14.2857142857143*Cpi[4])*alpha;
     w5.second.head<3>() = 1.0*(2.85714285714286*pi[1] + 5.71428571428571*pi[2] + 5.71428571428571*pi[5])*alpha;
     w5.second.tail<3>() = 1.0*(0.476190476190476*Cg*T2*pi[4] + 0.0476190476190476*Cg*T2*pi[5] - 2.85714285714286*Cpi[1]*pi[5] - 14.2857142857143*Cpi[2]*pi[4] + 8.57142857142857*Cpi[2]*pi[5])*alpha;
     wps.push_back(w5);
-    waypoint6_t w6 = initwp<waypoint6_t>();
+    waypoint_t w6 = initwp(DIM_POINT,DIM_VAR);
     w6.first.block<3,3>(0,0) = -5.71428571428572*alpha*Matrix3::Identity();
     w6.first.block<3,3>(3,0) = 1.0*(14.2857142857143*Cpi[4] - 20.0*Cpi[5])*alpha;
     w6.second.head<3>() = 1.0*(8.57142857142857*pi[2] - 14.2857142857143*pi[4] + 11.4285714285714*pi[5])*alpha;
     w6.second.tail<3>() = 1.0*(0.714285714285714*Cg*T2*pi[4] + 0.285714285714286*Cg*T2*pi[5] - 8.57142857142858*Cpi[2]*pi[5])*alpha;
     wps.push_back(w6);
-    waypoint6_t w7 = initwp<waypoint6_t>();
+    waypoint_t w7 = initwp(DIM_POINT,DIM_VAR);
     w7.first.block<3,3>(0,0) = 20*alpha*Matrix3::Identity();
     w7.first.block<3,3>(3,0) = 1.0*(20.0*Cpi[5])*alpha;
     w7.second.head<3>() = (-40*pi[4] + 20*pi[5])*alpha;

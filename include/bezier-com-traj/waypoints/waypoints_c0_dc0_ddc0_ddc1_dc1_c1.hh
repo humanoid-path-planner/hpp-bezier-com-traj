@@ -63,8 +63,10 @@ inline std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,do
     return pi;
 }
 
-inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
-    std::vector<waypoint6_t> wps;
+inline bezier_wp_t::t_point_t computeWwaypoints(const ProblemData& pData,double T){
+    bezier_wp_t::t_point_t wps;
+    const int DIM_POINT = 6;
+    const int DIM_VAR = 3;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     std::vector<Matrix3> Cpi;
     for(std::size_t i = 0 ; i < pi.size() ; ++i){
@@ -76,59 +78,59 @@ inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,doubl
     const double alpha = 1/(T2);
 
     // equation of waypoints for curve w found with sympy
-    waypoint6_t w0 = initwp<waypoint6_t>();
+    waypoint_t w0 = initwp(DIM_POINT,DIM_VAR);
     w0.second.head<3>() = (30*pi[0] - 60*pi[1] + 30*pi[2])*alpha;
     w0.second.tail<3>() = 1.0*(1.0*Cg*T2*pi[0] - 60.0*Cpi[0]*pi[1] + 30.0*Cpi[0]*pi[2])*alpha;
     wps.push_back(w0);
-    waypoint6_t w1 = initwp<waypoint6_t>();
+    waypoint_t w1 = initwp(DIM_POINT,DIM_VAR);
     w1.first.block<3,3>(0,0) = 13.3333333333333*alpha*Matrix3::Identity();
     w1.first.block<3,3>(3,0) = 13.3333333333333*Cpi[0]*alpha;
     w1.second.head<3>() = 1.0*(16.6666666666667*pi[0] - 20.0*pi[1] - 10.0*pi[2])*alpha;
     w1.second.tail<3>() = 1.0*(0.333333333333333*Cg*T2*pi[0] + 0.666666666666667*Cg*T2*pi[1] - 30.0*Cpi[0]*pi[2] + 20.0*Cpi[1]*pi[2])*alpha;
     wps.push_back(w1);
-    waypoint6_t w2 = initwp<waypoint6_t>();
+    waypoint_t w2 = initwp(DIM_POINT,DIM_VAR);
     w2.first.block<3,3>(0,0) = 6.66666666666667*alpha*Matrix3::Identity();
     w2.first.block<3,3>(3,0) = 1.0*(-13.3333333333333*Cpi[0] + 20.0*Cpi[1])*alpha;
     w2.second.head<3>() = 1.0*(8.33333333333333*pi[0] - 20.0*pi[2] + 5.0*pi[4])*alpha;
     w2.second.tail<3>() = 1.0*(0.0833333333333334*Cg*T2*pi[0] + 0.5*Cg*T2*pi[1] + 0.416666666666667*Cg*T2*pi[2] + 5.0*Cpi[0]*pi[4] - 20.0*Cpi[1]*pi[2])*alpha;
     wps.push_back(w2);
-    waypoint6_t w3 = initwp<waypoint6_t>();
+    waypoint_t w3 = initwp(DIM_POINT,DIM_VAR);
     w3.first.block<3,3>(0,0) = -5.71428571428572*alpha*Matrix3::Identity();
     w3.first.block<3,3>(3,0) = 1.0*(0.238095238095238*Cg*T2 - 20.0*Cpi[1] + 14.2857142857143*Cpi[2])*alpha;
     w3.second.head<3>() = 1.0*(3.57142857142857*pi[0] + 7.14285714285714*pi[1] - 14.2857142857143*pi[2] + 7.85714285714286*pi[4] + 1.42857142857143*pi[5])*alpha;
     w3.second.tail<3>() = 1.0*(0.0119047619047619*Cg*T2*pi[0] + 0.214285714285714*Cg*T2*pi[1] + 0.535714285714286*Cg*T2*pi[2] - 5.0*Cpi[0]*pi[4] + 1.42857142857143*Cpi[0]*pi[5] + 12.8571428571429*Cpi[1]*pi[4])*alpha;
     wps.push_back(w3);
-    waypoint6_t w4 = initwp<waypoint6_t>();
+    waypoint_t w4 = initwp(DIM_POINT,DIM_VAR);
     w4.first.block<3,3>(0,0) = -14.2857142857143*alpha*Matrix3::Identity();
     w4.first.block<3,3>(3,0) = 1.0*(0.476190476190476*Cg*T2 - 14.2857142857143*Cpi[2])*alpha;
     w4.second.head<3>() = 1.0*(1.19047619047619*pi[0] + 7.14285714285714*pi[1] - 3.57142857142857*pi[2] + 5.0*pi[4] + 4.28571428571429*pi[5] + 0.238095238095238*pi[6])*alpha;
     w4.second.tail<3>() = 1.0*( 0.0476190476190471*Cg*T2*pi[1] + 0.357142857142857*Cg*T2*pi[2] + 0.119047619047619*Cg*T2*pi[4] - 1.42857142857143*Cpi[0]*pi[5] + 0.238095238095238*Cpi[0]*pi[6] - 12.8571428571429*Cpi[1]*pi[4] + 5.71428571428571*Cpi[1]*pi[5] + 17.8571428571429*Cpi[2]*pi[4])*alpha;
     wps.push_back(w4);
-    waypoint6_t w5 = initwp<waypoint6_t>();
+    waypoint_t w5 = initwp(DIM_POINT,DIM_VAR);
     w5.first.block<3,3>(0,0) = -14.2857142857143*alpha*Matrix3::Identity();
     w5.first.block<3,3>(3,0) = 1.0*(0.476190476190476*Cg*T2  - 14.2857142857143*Cpi[4])*alpha;
     w5.second.head<3>() = 1.0*(0.238095238095238*pi[0] + 4.28571428571429*pi[1] + 5.0*pi[2] - 3.57142857142857*pi[4] + 7.14285714285714*pi[5] + 1.19047619047619*pi[6])*alpha;
     w5.second.tail<3>() = 1.0*( + 0.11904761904762*Cg*T2*pi[2] + 0.357142857142857*Cg*T2*pi[4] + 0.0476190476190476*Cg*T2*pi[5]  - 0.238095238095238*Cpi[0]*pi[6] - 5.71428571428572*Cpi[1]*pi[5] + 1.42857142857143*Cpi[1]*pi[6] - 17.8571428571429*Cpi[2]*pi[4] + 12.8571428571429*Cpi[2]*pi[5])*alpha;
     wps.push_back(w5);
-    waypoint6_t w6 = initwp<waypoint6_t>();
+    waypoint_t w6 = initwp(DIM_POINT,DIM_VAR);
     w6.first.block<3,3>(0,0) = -5.71428571428571*alpha*Matrix3::Identity();
     w6.first.block<3,3>(3,0) = 1.0*(0.238095238095238*Cg*T2 + 14.2857142857143*Cpi[4] - 20.0*Cpi[5])*alpha;
     w6.second.head<3>() = 1.0*(1.42857142857143*pi[1] + 7.85714285714286*pi[2] - 14.2857142857143*pi[4] + 7.14285714285715*pi[5] + 3.57142857142857*pi[6])*alpha;
     w6.second.tail<3>() = 1.0*(0.535714285714286*Cg*T2*pi[4] + 0.214285714285714*Cg*T2*pi[5] + 0.0119047619047619*Cg*T2*pi[6] - 1.42857142857143*Cpi[1]*pi[6]  - 12.8571428571429*Cpi[2]*pi[5] + 5.0*Cpi[2]*pi[6])*alpha;
     wps.push_back(w6);
-    waypoint6_t w7 = initwp<waypoint6_t>();
+    waypoint_t w7 = initwp(DIM_POINT,DIM_VAR);
     w7.first.block<3,3>(0,0) = 6.66666666666667*alpha*Matrix3::Identity();
     w7.first.block<3,3>(3,0) = 1.0*( 20.0*Cpi[5] - 13.3333333333333*Cpi[6])*alpha;
     w7.second.head<3>() = 1.0*(5.0*pi[2] - 20.0*pi[4]  + 8.33333333333333*pi[6])*alpha;
     w7.second.tail<3>() = 1.0*( 0.416666666666667*Cg*T2*pi[4] + 0.5*Cg*T2*pi[5] + 0.0833333333333333*Cg*T2*pi[6]  - 5.0*Cpi[2]*pi[6] + 20.0*Cpi[4]*pi[5])*alpha;
     wps.push_back(w7);
-    waypoint6_t w8 = initwp<waypoint6_t>();
+    waypoint_t w8 = initwp(DIM_POINT,DIM_VAR);
     w8.first.block<3,3>(0,0) = 13.3333333333333*alpha*Matrix3::Identity();
     w8.first.block<3,3>(3,0) = 1.0*( 13.3333333333333*Cpi[6])*alpha;
     w8.second.head<3>() = 1.0*(-9.99999999999999*pi[4] - 20.0*pi[5] + 16.6666666666667*pi[6])*alpha;
     w8.second.tail<3>() = 1.0*( 0.666666666666667*Cg*T2*pi[5] + 0.333333333333333*Cg*T2*pi[6]  - 20.0*Cpi[4]*pi[5] + 30.0*Cpi[4]*pi[6])*alpha;
     wps.push_back(w8);
-    waypoint6_t w9 = initwp<waypoint6_t>();
+    waypoint_t w9 = initwp(DIM_POINT,DIM_VAR);
     w9.second.head<3>() = (30*pi[4] - 60*pi[5] + 30*pi[6])*alpha;
     w9.second.tail<3>() = 1.0*(1.0*Cg*T2*pi[6] - 30.0*Cpi[4]*pi[6] + 60.0*Cpi[5]*pi[6])*alpha;
     wps.push_back(w9);

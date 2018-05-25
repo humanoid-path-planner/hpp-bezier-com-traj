@@ -26,7 +26,7 @@ typedef std::pair<double,point3_t> coefs_t;
 
 std::vector<waypoint6_t> computeDiscretizedWwaypoints(const ProblemData& pData,double T, const T_time& timeArray)
 {
-    std::vector<waypoint6_t> wps = computeWwaypoints(pData,T);
+    bezier_wp_t::t_point_t wps = computeWwaypoints(pData,T);
     std::vector<waypoint6_t> res;
     std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms((int)wps.size()-1);
     double t, b;

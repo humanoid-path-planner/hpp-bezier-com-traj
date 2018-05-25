@@ -100,7 +100,7 @@ waypoint_t evaluateJerkCurveWaypointAtTime(const ProblemData& pData, const doubl
  * @param T
  * @return
  */
-std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T);
+bezier_wp_t::t_point_t computeWwaypoints(const ProblemData& pData,double T);
 
 
 coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T);

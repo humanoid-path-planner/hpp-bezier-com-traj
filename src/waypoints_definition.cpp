@@ -313,7 +313,7 @@ std::vector<waypoint_t> computeJerkWaypoints(const ProblemData& pData,double T,s
 }
 
 
-typedef std::vector<waypoint6_t> (*compWp) (const ProblemData& pData,double T);
+typedef  bezier_wp_t::t_point_t (*compWp) (const ProblemData& pData,double T);
 typedef std::map<ConstraintFlag,compWp > T_compWp;
 typedef T_compWp::const_iterator         CIT_compWp;
 static const T_compWp compWps = boost::assign::map_list_of
@@ -332,7 +332,7 @@ static const T_compWp compWps = boost::assign::map_list_of
  * @param T
  * @return
  */
- std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T)
+ bezier_wp_t::t_point_t computeWwaypoints(const ProblemData& pData,double T)
 {
     CIT_compWp cit = compWps.find(pData.constraints_.flag_);
     if(cit != compWps.end())

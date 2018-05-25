@@ -52,8 +52,10 @@ inline std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,do
     return pi;
 }
 
-inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
-    std::vector<waypoint6_t> wps;
+inline bezier_wp_t::t_point_t computeWwaypoints(const ProblemData& pData,double T){
+    bezier_wp_t::t_point_t wps;
+    const int DIM_POINT = 6;
+    const int DIM_VAR = 3;
     std::vector<point_t> pi = c0_dc0_dc1::computeConstantWaypoints(pData,T);
     std::vector<Matrix3> Cpi;
     for(std::size_t i = 0 ; i < pi.size() ; ++i){
@@ -65,54 +67,32 @@ inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,doubl
     const double alpha = 1./(T2);
     // equation of waypoints for curve w found with sympy
     // TODO Apparently sympy equations are false ...
-    /*waypoint6_t w0 = initwp<waypoint6_t>();
-    w0.first.block<3,3>(0,0) = 6*alpha*Matrix3::Identity();
-    w0.first.block<3,3>(3,0) = 6.0*Cpi[0]*alpha;
-    w0.second.head<3>() = (6*pi[0] - 12*pi[1])*alpha;
-    w0.second.tail<3>() = 1.0*(1.0*Cg*T2*pi[0] - 12.0*Cpi[0]*pi[1])*alpha;
-    wps.push_back(w0);
-    waypoint6_t w1 = initwp<waypoint6_t>();
-    w1.first.block<3,3>(0,0) = 2.0*alpha*Matrix3::Identity();
-    w1.first.block<3,3>(3,0) = 1.0*(-4.0*Cpi[0] + 6.0*Cpi[1])*alpha;
-    w1.second.head<3>() = 1.0*(4.0*pi[0] - 6.0*pi[1])*alpha;
-    w1.second.tail<3>() = 1.0*Cg*pi[1];
-    wps.push_back(w1);
-    waypoint6_t w2 = initwp<waypoint6_t>();
-    w2.first.block<3,3>(0,0) = -2.0*alpha*Matrix3::Identity();
-    w2.first.block<3,3>(3,0) = 1.0*(1.0*Cg* - 2.0*Cpi[0])*alpha;
-    w2.second.head<3>() = 2.0*pi[0]*alpha;
-    wps.push_back(w2);
-    waypoint6_t w3 = initwp<waypoint6_t>();
-    w3.first.block<3,3>(0,0) = -6*alpha*Matrix3::Identity();
-    w3.first.block<3,3>(3,0) = 1.0*(1.0*Cg* - 6.0*Cpi[1])*alpha;
-    w3.second.head<3>() = 6*pi[1]*alpha;
-    wps.push_back(w3);
-    return wps;*/
 
-    waypoint6_t w0 = initwp<waypoint6_t>();
+
+    waypoint_t w0 = initwp(DIM_POINT,DIM_VAR);
     w0.first.block<3,3>(0,0) = 6*alpha*Matrix3::Identity();
     w0.first.block<3,3>(3,0) = 6.0*Cpi[0]*alpha;
     w0.second.head<3>() = (6*pi[0] - 12*pi[1])*alpha;
     w0.second.tail<3>() = (-Cpi[0])*(12.0*pi[1]*alpha + g);
     wps.push_back(w0);
-    waypoint6_t w1 = initwp<waypoint6_t>();
+    waypoint_t w1 = initwp(DIM_POINT,DIM_VAR);
     w1.first.block<3,3>(0,0) =  3*alpha*Matrix3::Identity();
     w1.first.block<3,3>(3,0) = skew(1.5 * (3*pi[1] - pi[0]))*alpha;
     w1.second.head<3>() = 1.5 *alpha* (3* pi[0] - 5*pi[1]);
     w1.second.tail<3>() = (3*alpha*pi[0]).cross(-pi[1]) + 0.25 * (Cg * (3*pi[1] + pi[0]));
     wps.push_back(w1);
-    waypoint6_t w2 = initwp<waypoint6_t>();
+    waypoint_t w2 = initwp(DIM_POINT,DIM_VAR);
     w2.first.block<3,3>(0,0) = 0*alpha*Matrix3::Identity();
     w2.first.block<3,3>(3,0) = skew(0.5*g - 3*alpha* pi[0] + 3*alpha*pi[1]);
     w2.second.head<3>() = 3*alpha*(pi[0] - pi[1]);
     w2.second.tail<3>() = 0.5 * Cg*pi[1];
     wps.push_back(w2);
-    waypoint6_t w3 = initwp<waypoint6_t>();
+    waypoint_t w3 = initwp(DIM_POINT,DIM_VAR);
     w3.first.block<3,3>(0,0) = -3*alpha*Matrix3::Identity();
     w3.first.block<3,3>(3,0) = skew(g - 1.5 *alpha* (pi[1] + pi[0]));
     w3.second.head<3>() = 1.5*alpha * (pi[1] + pi[0]);
     wps.push_back(w3);
-    waypoint6_t w4 = initwp<waypoint6_t>();
+    waypoint_t w4 = initwp(DIM_POINT,DIM_VAR);
     w4.first.block<3,3>(0,0) = -6*alpha * Matrix3::Identity();
     w4.first.block<3,3>(3,0) = skew(g - 6*alpha* pi[1]);
     w4.second.head<3>() = 6*pi[1]*alpha;

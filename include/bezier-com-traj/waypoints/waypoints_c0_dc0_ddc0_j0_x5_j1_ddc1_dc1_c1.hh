@@ -176,8 +176,10 @@ inline std::vector<point_t> computeConstantWaypoints(const ProblemData& pData,do
 }
 
 //TODO
-inline std::vector<waypoint6_t> computeWwaypoints(const ProblemData& pData,double T){
-    std::vector<waypoint6_t> wps;
+inline bezier_wp_t::t_point_t computeWwaypoints(const ProblemData& pData,double T){
+    bezier_wp_t::t_point_t wps;
+    const int DIM_POINT = 6;
+    const int DIM_VAR = 15;
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
     std::vector<Matrix3> Cpi;
     for(std::size_t i = 0 ; i < pi.size() ; ++i){
