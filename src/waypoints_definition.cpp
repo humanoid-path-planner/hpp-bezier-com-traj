@@ -16,6 +16,7 @@
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_j0_j1_ddc1_dc1_c1.hh>
 #include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1.hh>
+#include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1.hh>
 
 #include "boost/assign.hpp"
 
@@ -96,7 +97,9 @@ static const T_evalAccCurveAtTime evalAccCurveAtTimes = boost::assign::map_list_
  typedef T_evalCurveWaypointAtTime::const_iterator         CIT_evalCurveWaypointAtTime;
  static const T_evalCurveWaypointAtTime evalCurveWaypointAtTimes = boost::assign::map_list_of
          (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateCurveWaypointAtTime)
-         (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateCurveWaypointAtTime);
+         (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateCurveWaypointAtTime)
+         (c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::evaluateCurveWaypointAtTime);
+
 
  /** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t, defined by the waypoint pi and one free waypoint (x)
   * @param pi constant waypoints of the curve
@@ -120,7 +123,8 @@ static const T_evalAccCurveAtTime evalAccCurveAtTimes = boost::assign::map_list_
   typedef T_evalVelCurveWaypointAtTime::const_iterator         CIT_evalVelCurveWaypointAtTime;
   static const T_evalVelCurveWaypointAtTime evalVelCurveWaypointAtTimes = boost::assign::map_list_of
           (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateVelocityCurveWaypointAtTime)
-          (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateVelocityCurveWaypointAtTime);
+          (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateVelocityCurveWaypointAtTime)
+          (c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::evaluateVelocityCurveWaypointAtTime);
 
   /** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t, defined by the waypoint pi and one free waypoint (x)
    * @param pi constant waypoints of the curve
@@ -144,7 +148,8 @@ static const T_evalAccCurveAtTime evalAccCurveAtTimes = boost::assign::map_list_
    typedef T_evalAccCurveWaypointAtTime::const_iterator         CIT_evalAccCurveWaypointAtTime;
    static const T_evalAccCurveWaypointAtTime evalAccCurveWaypointAtTimes = boost::assign::map_list_of
            (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateAccelerationCurveWaypointAtTime)
-           (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateAccelerationCurveWaypointAtTime);
+           (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateAccelerationCurveWaypointAtTime)
+           (c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::evaluateAccelerationCurveWaypointAtTime);
 
    /** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t, defined by the waypoint pi and one free waypoint (x)
     * @param pi constant waypoints of the curve
@@ -168,7 +173,9 @@ typedef std::map<ConstraintFlag,evalJerkCurveWaypointAtTime > T_evalJerkCurveWay
 typedef T_evalJerkCurveWaypointAtTime::const_iterator         CIT_evalJerkCurveWaypointAtTime;
 static const T_evalJerkCurveWaypointAtTime evalJerkCurveWaypointAtTimes = boost::assign::map_list_of
         (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::evaluateJerkCurveWaypointAtTime)
-        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateJerkCurveWaypointAtTime);
+        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::evaluateJerkCurveWaypointAtTime)
+        (c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::evaluateJerkCurveWaypointAtTime);
+
 
 /** @brief evaluateCurveAtTime compute the expression of the point on the curve c at t, defined by the waypoint pi and one free waypoint (x)
  * @param pi constant waypoints of the curve
@@ -199,7 +206,8 @@ static const T_compConsWp compConsWps = boost::assign::map_list_of
         (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::computeConstantWaypoints)
         (c0_dc0_ddc0_ddc1_dc1_c1::flag  , c0_dc0_ddc0_ddc1_dc1_c1::computeConstantWaypoints)
         (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::computeConstantWaypoints)
-        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeConstantWaypoints);
+        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeConstantWaypoints)
+        (c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::computeConstantWaypoints);
 
 /**
  * @brief computeConstantWaypoints compute the constant waypoints of c(t) defined by the constraints on initial and final states
@@ -225,7 +233,9 @@ static const T_compConsWp compConsWps = boost::assign::map_list_of
  typedef T_compVelWp::const_iterator         CIT_compVelWp;
  static const T_compVelWp compVelWps = boost::assign::map_list_of
          (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::computeVelocityWaypoints)
-         (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeVelocityWaypoints);
+         (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeVelocityWaypoints)
+         (c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::computeVelocityWaypoints);
+
 
  /**
   * @brief computeConstantWaypoints compute the constant waypoints of c(t) defined by the constraints on initial and final states
@@ -251,7 +261,9 @@ static const T_compConsWp compConsWps = boost::assign::map_list_of
   typedef T_compAccWp::const_iterator         CIT_compAccWp;
   static const T_compAccWp compAccWps = boost::assign::map_list_of
           (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::computeAccelerationWaypoints)
-          (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeAccelerationWaypoints);
+          (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeAccelerationWaypoints)
+          (c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::computeAccelerationWaypoints);
+
 
   /**
    * @brief computeConstantWaypoints compute the constant waypoints of c(t) defined by the constraints on initial and final states
@@ -277,7 +289,9 @@ typedef std::map<ConstraintFlag,compJerkWp > T_compJerkWp;
 typedef T_compJerkWp::const_iterator         CIT_compJerkWp;
 static const T_compJerkWp compJerkWps = boost::assign::map_list_of
        (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::computeJerkWaypoints)
-        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeJerkWaypoints);
+        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeJerkWaypoints)
+        (c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::computeJerkWaypoints);
+
 
 
 /**
@@ -309,8 +323,7 @@ static const T_compWp compWps = boost::assign::map_list_of
         (c0_dc0_ddc0_c1::flag           , c0_dc0_ddc0_c1::computeWwaypoints)
         (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::computeWwaypoints)
         (c0_dc0_ddc0_ddc1_dc1_c1::flag  , c0_dc0_ddc0_ddc1_dc1_c1::computeWwaypoints)
-        (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::computeWwaypoints)
-        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeWwaypoints);
+        (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::computeWwaypoints);
 
 
 /**
@@ -340,8 +353,7 @@ static const T_compFinalVelP compFinalVelPs = boost::assign::map_list_of
         (c0_dc0_dc1_c1::flag            , c0_dc0_dc1_c1::computeFinalVelocityPoint)
         (c0_dc0_ddc0_c1::flag           , c0_dc0_ddc0_c1::computeFinalVelocityPoint)
         (c0_dc0_ddc0_dc1_c1::flag       , c0_dc0_ddc0_dc1_c1::computeFinalVelocityPoint)
-        (c0_dc0_ddc0_ddc1_dc1_c1::flag  , c0_dc0_ddc0_ddc1_dc1_c1::computeFinalVelocityPoint)
-        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeFinalVelocityPoint);
+        (c0_dc0_ddc0_ddc1_dc1_c1::flag  , c0_dc0_ddc0_ddc1_dc1_c1::computeFinalVelocityPoint);
 
 
  coefs_t computeFinalVelocityPoint(const ProblemData& pData,double T)
@@ -357,7 +369,11 @@ static const T_compFinalVelP compFinalVelPs = boost::assign::map_list_of
 }
 
 int dimVar(const ProblemData& pData){
-    if(pData.constraints_.flag_ & THREE_FREE_VAR)
+    if(pData.constraints_.flag_ & FIVE_FREE_VAR)
+        return 15;
+    else if(pData.constraints_.flag_ & FOUR_FREE_VAR)
+        return 12;
+    else if(pData.constraints_.flag_ & THREE_FREE_VAR)
         return 9;
     else if(pData.constraints_.flag_ & TWO_FREE_VAR)
         return 6;
@@ -371,7 +387,9 @@ typedef std::map<ConstraintFlag,compVelCost > T_compVelCost;
 typedef T_compVelCost::const_iterator         CIT_compVelCost;
 static const T_compVelCost compVelCosts = boost::assign::map_list_of
        (c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_j1_ddc1_dc1_c1::computeVelocityCost)
-        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeVelocityCost);
+        (c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1::computeVelocityCost)
+        (c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::flag , c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1::computeVelocityCost);
+
 
 
 /**

@@ -352,6 +352,12 @@ inline std::pair<MatrixXX,VectorX> computeVelocityCost(const ProblemData& pData,
 
     g =  (-7.8321678321748*pi[0] - 7.83216783237586*pi[1] + 9.13752913728184*pi[3] + 9.13752913758454*pi[5]  - 7.83216783216697*pi[7] - 7.83216783216777*pi[8])/(2*T);
     H = Matrix3::Identity() *  6.52680652684107 / (T);
+
+    double norm=H.norm();
+    H /= norm;
+    g /= norm;
+
+
     return std::make_pair(H,g);
 }
 

@@ -372,6 +372,11 @@ inline std::pair<MatrixXX,VectorX> computeVelocityCost(const ProblemData& pData,
     H.block<3,3>(3,6) = Matrix3::Identity() *   10.8844097036619/ (2*T); // x1*x2 / 2
     H.block<3,3>(6,3) = Matrix3::Identity() *   10.8844097036619/ (2*T); // x1*x2 / 2
 
+    double norm=H.norm();
+    H /= norm;
+    g /= norm;
+
+
     return std::make_pair(H,g);
 }
 

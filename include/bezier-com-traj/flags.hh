@@ -29,6 +29,8 @@ namespace bezier_com_traj
         ONE_FREE_VAR   = 0x00000,
         TWO_FREE_VAR   = 0x00100,
         THREE_FREE_VAR = 0x00200,
+        FOUR_FREE_VAR  = 0x00400,
+        FIVE_FREE_VAR  = 0x00800,
         UNKNOWN   = 0x01000
       };
 

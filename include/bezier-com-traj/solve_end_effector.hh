@@ -14,8 +14,8 @@ namespace bezier_com_traj
 {
 typedef std::pair<double,point3_t> coefs_t;
 const int DIM_POINT=3;
-const int NUM_DISCRETIZATION = 11;
-const bool verbose = false;
+//const int NUM_DISCRETIZATION = 11;
+const bool verbose = true;
 
 
 /**
@@ -102,9 +102,10 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
             empty_jerk++;
     }
 
-    A = MatrixXX::Zero(2*DIM_POINT*(wps_acc.size()-empty_acc+wps_vel.size()-empty_vel+wps_jerk.size() - empty_jerk)+DIM_POINT,DIM_POINT); // *2 because we have to put the lower and upper bound for each one, +DIM_POINT for the constraint on x[z]
+    A = MatrixXX::Zero((2*DIM_POINT*(wps_acc.size()-empty_acc+wps_vel.size()-empty_vel+wps_jerk.size() - empty_jerk))+DIM_VAR,DIM_VAR); // *2 because we have to put the lower and upper bound for each one, +DIM_VAR for the constraint on x[z]
     b = VectorX::Zero(A.rows());
     int i = 0;
+
     //upper acc bounds
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_acc.begin(); wpcit != wps_acc.end(); ++wpcit)
     {
@@ -123,6 +124,7 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
             ++i;
         }
     }
+
     //upper velocity bounds
     for (std::vector<waypoint_t>::const_iterator wpcit = wps_vel.begin(); wpcit != wps_vel.end(); ++wpcit)
     {
@@ -208,7 +210,7 @@ void computeDistanceCostFunction(int numPoints,const ProblemData& pData, double 
         g += ((ckcit->second - pk).transpose() * ckcit->first).transpose();
         i++;
     }
-    double norm=H.norm(); // because H is always diagonal.
+    double norm=H.norm();
     H /= norm;
     g /= norm;
 }
@@ -222,6 +224,12 @@ void computeC_of_T (const ProblemData& pData,double T, ResultDataCOMTraj& res){
         wps[4] = res.x.segment<3>(0);
         wps[5] = res.x.segment<3>(3);
         wps[6] = res.x.segment<3>(6);
+    }else if(dimVar(pData) ==15){
+        wps[4] = res.x.segment<3>(0);
+        wps[5] = res.x.segment<3>(3);
+        wps[6] = res.x.segment<3>(6);
+        wps[7] = res.x.segment<3>(9);
+        wps[8] = res.x.segment<3>(12);
     }
     res.c_of_t_ = bezier_t (wps.begin(), wps.end(),T);
     if(verbose)
@@ -319,8 +327,8 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     MatrixXX A;
     VectorX b;
     Vector3 jerk_bounds(10000,10000,10000);
-    Vector3 acc_bounds(500,500,500);
-    Vector3 vel_bounds(500,500,500);
+    Vector3 acc_bounds(10000,10000,10000);
+    Vector3 vel_bounds(10000,10000,10000);
     const int DIM_VAR = dimVar(pData);
     computeConstraintsMatrix(pData,wps_acc,wps_vel,acc_bounds,vel_bounds,A,b,wps_jerk,jerk_bounds);
   //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
@@ -358,6 +366,12 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
       std::cout<<"End eff g = "<<std::endl<<g<<std::endl;
     }
     // call the solver
+    std::cout<<"Dim Var = "<<dimVar(pData)<<std::endl;
+    std::cout<<"Dim H   = "<<H.rows()<<" x "<<H.cols()<<std::endl;
+    std::cout<<"Dim g   = "<<g.rows()<<std::endl;
+    std::cout<<"Dim A   = "<<A.rows()<<" x "<<A.cols()<<std::endl;
+    std::cout<<"Dim b   = "<<b.rows()<<std::endl;
+
     VectorX init = VectorX(dimVar(pData));
    // init = (pData.c0_ + pData.c1_)/2.;
    // init =pData.c0_;
