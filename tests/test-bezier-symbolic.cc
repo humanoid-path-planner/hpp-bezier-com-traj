@@ -28,8 +28,9 @@
 #include <spline/bezier_curve.h>
 
 using namespace bezier_com_traj;
+const double T = 1.5;
 
-std::vector<point_t> generate_wps(){
+ProblemData buildPData(){
     ProblemData pData;
     pData.c0_ = Vector3(0,0.5,5.);
     pData.c1_ = Vector3(2,-0.5,5.);
@@ -38,7 +39,21 @@ std::vector<point_t> generate_wps(){
     pData.ddc0_ = Vector3::Zero();
     pData.ddc1_ = Vector3::Zero();
     pData.constraints_.flag_ = INIT_POS | INIT_VEL | END_VEL | END_POS;
-    return computeConstantWaypoints(pData,1.);
+
+    MatrixX3 normals(2,3),positions(2,3);
+    normals.block<1,3>(0,0)=Vector3(0,0,1);
+    positions.block<1,3>(0,0)=Vector3(0,0.1,0);
+    normals.block<1,3>(1,0)=Vector3(0,0,1);
+    positions.block<1,3>(1,0)=Vector3(0,-0.1,0);
+    std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals,positions,LX,LY);
+    pData.contacts_.push_back(new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first,contacts.second)));
+
+
+    return pData;
+}
+
+std::vector<point_t> generate_wps(){
+    return computeConstantWaypoints(buildPData(),T);
 }
 
 
@@ -61,12 +76,12 @@ bezier_wp_t::t_point_t generate_wps_symbolic(){
     return wps;
 }
 
-
-point_t eval(const waypoint_t& w, const point_t& x){
+VectorX eval(const waypoint_t& w, const point_t& x){
     return w.first*x + w.second;
 }
 
-void vectorEqual(const point_t& a , const point_t& b, const double EPS = 1e-14){
+void vectorEqual(const VectorX& a , const VectorX& b, const double EPS = 1e-14){
+    BOOST_CHECK_EQUAL(a.size(),b.size());
     BOOST_CHECK((a-b).norm() < EPS);
 }
 
@@ -78,11 +93,11 @@ BOOST_AUTO_TEST_CASE(symbolic_eval_c){
     point_t y(1,0.2,4.5);
     pts[2] = y;
 
-    bezier_t c (pts.begin(),pts.end());
-    bezier_wp_t c_sym (wps.begin(),wps.end());
+    bezier_t c (pts.begin(),pts.end(),T);
+    bezier_wp_t c_sym (wps.begin(),wps.end(),T);
 
     double t = 0.;
-    while(t<1.){
+    while(t<T){
         vectorEqual(c(t),eval(c_sym(t),y));
         t += 0.01;
     }
@@ -94,13 +109,13 @@ BOOST_AUTO_TEST_CASE(symbolic_eval_dc){
     point_t y(1,0.2,4.5);
     pts[2] = y;
 
-    bezier_t c (pts.begin(),pts.end());
+    bezier_t c (pts.begin(),pts.end(),T);
     bezier_t dc = c.compute_derivate(1);
-    bezier_wp_t c_sym (wps.begin(),wps.end());
+    bezier_wp_t c_sym (wps.begin(),wps.end(),T);
     bezier_wp_t dc_sym = c_sym.compute_derivate(1);
 
     double t = 0.;
-    while(t<1.){
+    while(t<T){
         vectorEqual(dc(t),eval(dc_sym(t),y));
         t += 0.01;
     }
@@ -112,13 +127,13 @@ BOOST_AUTO_TEST_CASE(symbolic_eval_ddc){
     point_t y(1,0.2,4.5);
     pts[2] = y;
 
-    bezier_t c (pts.begin(),pts.end());
+    bezier_t c (pts.begin(),pts.end(),T);
     bezier_t ddc = c.compute_derivate(2);
-    bezier_wp_t c_sym (wps.begin(),wps.end());
+    bezier_wp_t c_sym (wps.begin(),wps.end(),T);
     bezier_wp_t ddc_sym = c_sym.compute_derivate(2);
 
     double t = 0.;
-    while(t<1.){
+    while(t<T){
         vectorEqual(ddc(t),eval(ddc_sym(t),y),1e-10);
         t += 0.01;
     }
@@ -131,18 +146,69 @@ BOOST_AUTO_TEST_CASE(symbolic_eval_jc){
     point_t y(1,0.2,4.5);
     pts[2] = y;
 
-    bezier_t c (pts.begin(),pts.end());
+    bezier_t c (pts.begin(),pts.end(),T);
     bezier_t jc = c.compute_derivate(3);
-    bezier_wp_t c_sym (wps.begin(),wps.end());
+    bezier_wp_t c_sym (wps.begin(),wps.end(),T);
     bezier_wp_t jc_sym = c_sym.compute_derivate(3);
 
 
     double t = 0.;
-    while(t<1.){
+    while(t<T){
         vectorEqual(jc(t),eval(jc_sym(t),y),1e-10);
         t += 0.01;
     }
 }
+
+BOOST_AUTO_TEST_CASE(symbolic_split_c){
+    std::vector<point_t> pts = generate_wps();
+    bezier_wp_t::t_point_t wps =  generate_wps_symbolic();
+    point_t y(1,0.2,4.5);
+    pts[2] = y;
+
+    bezier_t c (pts.begin(),pts.end(),T);
+    bezier_wp_t c_sym (wps.begin(),wps.end(),T);
+
+    double a,b,t,t1,t2;
+    for(size_t i = 0 ; i < 100 ; ++i){
+        a = (rand()/(double)RAND_MAX ) * T;
+        b = (rand()/(double)RAND_MAX ) * T;
+        t1 = std::min(a,b);
+        t2 = std::max(a,b);
+        std::cout<<"try extract between : ["<<t1<<";"<<t2<<"] "<<std::endl;
+        bezier_t c_e = c.extract(t1,t2);
+        bezier_wp_t c_sym_e = c_sym.extract(t1,t2);
+        t = t1;
+        while(t < t2){
+            vectorEqual(c_e(t-t1),eval(c_sym_e(t-t1),y));
+            vectorEqual(c(t),eval(c_sym_e(t-t1),y));
+            t+= 0.01;
+        }
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(symbolic_split_w){
+    bezier_wp_t::t_point_t wps =  computeWwaypoints(buildPData(),T);
+    point_t y(1,0.2,4.5);
+
+    bezier_wp_t w (wps.begin(),wps.end(),T);
+
+    double a,b,t,t1,t2;
+    for(size_t i = 0 ; i < 100 ; ++i){
+        a = (rand()/(double)RAND_MAX ) * T;
+        b = (rand()/(double)RAND_MAX ) * T;
+        t1 = std::min(a,b);
+        t2 = std::max(a,b);
+        std::cout<<"try extract between : ["<<t1<<";"<<t2<<"] "<<std::endl;
+        bezier_wp_t w_e = w.extract(t1,t2);
+        t = t1;
+        while(t < t2){
+            vectorEqual(eval(w(t),y),eval(w_e(t-t1),y),1e-12);
+            t+= 0.01;
+        }
+    }
+}
+
 
 
 
