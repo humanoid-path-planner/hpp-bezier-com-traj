@@ -11,7 +11,7 @@ namespace bezier_com_traj
 waypoint_t initwp(const size_t rows, const size_t cols){
     waypoint_t w;
     w.first  = MatrixXX::Zero(rows,cols);
-    w.second = VectorX::Zero(cols);
+    w.second = VectorX::Zero(rows);
     return w;
 }
 
