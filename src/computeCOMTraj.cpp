@@ -303,16 +303,16 @@ ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const doub
     return res;
 }
 
-ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,const Vector3& init_guess,
-                               const int pointsPerPhase, const double /*feasability_treshold*/)
+ResultDataCOMTraj computeCOMTrajFixedSize(const ProblemData& pData, const VectorX& Ts,
+                               const unsigned int pointsPerPhase)
 {
     if(Ts.size() != pData.contacts_.size())
         throw std::runtime_error("Time phase vector has different size than the number of contact phases");
     double T = Ts.sum();
-    T_time timeArray = computeDiscretizedTime(Ts,pointsPerPhase);
+    T_time timeArray = computeDiscretizedTimeFixed(Ts,pointsPerPhase);
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
-    VectorX x = VectorX::Zero(numCol); x.head<3>() = init_guess;
+    VectorX x = VectorX::Zero(numCol);
     ResultData resQp = solve(Ab,Hg, x);
 #if QHULL
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");

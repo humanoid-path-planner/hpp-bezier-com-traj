@@ -46,7 +46,7 @@ BEZIER_COM_TRAJ_DLLAPI Bezier computeBezierCurve(const ConstraintFlag& flag, con
  * @param pointsPerPhase
  * @return
  */
-T_time computeDiscretizedTime(const VectorX& phaseTimings, const int pointsPerPhase );
+T_time computeDiscretizedTimeFixed(const VectorX& phaseTimings, const unsigned int pointsPerPhase );
 
 /**
  * @brief computeDiscretizedTime build an array of discretized points in time,
