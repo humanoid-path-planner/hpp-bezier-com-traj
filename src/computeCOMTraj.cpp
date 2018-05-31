@@ -140,10 +140,8 @@ void assignStabilityConstraintsForTimeStep(MatrixXX& mH, VectorX& h, const waypo
 void switchContactPhase(const ProblemData& pData,
                         MatrixXX& A, VectorX& b,
                         MatrixXX& mH, VectorX& h,
-                        const waypoint_t& wp_w,  ContactData& phase,
-                        const long int id_phase, long int& id_rows, int& dimH)
+                        const waypoint_t& wp_w, const ContactData& phase, long int& id_rows, int& dimH)
 {
-    phase = pData.contacts_[id_phase];
     updateH(pData, phase, mH, h, dimH);
     // the current waypoint must have the constraints of both phases. So we add it again :
     // TODO : filter for redunbdant constraints ...
@@ -158,12 +156,11 @@ long int assignStabilityConstraints(const ProblemData& pData, MatrixXX& A, Vecto
     bezier_wp_t::t_point_t wps_w = computeDiscretizedWwaypoints(pData,t_total,timeArray);
 
     std::size_t id_phase = 0;
-    ContactData phase = pData.contacts_[id_phase];
-    const Vector3& g = phase.contactPhase_->m_gravity;
+    const Vector3& g = pData.contacts_[id_phase].contactPhase_->m_gravity;
 
     //reference to current stability matrix
     MatrixXX mH; VectorX h; int dimH;
-    updateH(pData, phase, mH, h, dimH);
+    updateH(pData, pData.contacts_[id_phase], mH, h, dimH);
 
     // assign the Stability constraints  for each discretized waypoints :
     // we don't consider the first point, because it's independant of x.
@@ -178,7 +175,7 @@ long int assignStabilityConstraints(const ProblemData& pData, MatrixXX& A, Vecto
             {
                 id_phase++;
                 switchContactPhase(pData, A,b, mH, h,
-                            wps_w[id_step], phase, id_phase, id_rows, dimH);
+                            wps_w[id_step], pData.contacts_[id_phase], id_rows, dimH);
             }
         }
     }
@@ -190,10 +187,8 @@ void assignKinematicConstraints(const ProblemData& pData, MatrixXX& A, VectorX& 
 {
     std::size_t id_phase = 0;
     std::vector<coefs_t> wps_c = computeDiscretizedWaypoints<point_t>(pData,t_total,timeArray);
-    ContactData phase = pData.contacts_[id_phase];
     long int current_size;
     id_phase = 0;
-    phase = pData.contacts_[id_phase];
     // assign the Kinematics constraints  for each discretized waypoints :
     // we don't consider the first point, because it's independant of x.
     for(std::size_t id_step = 0 ; id_step <  timeArray.size() ; ++id_step )
@@ -201,11 +196,11 @@ void assignKinematicConstraints(const ProblemData& pData, MatrixXX& A, VectorX& 
         // add constraints for wp id_step, on current phase :
         // add kinematics constraints :
         // constraint are of the shape A c <= b . But here c(x) = Fx + s so : AFx <= b - As
-        current_size = (int)phase.kin_.rows();
+        current_size = (int)pData.contacts_[id_phase].kin_.rows();
         if(current_size > 0)
         {
-            A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps_c[id_step].first);
-            b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps_c[id_step].second);
+            A.block(id_rows,0,current_size,3) = (pData.contacts_[id_phase].Kin_ * wps_c[id_step].first);
+            b.segment(id_rows,current_size) = pData.contacts_[id_phase].kin_ - (pData.contacts_[id_phase].Kin_*wps_c[id_step].second);
             id_rows += current_size;
         }
 
@@ -216,14 +211,13 @@ void assignKinematicConstraints(const ProblemData& pData, MatrixXX& A, VectorX& 
             {
                 // switch to phase i
                 id_phase=i+1;
-                phase = pData.contacts_[id_phase];
                 // the current waypoint must have the constraints of both phases. So we add it again :
                 // TODO : filter for redunbdant constraints ...
-                current_size = phase.kin_.rows();
+                current_size = pData.contacts_[id_phase].kin_.rows();
                 if(current_size > 0)
                 {
-                    A.block(id_rows,0,current_size,3) = (phase.Kin_ * wps_c[id_step].first);
-                    b.segment(id_rows,current_size) = phase.kin_ - (phase.Kin_*wps_c[id_step].second);
+                    A.block(id_rows,0,current_size,3) = (pData.contacts_[id_phase].Kin_ * wps_c[id_step].first);
+                    b.segment(id_rows,current_size) = pData.contacts_[id_phase].kin_ - (pData.contacts_[id_phase].Kin_*wps_c[id_step].second);
                     id_rows += current_size;
                 }
             }
