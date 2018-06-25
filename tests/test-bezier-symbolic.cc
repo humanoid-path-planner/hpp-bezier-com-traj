@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(symbolic_split_c){
         b = (rand()/(double)RAND_MAX ) * T;
         t1 = std::min(a,b);
         t2 = std::max(a,b);
-        std::cout<<"try extract between : ["<<t1<<";"<<t2<<"] "<<std::endl;
+       // std::cout<<"try extract between : ["<<t1<<";"<<t2<<"] "<<std::endl;
         bezier_t c_e = c.extract(t1,t2);
         bezier_wp_t c_sym_e = c_sym.extract(t1,t2);
         t = t1;
@@ -170,6 +170,33 @@ BOOST_AUTO_TEST_CASE(symbolic_split_c){
             t+= 0.01;
         }
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(symbolic_split_c_bench){
+    using namespace std;
+
+    std::vector<point_t> pts = generate_wps();
+    bezier_wp_t::t_point_t wps =  generate_wps_symbolic();
+    point_t y(1,0.2,4.5);
+    pts[2] = y;
+
+    bezier_wp_t c_sym (wps.begin(),wps.end(),T);
+
+    std::vector<double> values;
+    for (int i =0; i < 100000; ++i)
+        values.push_back((double)rand()/RAND_MAX);
+
+    clock_t s0,e0;
+    std::pair<bezier_wp_t,bezier_wp_t> splitted = c_sym.split(0.5);
+    s0 = clock();
+    for(std::vector<double>::const_iterator cit = values.begin(); cit != values.end(); ++cit)
+    {
+        splitted = c_sym.split(*cit);
+    }
+    e0 = clock();
+
+    std::cout<<"Time required to split a c curve : "<<((double)(e0-s0)/CLOCKS_PER_SEC)/100.<<" ms "<<std::endl;
 }
 
 
@@ -185,7 +212,7 @@ BOOST_AUTO_TEST_CASE(symbolic_split_w){
         b = (rand()/(double)RAND_MAX ) * T;
         t1 = std::min(a,b);
         t2 = std::max(a,b);
-        std::cout<<"try extract between : ["<<t1<<";"<<t2<<"] "<<std::endl;
+       // std::cout<<"try extract between : ["<<t1<<";"<<t2<<"] "<<std::endl;
         bezier_wp_t w_e = w.extract(t1,t2);
         t = t1;
         while(t < t2){
@@ -193,6 +220,30 @@ BOOST_AUTO_TEST_CASE(symbolic_split_w){
             t+= 0.01;
         }
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(symbolic_split_w_bench){
+    bezier_wp_t::t_point_t wps =  computeWwaypoints(buildPData(),T);
+    point_t y(1,0.2,4.5);
+
+    bezier_wp_t w (wps.begin(),wps.end(),T);
+
+    std::vector<double> values;
+    for (int i =0; i < 100000; ++i)
+        values.push_back((double)rand()/RAND_MAX);
+
+    clock_t s0,e0;
+    std::pair<bezier_wp_t,bezier_wp_t> splitted = w.split(0.5);
+    s0 = clock();
+    for(std::vector<double>::const_iterator cit = values.begin(); cit != values.end(); ++cit)
+    {
+        splitted = w.split(*cit);
+    }
+    e0 = clock();
+
+    std::cout<<"Time required to split a w curve : "<<((double)(e0-s0)/CLOCKS_PER_SEC)/100.<<" ms "<<std::endl;
+
 }
 
 

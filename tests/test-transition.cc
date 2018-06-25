@@ -56,7 +56,7 @@ bool check_constraints(const bezier_com_traj::ContactData& contactPhase, Vector3
 }
 
 
-void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shouldFail=false){
+void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shouldFail=false,bool continuous = false){
     BOOST_CHECK_EQUAL(pData.contacts_.size(),Ts.size());
 
     double t_total = 0;
@@ -66,7 +66,12 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
     int pointsPerPhase = 5;
 
     // check if transition is feasible (should be)
-    bezier_com_traj::ResultDataCOMTraj res = bezier_com_traj::computeCOMTrajFixedSize(pData,Ts,pointsPerPhase);
+    bezier_com_traj::ResultDataCOMTraj res;
+    if(continuous)
+        res = bezier_com_traj::computeCOMTraj(pData,Ts);
+    else
+        res = bezier_com_traj::computeCOMTrajFixedSize(pData,Ts,pointsPerPhase);
+
     if(shouldFail){
         BOOST_CHECK(!res.success_);
         return;
@@ -117,9 +122,15 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
             }
         }
     }
-    for(size_t i = 0 ; i < pData.contacts_.size() ; ++i){
-        delete pData.contacts_[i].contactPhase_;
+    if(!continuous)
+        check_transition(pData,Ts,shouldFail,true);
+    else{
+        for(size_t i = 0 ; i < pData.contacts_.size() ; ++i){
+            delete pData.contacts_[i].contactPhase_;
+        }
     }
+
+
 }
 
 
