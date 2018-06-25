@@ -65,15 +65,15 @@ namespace bezier_com_traj
     {
         Constraints()
             : flag_(INIT_POS | INIT_VEL | END_VEL | END_POS)
-            , constraintAcceleration_(true)
-            , maxAcceleration_(5.)
-            , reduce_h_(1e-4) {}
+            , constraintAcceleration_(false)
+            , maxAcceleration_(10.)
+            , reduce_h_(1e-3) {}
 
         Constraints(ConstraintFlag flag)
             : flag_(flag)
-            , constraintAcceleration_(true)
-            , maxAcceleration_(5.)
-            , reduce_h_(1e-4) {}
+            , constraintAcceleration_(false)
+            , maxAcceleration_(10.)
+            , reduce_h_(1e-3) {}
 
         ~Constraints(){}
 
