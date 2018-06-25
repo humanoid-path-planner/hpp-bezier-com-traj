@@ -248,7 +248,7 @@ bezier_wp_t::t_point_t computeConstantWaypointsSymbolic(const ProblemData& pData
     bezier_wp_t::t_point_t wps;
     for(std::vector<point_t>::const_iterator pit = pts.begin() ; pit != pts.end() ; ++pit ){
         waypoint_t w = initwp(DIM_POINT,DIM_VAR);
-        if(*pit == bezier_t::point_t::Zero()){
+        if(pit->isZero()){
             w.first = MatrixXX::Identity(DIM_POINT,DIM_VAR);
         }else{
             w.second = *pit;

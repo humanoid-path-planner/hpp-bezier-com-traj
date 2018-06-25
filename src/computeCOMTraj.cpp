@@ -14,7 +14,7 @@
 #include  <algorithm>
 
 #ifndef QHULL
-#define QHULL 1
+#define QHULL 0
 #endif
 
 const int numCol = 3;
@@ -298,41 +298,16 @@ ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const doub
     return res;
 }
 
-ResultDataCOMTraj computeCOMTrajFixedSize(const ProblemData& pData, const VectorX& Ts,
-                               const unsigned int pointsPerPhase)
-{
-    if(Ts.size() != pData.contacts_.size())
-        throw std::runtime_error("Time phase vector has different size than the number of contact phases");
-    double T = Ts.sum();
-    T_time timeArray = computeDiscretizedTimeFixed(Ts,pointsPerPhase);
-    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
-    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
-    VectorX x = VectorX::Zero(numCol);
-    ResultData resQp = solve(Ab,Hg, x);
-#if QHULL
-    if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
-#endif
-    return genTraj(resQp, pData, T);
-}
 
-ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
-                               const double timeStep)
-{
-    if(Ts.size() != pData.contacts_.size())
-        throw std::runtime_error("Time phase vector has different size than the number of contact phases");
-    double T = Ts.sum();
-    T_time timeArray = computeDiscretizedTime(Ts,timeStep);
-    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
-    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
-    VectorX x = VectorX::Zero(numCol);
-    ResultData resQp = solve(Ab,Hg, x);
-#if QHULL
-    if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
-#endif
-    return genTraj(resQp, pData, T);
-}
-
-long int computeNumIneqContinuous(const ProblemData& pData, const VectorX& Ts,const int degree){
+/**
+ * @brief computeNumIneqContinuous compute the number of inequalitie required by all the phases
+ * @param pData
+ * @param Ts
+ * @param degree
+ * @param w_degree //FIXME : cannot use 2n+3 because for capturability the degree doesn't correspond (cf waypoints_c0_dc0_dc1 )
+ * @return
+ */
+long int computeNumIneqContinuous(const ProblemData& pData, const VectorX& Ts,const int degree,const int w_degree){
     long int num_ineq = 0;
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     for(std::vector<ContactData>::const_iterator it = pData.contacts_.begin() ; it != pData.contacts_.end() ; ++it){
@@ -340,7 +315,7 @@ long int computeNumIneqContinuous(const ProblemData& pData, const VectorX& Ts,co
         num_ineq += it->kin_.rows()*(degree+1);
         //stability :
         it->contactPhase_->getPolytopeInequalities(Hrow,h);
-        num_ineq += Hrow.rows()*(degree*2 - 2);
+        num_ineq += Hrow.rows()*(w_degree+1);
     }
     // acceleration constraints : 6 per points
     num_ineq += (degree-1)*6*Ts.size();
@@ -362,12 +337,12 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
 
 
     // for each splitted curves : add the constraints for each waypoints
-    const long int num_ineq = computeNumIneqContinuous(pData,Ts,c.degree_);
+    const long int num_ineq = computeNumIneqContinuous(pData,Ts,c.degree_,w.degree_);
     long int id_rows = 0;
     MatrixXX A = MatrixXX::Zero(num_ineq,numCol);
     VectorX b = VectorX::Zero(num_ineq);
 
-    double current_t = 0;
+    double current_t = 0.;
     ContactData phase;
     int size_kin;
     MatrixXX mH; VectorX h; int dimH;
@@ -375,9 +350,9 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
 
     // for each phases, split the curve and compute the waypoints of the splitted curves
     for(size_t id_phase = 0 ; id_phase < Ts.size() ; ++id_phase){
-        bezier_wp_t cs = c.extract(current_t , Ts[id_phase]);
-        bezier_wp_t ddcs = ddc.extract(current_t , Ts[id_phase]);
-        bezier_wp_t ws = w.extract(current_t , Ts[id_phase]);
+        bezier_wp_t cs = c.extract(current_t, Ts[id_phase]+current_t);
+        bezier_wp_t ddcs = ddc.extract(current_t, Ts[id_phase]+current_t);
+        bezier_wp_t ws = w.extract(current_t , Ts[id_phase]+current_t);
         current_t += Ts[id_phase];
 
         phase = pData.contacts_[id_phase];
@@ -409,13 +384,15 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
     return std::make_pair(A,b);
 }
 
-ResultDataCOMTraj computeCOMTrajContinuous(const ProblemData& pData, const VectorX& Ts){
+
+ResultDataCOMTraj computeCOMTrajFixedSize(const ProblemData& pData, const VectorX& Ts,
+                               const unsigned int pointsPerPhase)
+{
     if(Ts.size() != pData.contacts_.size())
         throw std::runtime_error("Time phase vector has different size than the number of contact phases");
-    const double T = Ts.sum();
-    std::pair<MatrixXX, VectorX> Ab = computeConstraintsContinuous(pData,Ts);
-
-    T_time timeArray = computeDiscretizedTimeFixed(Ts,50);
+    double T = Ts.sum();
+    T_time timeArray = computeDiscretizedTimeFixed(Ts,pointsPerPhase);
+    std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
     VectorX x = VectorX::Zero(numCol);
     ResultData resQp = solve(Ab,Hg, x);
@@ -423,7 +400,30 @@ ResultDataCOMTraj computeCOMTrajContinuous(const ProblemData& pData, const Vecto
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
 #endif
     return genTraj(resQp, pData, T);
+}
 
+ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
+                               const double timeStep)
+{
+    if(Ts.size() != pData.contacts_.size())
+        throw std::runtime_error("Time phase vector has different size than the number of contact phases");
+    double T = Ts.sum();
+    T_time timeArray;
+    std::pair<MatrixXX, VectorX> Ab;
+    if(timeStep > 0 ){ // discretized
+        timeArray = computeDiscretizedTime(Ts,timeStep);
+        Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
+    }else{ // continuous
+        Ab = computeConstraintsContinuous(pData,Ts);
+        timeArray = computeDiscretizedTimeFixed(Ts,7); // FIXME : hardcoded value for discretization for cost function in case of continuous formulation for the constraints
+    }
+    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
+    VectorX x = VectorX::Zero(numCol);
+    ResultData resQp = solve(Ab,Hg, x);
+#if QHULL
+    if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
+#endif
+    return genTraj(resQp, pData, T);
 }
 
 
