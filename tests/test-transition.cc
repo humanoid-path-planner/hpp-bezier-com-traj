@@ -68,7 +68,16 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
     // check if transition is feasible (should be)
     bezier_com_traj::ResultDataCOMTraj res;
     if(continuous)
+    {
+        clock_t s0,e0;
+        s0 = clock();
         res = bezier_com_traj::computeCOMTraj(pData,Ts);
+        e0 = clock();
+        if(pData.representation_ == bezier_com_traj::FORCE)
+            std::cout<<"Time required with force formulation : "<<((double)(e0-s0)/CLOCKS_PER_SEC)*1000<<" ms "<<std::endl;
+        else
+            std::cout<<"Time required with Double Description: "<<((double)(e0-s0)/CLOCKS_PER_SEC)*1000<<" ms "<<std::endl;
+    }
     else
         res = bezier_com_traj::computeCOMTrajFixedSize(pData,Ts,pointsPerPhase);
 
