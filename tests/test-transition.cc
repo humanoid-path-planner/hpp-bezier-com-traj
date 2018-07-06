@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(transition_noDc1_Acc05){
 BOOST_AUTO_TEST_CASE(transition_ddc0_Acc1){
     bezier_com_traj::ProblemData pData = gen_problem_data_flat();
     pData.constraints_.flag_ |= bezier_com_traj::INIT_ACC;
-    pData.constraints_.maxAcceleration_=1.;    
+    pData.constraints_.maxAcceleration_=1.;
     pData.constraints_.constraintAcceleration_=true;
     VectorX Ts(3);
     Ts<<0.6,0.6,0.6;
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(transition_ddc0_Acc1){
 BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1_Acc02){
     bezier_com_traj::ProblemData pData = gen_problem_data_flat();
     pData.constraints_.flag_ |= bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC ;
-    pData.constraints_.maxAcceleration_=0.2;    
+    pData.constraints_.maxAcceleration_=0.2;
     pData.constraints_.constraintAcceleration_=true;
     VectorX Ts(3);
     Ts<<0.6,0.6,0.6;

@@ -177,7 +177,7 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vector
     tsid::solvers::EiquadprogFast_status status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
     ResultData res;
     res.success_ = (status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL );
-    res.x = x.head<3>();
+    res.x = x;
     if(res.success_)
     {
         assert (!(is_nan(x)));
