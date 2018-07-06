@@ -494,7 +494,7 @@ ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
     T_time timeArray;
     std::pair<MatrixXX, VectorX> Ab;
     std::pair<MatrixXX, VectorX> Dd;
-    if(timeStep > 0 ){ // discretized        
+    if(timeStep > 0 ){ // discretized
         assert (pData.representation_ == DOUBLE_DESCRIPTION);
         timeArray = computeDiscretizedTime(Ts,timeStep);
         Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
