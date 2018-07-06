@@ -30,7 +30,7 @@
 using namespace bezier_com_traj;
 const double T = 1.5;
 
-ProblemData buildPData(){
+ProblemData buildPData(const centroidal_dynamics::EquilibriumAlgorithm algo = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP){
     ProblemData pData;
     pData.c0_ = Vector3(0,0.5,5.);
     pData.c1_ = Vector3(2,-0.5,5.);
@@ -46,7 +46,7 @@ ProblemData buildPData(){
     normals.block<1,3>(1,0)=Vector3(0,0,1);
     positions.block<1,3>(1,0)=Vector3(0,-0.1,0);
     std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals,positions,LX,LY);
-    pData.contacts_.push_back(new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first,contacts.second)));
+    pData.contacts_.push_back(new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first,contacts.second,algo)));
 
 
     return pData;

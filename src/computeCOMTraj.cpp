@@ -17,7 +17,8 @@
 #define QHULL 0
 #endif
 
-const int numCol = 3;
+static const int dimVarX = 3;
+static const int numRowsForce = 6;
 
 
 namespace bezier_com_traj
@@ -28,7 +29,7 @@ bezier_wp_t::t_point_t computeDiscretizedWwaypoints(const ProblemData& pData,dou
 {
     bezier_wp_t::t_point_t wps = computeWwaypoints(pData,T);
     bezier_wp_t::t_point_t res;
-    const int DIM_VAR = dimVar(pData);
+    const int DIM_VAR = (int)dimVar(pData);
     std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms((int)wps.size()-1);
     double t, b;
     for (CIT_time cit = timeArray.begin(); cit != timeArray.end(); ++cit)
@@ -64,7 +65,7 @@ bezier_wp_t::t_point_t computeDiscretizedWwaypoints(const ProblemData& pData,dou
 
 std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const VectorX& h,const Vector3& g,const waypoint_t& w){
     int dimH = (int)(mH.rows());
-    MatrixXX A(dimH,numCol);
+    MatrixXX A(dimH,dimVarX);
     VectorX b(dimH);
     VectorX g_= VectorX::Zero(6);
     g_.head<3>() = g;
@@ -132,9 +133,21 @@ void assignStabilityConstraintsForTimeStep(MatrixXX& mH, VectorX& h, const waypo
               MatrixXX& A, VectorX& b, const Vector3& g)
 {
     std::pair<MatrixXX,VectorX> Ab_stab = dynamicStabilityConstraints(mH,h,g,wp_w);
-    A.block(id_rows,0,dimH,numCol) = Ab_stab.first;
-    b.segment(id_rows,dimH) = Ab_stab.second;    
+    A.block(id_rows,0,dimH,dimVarX) = Ab_stab.first;
+    b.segment(id_rows,dimH) = Ab_stab.second;
     id_rows += dimH ;
+}
+
+// mG is -G
+void assignStabilityConstraintsForTimeStepForce(const waypoint_t& wp_w, const long int rowIdx, long int& id_cols, const centroidal_dynamics::Matrix6X mG,
+              MatrixXX& D, VectorX& d, const double mass, const Vector3& g)
+{
+    D.block(rowIdx,id_cols,numRowsForce,mG.cols()) = mG;
+    id_cols += mG.cols() ;
+    D.block(rowIdx,0,numRowsForce,dimVarX) = mass * wp_w.first;
+    VectorX g_= VectorX::Zero(6);
+    g_.head<3>() = g;
+    d.segment(rowIdx,numRowsForce) = mass * (g_ - wp_w.second);
 }
 
 void switchContactPhase(const ProblemData& pData,
@@ -253,7 +266,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsOneStep(const ProblemData& pData,
 
     // init constraints matrix :
     long int num_ineq = computeNumIneq(pData, Ts, stepIdForPhase);
-    MatrixXX A = MatrixXX::Zero(num_ineq,numCol); VectorX b(num_ineq);
+    MatrixXX A = MatrixXX::Zero(num_ineq,dimVarX); VectorX b(num_ineq);
 
     // assign dynamic and kinematic constraints per timestep, including additional acceleration
     // constraints.
@@ -274,10 +287,10 @@ void computeFinalVelocity(ResultDataCOMTraj& res){
 }
 
 std::pair<MatrixXX, VectorX> genCostFunction(const ProblemData& pData,const VectorX& Ts,
-                                             const double T, const T_time& timeArray)
+                                             const double T, const T_time& timeArray, const long int& dim)
 {
-    MatrixXX H(numCol,numCol);
-    VectorX g(numCol);
+    MatrixXX H =  MatrixXX::Identity(dim,dim)*1e-6;
+    VectorX g = VectorX::Zero(dim);
     cost::genCostFunction(pData,Ts,T,timeArray,H,g);
     return std::make_pair(H,g);
 }
@@ -305,28 +318,65 @@ ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const doub
  * @param Ts
  * @param degree
  * @param w_degree //FIXME : cannot use 2n+3 because for capturability the degree doesn't correspond (cf waypoints_c0_dc0_dc1 )
+ * @param useDD whether double description or force formulation is used to compute dynamic constraints)
  * @return
  */
-long int computeNumIneqContinuous(const ProblemData& pData, const VectorX& Ts,const int degree,const int w_degree){
+long int computeNumIneqContinuous(const ProblemData& pData, const VectorX& Ts,const int degree,const int w_degree, const bool useDD){
     long int num_ineq = 0;
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     for(std::vector<ContactData>::const_iterator it = pData.contacts_.begin() ; it != pData.contacts_.end() ; ++it){
         //kinematics :
         num_ineq += it->kin_.rows()*(degree+1);
         //stability :
-        it->contactPhase_->getPolytopeInequalities(Hrow,h);
-        num_ineq += Hrow.rows()*(w_degree+1);
+        if(useDD)
+        {
+            it->contactPhase_->getPolytopeInequalities(Hrow,h);
+            num_ineq += Hrow.rows()*(w_degree+1);
+        }
     }
     // acceleration constraints : 6 per points
     num_ineq += (degree-1)*6*Ts.size();
     return num_ineq;
 }
 
+/**
+ * @brief computeNumEqContinuous compute the number of equalities required by all the phases
+ * @param pData
+ * @param w_degree //FIXME : cannot use 2n+3 because for capturability the degree doesn't correspond (cf waypoints_c0_dc0_dc1 )
+ * @param useForce whether double description or force formulation is used to compute dynamic constraints)
+ * @param forceVarDim reference value that stores the total force variable size
+ * @return
+ */
+long int computeNumEqContinuous(const ProblemData& pData, const int w_degree, const bool useForce, long int& forceVarDim){
+    long int numEq = 0;
+    if(useForce)
+    {
+        long int cSize = 0;
+        int currentDegree; //remove redundant equalities depending on more constraining problem
+        std::vector<ContactData>::const_iterator it2 = pData.contacts_.begin(); ++it2;
+        for(std::vector<ContactData>::const_iterator it = pData.contacts_.begin() ; it != pData.contacts_.end() ; ++it, ++it2)
+        {
+            currentDegree = w_degree +1;
+            if(cSize != 0 && it->contactPhase_->m_G_centr.cols() > cSize)
+                currentDegree -= 1;
+            cSize =it->contactPhase_->m_G_centr.cols();
+            if(it2 != pData.contacts_.end() && it2->contactPhase_->m_G_centr.cols() <= cSize)
+                currentDegree -= 1;
+            forceVarDim += cSize * (currentDegree);
+            numEq += (numRowsForce ) * (currentDegree);
+        }
+    }
+    return numEq;
+}
 
-std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pData, const VectorX& Ts){
+std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pData, const VectorX& Ts,
+                                                          std::pair<MatrixXX, VectorX>& Dd){
+
+    // determine whether to use force or double description
+    // based on equilibrium value
+    bool useDD = pData.representation_ == DOUBLE_DESCRIPTION;//!(pData.contacts_.begin()->contactPhase_->getAlgorithm() == centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP);
 
     double T = Ts.sum();
-    const int n_phases = pData.contacts_.size();
 
     // create the curves for c and w with symbolic waypoints (ie. depend on y)
     bezier_wp_t::t_point_t wps_c = computeConstantWaypointsSymbolic(pData,T);
@@ -337,10 +387,18 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
 
 
     // for each splitted curves : add the constraints for each waypoints
-    const long int num_ineq = computeNumIneqContinuous(pData,Ts,c.degree_,w.degree_);
+    const long int num_ineq = computeNumIneqContinuous(pData,Ts,(int)c.degree_,(int)w.degree_,  useDD);
+    long int forceVarDim = 0;
+    const long int num_eq   = computeNumEqContinuous  (pData,(int)w.degree_, !useDD,forceVarDim);
+    long int totalVarDim = dimVarX + forceVarDim ;
     long int id_rows = 0;
-    MatrixXX A = MatrixXX::Zero(num_ineq,numCol);
-    VectorX b = VectorX::Zero(num_ineq);
+    long int id_cols = dimVarX; // start after x variable
+    MatrixXX A = MatrixXX::Zero(num_ineq+forceVarDim,totalVarDim);
+    VectorX b = VectorX::Zero(num_ineq+forceVarDim);
+    MatrixXX& D = Dd.first;
+    VectorX& d =  Dd.second;
+    D = MatrixXX::Zero(num_eq,totalVarDim);
+    d = VectorX::Zero(num_eq);
 
     double current_t = 0.;
     ContactData phase;
@@ -348,8 +406,10 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
     MatrixXX mH; VectorX h; int dimH;
     Vector3 acc_bounds = Vector3::Ones()*pData.constraints_.maxAcceleration_;
 
+    long int cSize = 0;
+    long int rowIdx = 0;
     // for each phases, split the curve and compute the waypoints of the splitted curves
-    for(size_t id_phase = 0 ; id_phase < Ts.size() ; ++id_phase){
+    for(size_t id_phase = 0 ; id_phase < (size_t)Ts.size() ; ++id_phase){
         bezier_wp_t cs = c.extract(current_t, Ts[id_phase]+current_t);
         bezier_wp_t ddcs = ddc.extract(current_t, Ts[id_phase]+current_t);
         bezier_wp_t ws = w.extract(current_t , Ts[id_phase]+current_t);
@@ -358,16 +418,30 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
         phase = pData.contacts_[id_phase];
 
         // add kinematics constraints :
-        size_kin = phase.kin_.rows();
+        size_kin = (int)phase.kin_.rows();
         for(bezier_wp_t::cit_point_t wpit = cs.waypoints().begin() ; wpit != cs.waypoints().end() ; ++wpit){
             A.block(id_rows,0,size_kin,3) = (phase.Kin_ * wpit->first);
             b.segment(id_rows,size_kin) = phase.kin_ - (phase.Kin_*wpit->second);
             id_rows += size_kin;
         }
         // add stability constraints
-        updateH(pData, phase, mH, h, dimH);
-        for(bezier_wp_t::cit_point_t wpit = ws.waypoints().begin() ; wpit != ws.waypoints().end() ; ++wpit){
-            assignStabilityConstraintsForTimeStep(mH, h, *wpit, dimH, id_rows, A, b, phase.contactPhase_->m_gravity);
+        if(useDD)
+        {
+            updateH(pData, phase, mH, h, dimH);
+            for(bezier_wp_t::cit_point_t wpit = ws.waypoints().begin() ; wpit != ws.waypoints().end() ; ++wpit)
+                assignStabilityConstraintsForTimeStep(mH, h, *wpit, dimH, id_rows, A, b, phase.contactPhase_->m_gravity);
+        }
+        else
+        {
+            bezier_wp_t::cit_point_t start = ws.waypoints().begin() ;
+            bezier_wp_t::cit_point_t stop = ws.waypoints().end() ;
+            if (id_phase +1 < (size_t)Ts.size() && pData.contacts_[id_phase+1].contactPhase_->m_G_centr.cols() <= phase.contactPhase_->m_G_centr.cols())
+                --stop;
+            if (cSize > 0 && cSize < phase.contactPhase_->m_G_centr.cols())
+                ++start;
+            cSize = phase.contactPhase_->m_G_centr.cols();
+            for(bezier_wp_t::cit_point_t wpit = start ; wpit != stop ; ++wpit, rowIdx+=6)
+                assignStabilityConstraintsForTimeStepForce(*wpit, rowIdx, id_cols, phase.contactPhase_->m_G_centr, D, d, phase.contactPhase_->m_mass, phase.contactPhase_->m_gravity);
         }
         // add acceleration constraints :
         for(bezier_wp_t::cit_point_t wpit = ddcs.waypoints().begin() ; wpit != ddcs.waypoints().end() ; ++wpit){
@@ -378,9 +452,17 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
             id_rows += 6;
         }
     }
-    assert(id_rows == (A.rows()) && "The constraints matrices were not fully filled.");
-    assert(id_rows == (b.rows()) && "The constraints matrices were not fully filled.");
-
+    if(!useDD)
+    {
+        // add positive constraints on forces
+        A.block(id_rows,3,forceVarDim,forceVarDim)=MatrixXX::Identity(forceVarDim,forceVarDim)*(-1);
+        id_rows += forceVarDim;
+    }
+    assert(id_rows == (A.rows()) && "The inequality constraints matrices were not fully filled.");
+    assert(id_rows == (b.rows()) && "The inequality constraints matrices were not fully filled.");
+    assert(id_cols == (D.cols()) && "The equality constraints matrices were not fully filled.");
+    assert(rowIdx  == (d.rows()) && "The equality constraints matrices were not fully filled.");
+    //int out = Normalize(D,d);
     return std::make_pair(A,b);
 }
 
@@ -388,13 +470,14 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
 ResultDataCOMTraj computeCOMTrajFixedSize(const ProblemData& pData, const VectorX& Ts,
                                const unsigned int pointsPerPhase)
 {
-    if(Ts.size() != pData.contacts_.size())
+    assert (pData.representation_ == DOUBLE_DESCRIPTION);
+    if(Ts.size() != (int) pData.contacts_.size())
         throw std::runtime_error("Time phase vector has different size than the number of contact phases");
     double T = Ts.sum();
     T_time timeArray = computeDiscretizedTimeFixed(Ts,pointsPerPhase);
     std::pair<MatrixXX, VectorX> Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
-    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
-    VectorX x = VectorX::Zero(numCol);
+    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray, dimVarX);
+    VectorX x = VectorX::Zero(dimVarX);
     ResultData resQp = solve(Ab,Hg, x);
 #if QHULL
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
@@ -405,21 +488,24 @@ ResultDataCOMTraj computeCOMTrajFixedSize(const ProblemData& pData, const Vector
 ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
                                const double timeStep)
 {
-    if(Ts.size() != pData.contacts_.size())
+    if(Ts.size() != (int) pData.contacts_.size())
         throw std::runtime_error("Time phase vector has different size than the number of contact phases");
     double T = Ts.sum();
     T_time timeArray;
     std::pair<MatrixXX, VectorX> Ab;
-    if(timeStep > 0 ){ // discretized
+    std::pair<MatrixXX, VectorX> Dd;
+    if(timeStep > 0 ){ // discretized        
+        assert (pData.representation_ == DOUBLE_DESCRIPTION);
         timeArray = computeDiscretizedTime(Ts,timeStep);
         Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
+        Dd = std::make_pair(MatrixXX::Zero(0,Ab.first.cols()),VectorX::Zero(0));
     }else{ // continuous
-        Ab = computeConstraintsContinuous(pData,Ts);
+        Ab = computeConstraintsContinuous(pData,Ts, Dd);
         timeArray = computeDiscretizedTimeFixed(Ts,7); // FIXME : hardcoded value for discretization for cost function in case of continuous formulation for the constraints
     }
-    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray);
-    VectorX x = VectorX::Zero(numCol);
-    ResultData resQp = solve(Ab,Hg, x);
+    std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray,Ab.first.cols());
+    VectorX x = VectorX::Zero(Ab.first.cols());
+    ResultData resQp = solve(Ab,Dd,Hg, x);
 #if QHULL
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
 #endif

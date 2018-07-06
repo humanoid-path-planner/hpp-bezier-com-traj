@@ -301,6 +301,16 @@ void set_costFunction_(ProblemData& res, const CostFunction val)
     res.costFunction_ = val;
 }
 
+GIWCRepresentation get_GIWC_representation_(const ProblemData& res)
+{
+    return res.representation_;
+}
+
+void set_GIWC_representation_(ProblemData& res, const GIWCRepresentation val)
+{
+    res.representation_ = val;
+}
+
 Constraints* get_constraints_(ProblemData& res)
 {
     return &res.constraints_;
@@ -395,6 +405,7 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
             .add_property("ddc1_",&get_ddc1_, &set_ddc1_ )
             .add_property("useAngularMomentum_",&get_useAngularMomentum_, &set_useAngularMomentum_)
             .add_property("costFunction_",&get_costFunction_, &set_costFunction_ )
+            .add_property("GIWCrepresentation_",&get_GIWC_representation_, &set_GIWC_representation_ )
             .add_property("constraints_",make_function(&get_constraints_,
                                                        return_value_policy<reference_existing_object>()), &set_constraints_ )
             .def("clearContacts", clearContacts)
@@ -414,6 +425,12 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
             .value("DISTANCE_TRAVELED", DISTANCE_TRAVELED)
             .value("TARGET_END_VELOCITY", TARGET_END_VELOCITY)
             .value("UNKNOWN_COST", UNKNOWN_COST)
+            .export_values();
+
+    enum_<GIWCRepresentation>("GIWCRepresentation")
+            .value("DOUBLE_DESCRIPTION", DOUBLE_DESCRIPTION)
+            .value("FORCE", FORCE)
+            .value("UNKNOWN_REPRESENTATION", UNKNOWN_REPRESENTATION)
             .export_values();
 
 

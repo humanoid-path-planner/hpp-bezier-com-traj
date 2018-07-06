@@ -104,7 +104,8 @@ namespace bezier_com_traj
             ,ddc1_(point_t::Zero())
             ,j1_(point_t::Zero())
             ,useAngularMomentum_(false)
-            ,costFunction_(ACCELERATION) {}
+            ,costFunction_(ACCELERATION)
+            ,representation_(DOUBLE_DESCRIPTION) {}
 
         std::vector<ContactData> contacts_;
         point_t  c0_,dc0_,ddc0_,j0_,c1_,dc1_,ddc1_,j1_;
@@ -112,6 +113,7 @@ namespace bezier_com_traj
         bool useAngularMomentum_;
         Constraints constraints_;
         CostFunction costFunction_;
+        GIWCRepresentation representation_;
     };
 
 

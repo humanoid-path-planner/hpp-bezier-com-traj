@@ -34,6 +34,12 @@ namespace bezier_com_traj
         UNKNOWN   = 0x01000
       };
 
+    enum BEZIER_COM_TRAJ_DLLAPI GIWCRepresentation{
+        DOUBLE_DESCRIPTION      = 0x00001,
+        FORCE                   = 0x00002,
+        UNKNOWN_REPRESENTATION  = 0x00004
+      };
+
     inline ConstraintFlag operator~(ConstraintFlag a)
     {return static_cast<ConstraintFlag>(~static_cast<const int>(a));}
 

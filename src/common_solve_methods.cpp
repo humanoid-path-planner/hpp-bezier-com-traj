@@ -29,6 +29,12 @@ MatrixXX initMatrixA(const int dimH, const std::vector<waypoint6_t>& wps, const 
     return MatrixXX::Zero(dimH * wps.size() + extraConstraintSize, dimPb);
 }
 
+MatrixXX initMatrixD(const int colG, const std::vector<waypoint6_t>& wps, const long int extraConstraintSize, const bool useAngMomentum)
+{
+    int dimPb = useAngMomentum ? 6 : 3;
+    return MatrixXX::Zero(6 + extraConstraintSize, wps.size() * colG +  dimPb);
+}
+
 void addKinematic(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Kin, Cref_vectorX kin, const long int otherConstraintIndex)
 {
     int dimKin = (int)(kin.rows());
@@ -93,6 +99,7 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     // gravity vector
     const point_t& g = cData.contactPhase_->m_gravity;
     // compute GIWC
+    assert (cData.contactPhase_->getAlgorithm() ==  centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP);
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     cData.contactPhase_->getPolytopeInequalities(Hrow,h);
     MatrixXX H = -Hrow;
@@ -144,7 +151,7 @@ inline bool is_nan(const Eigen::MatrixBase<Derived>& x)
     return isnan;
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
+ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vectorX d, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
 {
     /*
    * solves the problem
@@ -152,35 +159,53 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vector
    * s.t. CE x + ce0 = 0
    *      CI x + ci0 >= 0
    * Thus CI = -A; ci0 = b
-   *      CI = 0; ce0 = 0
+   *      CI = D; ce0 = -d
    */
 
     assert (!(is_nan(A)));
     assert (!(is_nan(ci0)));
+    assert (!(is_nan(D)));
+    assert (!(is_nan(d)));
     assert (!(is_nan(initGuess)));
     assert (!(is_nan(H)));
 
     MatrixXX CI = -A;
-    MatrixXX CE = MatrixXX::Zero(0,A.cols());
-    VectorX ce0  = VectorX::Zero(0);
+    MatrixXX CE = D;
+    VectorX ce0  = -d;
     tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
     VectorX x = initGuess;
     tsid::solvers::EiquadprogFast_status status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
     ResultData res;
     res.success_ = (status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL );
-    res.x = x;
+    res.x = x.head<3>();
     if(res.success_)
     {
         assert (!(is_nan(x)));
+        assert(x.rows() < 4 || x.tail(x.rows()-3).minCoeff() >= -1e-6);
+        assert((A*x-ci0).maxCoeff() <= 1e-6 );
+        assert(ce0.rows() == 0 || (D*x + ce0).norm() <= 1e-6 );
         res.cost_ = QPsolver.getObjValue();
     }
     return res;
 }
 
+ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
+{
+    MatrixXX D = MatrixXX::Zero(0,A.cols());
+    VectorX d  = VectorX::Zero(0);
+    return solve(A,b,D,d,H,g,initGuess);
+}
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init)
+
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init)
 {
     return solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
+}
+
+
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Dd,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init)
+{
+    return solve(Ab.first,Ab.second,Dd.first, Dd.second, Hg.first,Hg.second, init);
 }
 
 } // namespace bezier_com_traj

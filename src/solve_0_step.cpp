@@ -236,7 +236,8 @@ void computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts, Res
 
 // no angular momentum for now
 ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double>& Ts, const double timeStep)
-{
+{    
+    assert (pData.representation_ == DOUBLE_DESCRIPTION);
     assert(pData.contacts_.size() ==1);
     assert(Ts.size() == pData.contacts_.size());
     bool fail = true;

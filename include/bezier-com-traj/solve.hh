@@ -30,7 +30,7 @@ namespace bezier_com_traj
      * @brief computeCOMTraj Tries to solve the one step problem :  Given two or three contact phases,
      * an initial and final com position and velocity,
      * try to compute the CoM trajectory (as a Bezier curve) that connect them
-     * @param pData problem Data. Should contain only two contact phases.
+     * @param pData problem Data.
      * @param Ts timelength of each contact phase. Should be the same legnth as pData.contacts
      * @param timeStep time step used by the discretization
      * @return ResultData a struct containing the resulting trajectory, if success is true.
@@ -42,7 +42,7 @@ namespace bezier_com_traj
     * @brief computeCOMTraj Tries to solve the one step problem :  Given two or three contact phases,
     * an initial and final com position and velocity,
     * try to compute the CoM trajectory (as a Bezier curve) that connect them
-    * @param pData problem Data. Should contain only two contact phases.
+    * @param pData problem Data.
     * @param Ts timelength of each contact phase. Should be the same legnth as pData.contacts
     * @param timeStep time step used by the discretization, if -1 : use the continuous fomulation
     * @return ResultData a struct containing the resulting trajectory, if success is true.

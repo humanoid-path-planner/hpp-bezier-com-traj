@@ -22,6 +22,7 @@ using bezier_com_traj::Vector3;
 #define KIN_Y_MAX  0.4
 #define KIN_Z_MIN  0
 #define KIN_Z_MAX  0.9
+#define EPSILON  1e-6
 
 typedef std::pair<MatrixX3,VectorX> ConstraintsPair;
 
@@ -93,10 +94,10 @@ std::pair<MatrixX3, MatrixX3> computeRectangularContacts(MatrixX3 normals, Matri
     return std::make_pair(rec_normals,rec_positions);
 }
 
-centroidal_dynamics::Equilibrium ComputeContactCone(MatrixX3 normals, MatrixX3 positions){
+centroidal_dynamics::Equilibrium ComputeContactCone(MatrixX3 normals, MatrixX3 positions, const centroidal_dynamics::EquilibriumAlgorithm algo = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP){
     centroidal_dynamics::Equilibrium contactCone("test-quasiStatic", MASS,4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false);
-    centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
-    contactCone.setNewContacts(positions,normals,MU,alg);
+    //centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
+    contactCone.setNewContacts(positions,normals,MU,algo);
     return contactCone;
 }
 
@@ -120,9 +121,9 @@ std::pair<MatrixXX, VectorX> generateStabilityConstraints(centroidal_dynamics::E
     return std::make_pair(A,b);
 }
 
-std::pair<MatrixXX, VectorX> generateStabilityConstraints(MatrixX3 normals, MatrixX3 positions,Vector3 acc = Vector3::Zero()){
+std::pair<MatrixXX, VectorX> generateStabilityConstraints(MatrixX3 normals, MatrixX3 positions,Vector3 acc = Vector3::Zero(), const centroidal_dynamics::EquilibriumAlgorithm algo = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP){
     std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals,positions,LX,LY);
-    centroidal_dynamics::Equilibrium contactPhase = ComputeContactCone(contacts.first,contacts.second);
+    centroidal_dynamics::Equilibrium contactPhase = ComputeContactCone(contacts.first,contacts.second, algo);
     return generateStabilityConstraints(contactPhase,acc);
 }
 
@@ -183,7 +184,9 @@ bool verifyStabilityConstraintsDLP(centroidal_dynamics::Equilibrium contactPhase
     centroidal_dynamics::LP_status status = contactPhaseDLP.computeEquilibriumRobustness(c,ddc,res);
     success = (status == centroidal_dynamics::LP_STATUS_OPTIMAL || status == centroidal_dynamics::LP_STATUS_UNBOUNDED);
     if(success)
-        success = res>=0.;
+        success = res>=-EPSILON;
+    if(!success)
+        std::cout << "fail level " << res << std::endl;
     return success;
 }
 
@@ -208,7 +211,7 @@ bool verifyStabilityConstraintsPP(centroidal_dynamics::Equilibrium contactPhase,
 
     // verify inequalities with c :
     for(long int i = 0 ; i < b.size() ; ++i){
-        if(A.block<1,3>(i,0).dot(c) > b[i] ){
+        if(A.block<1,3>(i,0).dot(c) -EPSILON > b[i] ){
             return false;
         }
     }
