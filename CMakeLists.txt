@@ -47,6 +47,7 @@ ENDIF(BUILD_PYTHON_INTERFACE)
 
 
 find_package (centroidal-dynamics-lib REQUIRED)
+find_package (glpk REQUIRED)
 find_package (Spline REQUIRED)
 
 # Declare Headers

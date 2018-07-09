@@ -6,6 +6,7 @@ INCLUDE_DIRECTORIES("${INCLUDE_DIR}")
 INCLUDE_DIRECTORIES("${EIGEN3_INCLUDE_DIR}")
 INCLUDE_DIRECTORIES("${SPLINE_INCLUDE_DIR}")
 INCLUDE_DIRECTORIES("${CDL_INCLUDE_DIR}")
+INCLUDE_DIRECTORIES("${GLPK_INCLUDE_DIR}")
 
 
 SET(LIBRARY_NAME ${PROJECT_NAME})
@@ -28,9 +29,11 @@ SET(${LIBRARY_NAME}_SOURCES
     ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh
     ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh
     ${INCLUDE_DIR}/solver/eiquadprog-fast.hpp
+    ${INCLUDE_DIR}/solver/glpk-wrapper.hpp
     common_solve_methods.cpp
     costfunction_definition.cpp
     eiquadprog-fast.cpp
+    glpk-wrapper.cpp
     computeCOMTraj.cpp
     solve_0_step.cpp
     utils.cpp
@@ -43,6 +46,7 @@ ADD_LIBRARY(${LIBRARY_NAME} SHARED ${${LIBRARY_NAME}_SOURCES})
 if ( MSVC )
 	SET(CMAKE_DEBUG_POSTFIX d)
 endif ( MSVC )
+TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${GLPK_LIB})
 TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${CDL_LIBRARIES})
 
 
