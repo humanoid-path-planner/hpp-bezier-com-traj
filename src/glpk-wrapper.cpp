@@ -29,7 +29,8 @@
                     const VectorXd & ce0,
                     const MatrixXd & CI,
                     const VectorXd & ci0,
-                    VectorXd& x)
+                    VectorXd& x,
+                    double& cost)
   {
       glp_smcp opts; glp_init_smcp(&opts); opts.msg_lev = GLP_MSG_OFF;
       glp_prob *lp;
@@ -79,9 +80,6 @@
           }
           idcol = 1;
       }
-      //assert(num_constraints_total == idConsMat -1);
-
-
 
       //COLUMNS
       glp_add_cols(lp, xsize); //adds three columns to the problem object
@@ -96,32 +94,18 @@
           glp_set_col_bnds(lp, idcol, GLP_LO, 0.0, 0.0);
           glp_set_obj_coef(lp, idcol, g0(i));
       }
-      /*for (int i =3; i < x.size(); ++i, ++idcol )
-          glp_set_col_bnds(lp, idrow, GLP_UP, 0.0, ci0(i));*/
-
-      // Constraint matrix
-      /*Eigen::MatrixXd constraints = Eigen::MatrixXd::Zero(1+num_constraints_total,1+x.size());
-      constraints.block(1,1,numIneqConstraints,idcol) = CI.block(0,0,numIneqConstraints,idcol);
-      constraints.block(1+numIneqConstraints,1,numEqConstraints,idcol) = CE;*/
-
       glp_load_matrix(lp,idConsMat-1,ia,ja,ar);
-
-      //ia[1] = 1, ja[1] = 1, ar[1] = 1.0; /* a[1,1] = 1 */
 
       int res = glp_simplex(lp, &opts);                      //calls the routine glp_simplex
       glpk_status ret = glpk_INFEASIBLE;
       if(res == 0)
       {
           ret = glpk_OPTIMAL;
-                                                  //to solve LP problem
-          //z = glp_get_obj_val(lp);                    //obtains a computed value of the objective function
+          cost = glp_get_obj_val(lp);                    //obtains a computed value of the objective function
 
           idrow = 1;
           for (int i =0; i < xsize; ++i, ++idrow)
               x(i) = glp_get_col_prim(lp, idrow);
-
-
-          //printf("\nz = %g; x1 = %g; x2 = %g;\n", z, x1, x2); //writes out the optimal solution
       }
       glp_delete_prob(lp);                        //calls the routine glp_delete_prob, which frees all the memory
       glp_free_env();

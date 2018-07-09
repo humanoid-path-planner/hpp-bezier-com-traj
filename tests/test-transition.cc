@@ -69,20 +69,7 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
     bezier_com_traj::ResultDataCOMTraj res;
     if(continuous)
     {
-        clock_t s0,e0;
-        std::cout<<"num contacts : "<< pData.contacts_[0].contactPhase_->m_G_centr.cols() / 16 << std::endl;
-        if(pData.representation_ == bezier_com_traj::FORCE)
-            std::cout<<"FORCE --------------------" <<std::endl;
-        else
-            std::cout<<"CONTINUOUS --------------------" <<std::endl;
-        s0 = clock();
         res = bezier_com_traj::computeCOMTraj(pData,Ts);
-        e0 = clock();
-        if(pData.representation_ == bezier_com_traj::FORCE)
-            std::cout<<"Time required with force formulation : "<<((double)(e0-s0)/CLOCKS_PER_SEC)*1000<<" ms "<<std::endl;
-        else
-            std::cout<<"Time required with Double Description: "<<((double)(e0-s0)/CLOCKS_PER_SEC)*1000<<" ms "<<std::endl;
-        std::cout<<"-------------------- \n" <<std::endl <<std::endl;
     }
     else
         res = bezier_com_traj::computeCOMTrajFixedSize(pData,Ts,pointsPerPhase);

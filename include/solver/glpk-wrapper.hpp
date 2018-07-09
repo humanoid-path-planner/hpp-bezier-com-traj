@@ -31,9 +31,7 @@ namespace solvers
     enum glpk_status
     {
       glpk_OPTIMAL=0,
-      glpk_INFEASIBLE=1,
-      glpk_UNBOUNDED=2,
-      glpk_MAX_ITER_REACHED=3,
+      glpk_INFEASIBLE=1
     };
 
     // min g'x
@@ -44,7 +42,8 @@ namespace solvers
                       const VectorXd & ce0,
                       const MatrixXd & CI,
                       const VectorXd & ci0,
-                      VectorXd& x);
+                      VectorXd& x,
+                      double& cost);
 
 } /* namespace solvers */
 

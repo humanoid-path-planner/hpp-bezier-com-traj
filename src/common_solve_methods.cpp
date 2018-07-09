@@ -177,33 +177,27 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vector
     assert (!(is_nan(H)));
 
     ResultData res;
-    MatrixXX CI = -A;
-    MatrixXX CE = D;
-    VectorX ce0  = -d;
-    tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
     VectorX x = initGuess;
 
-    tsid::solvers::EiquadprogFast_status status;
     if(sparse)
     {
-        clock_t s0,e0;
-        SpMat Hsp = H.sparseView();
-        s0 = clock();
-        status = QPsolver.solve_quadprog_sparse(Hsp,g,CE,ce0,CI,ci0,x);
-        e0 = clock();
-        std::cout<<"Time required with force formulation sparse : "<<((double)(e0-s0)/CLOCKS_PER_SEC)*1000<<" ms "<<std::endl;
-        s0 = clock();
-        solvers::glpk_status ret = solvers::solve(g,D,d,A,ci0,x);
-        e0 = clock();
-        res.success_ = (ret == solvers::glpk_OPTIMAL );
-        std::cout<<"Time required with force formulation LP : "<<((double)(e0-s0)/CLOCKS_PER_SEC)*1000<<" ms "<<std::endl;
-        //std::cout << "solvers agree ? " << ret << " " << status << std::endl;
-        //assert(((int)ret == 0 && (int)status == 0) || ((int)ret != 0 && (int)status != 0));
+        double obj;
+        solvers::glpk_status ret = solvers::solve(g,D,d,A,ci0,x,obj);
+        res.success_ = (ret == solvers::glpk_OPTIMAL);
+        if(res.success_)
+            res.cost_ = obj;
     }
     else
     {
+        MatrixXX CI = -A;
+        MatrixXX CE = D;
+        VectorX ce0  = -d;
+        tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
+        tsid::solvers::EiquadprogFast_status status;
         status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
         res.success_ = (status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL );
+        if(res.success_)
+            res.cost_ = QPsolver.getObjValue();
     }
     res.x = x;
     if(res.success_)
@@ -212,7 +206,6 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vector
         assert(x.rows() < 4 || x.tail(x.rows()-3).minCoeff() >= -1e-6);
         assert((A*x-ci0).maxCoeff() <= 1e-6 );
         assert(ce0.rows() == 0 || (D*x + ce0).norm() <= 1e-6 );
-        res.cost_ = QPsolver.getObjValue();
     }
     return res;
 }
