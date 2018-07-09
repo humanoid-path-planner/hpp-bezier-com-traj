@@ -19,6 +19,7 @@
 #define EIQUADPROGFAST_HH_
 
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 
 #define OPTIMIZE_STEP_1_2   // compute s(x) = ci^T * x + ci0
 #define OPTIMIZE_COMPUTE_D
@@ -77,9 +78,14 @@ namespace tsid
 
     class EiquadprogFast
     {
+    public:
       typedef Eigen::MatrixXd MatrixXd;
       typedef Eigen::VectorXd VectorXd;
       typedef Eigen::VectorXi VectorXi;
+
+      typedef Eigen::SparseMatrix<double> SpMat;
+      typedef Eigen::SparseVector<double> SpVec;
+      typedef Eigen::SparseVector<int>    SpVeci;
 
     public:
       
@@ -120,7 +126,6 @@ namespace tsid
        * @return The Lagrange multipliers
        */
       const VectorXd & getLagrangeMultipliers() const { return u; }
-
       /**
        * Return the active set, namely the indeces of active constraints.
        * The first nEqCon indexes are for the equalities and are negative.
@@ -144,6 +149,19 @@ namespace tsid
                                             const MatrixXd & CI,
                                             const VectorXd & ci0,
                                             VectorXd & x);
+       /**
+        * solves the sparse problem
+        * min. x' Hess x + 2 g0' x
+        * s.t. CE x + ce0 = 0
+        *      CI x + ci0 >= 0
+        */
+        EiquadprogFast_status solve_quadprog_sparse(const SpMat    & Hess,
+                                              const VectorXd & g0,
+                                              const MatrixXd & CE,
+                                              const VectorXd & ce0,
+                                              const MatrixXd & CI,
+                                              const VectorXd & ci0,
+                                              VectorXd & x);
 
       MatrixXd m_J; // J * J' = Hessian <nVars,nVars>::d
       bool is_inverse_provided_;
@@ -157,6 +175,7 @@ namespace tsid
       double f_value; /// current value of cost function
 
       Eigen::LLT<MatrixXd,Eigen::Lower> chol_; // <nVars,nVars>::d
+      //Eigen::LLT<MatrixXd,Eigen::Lower> chol_; // <nVars,nVars>::d
 
       /// from QR of L' N, where L is Cholewsky factor of Hessian, and N is the matrix of active constraints
       MatrixXd R; // <nVars,nVars>::d

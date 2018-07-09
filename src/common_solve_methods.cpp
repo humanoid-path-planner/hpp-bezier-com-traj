@@ -151,7 +151,12 @@ inline bool is_nan(const Eigen::MatrixBase<Derived>& x)
     return isnan;
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vectorX d, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
+
+typedef Eigen::SparseMatrix<double> SpMat;
+typedef Eigen::SparseVector<double> SpVec;
+typedef Eigen::SparseVector<int>    SpVeci;
+
+ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vectorX d, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess, const bool sparse)
 {
     /*
    * solves the problem
@@ -174,7 +179,20 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vector
     VectorX ce0  = -d;
     tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
     VectorX x = initGuess;
-    tsid::solvers::EiquadprogFast_status status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
+
+
+    //clock_t s0,e0;
+    //s0 = clock();
+    tsid::solvers::EiquadprogFast_status status;
+    if(sparse)
+    {
+        SpMat Hsp = H.sparseView();
+        status = QPsolver.solve_quadprog_sparse(Hsp,g,CE,ce0,CI,ci0,x);
+    }
+    else
+        status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
+    //e0 = clock();
+    //std::cout<<"Time required with force formulation normal : "<<((double)(e0-s0)/CLOCKS_PER_SEC)*1000<<" ms "<<std::endl;
     ResultData res;
     res.success_ = (status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL );
     res.x = x;
@@ -189,23 +207,23 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vector
     return res;
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
+ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess, const bool sparse)
 {
     MatrixXX D = MatrixXX::Zero(0,A.cols());
     VectorX d  = VectorX::Zero(0);
-    return solve(A,b,D,d,H,g,initGuess);
+    return solve(A,b,D,d,H,g,initGuess,sparse);
 }
 
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init)
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const bool sparse)
 {
-    return solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
+    return solve(Ab.first,Ab.second,Hg.first,Hg.second, init,sparse);
 }
 
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Dd,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init)
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Dd,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const bool sparse)
 {
-    return solve(Ab.first,Ab.second,Dd.first, Dd.second, Hg.first,Hg.second, init);
+    return solve(Ab.first,Ab.second,Dd.first, Dd.second, Hg.first,Hg.second, init, sparse);
 }
 
 } // namespace bezier_com_traj

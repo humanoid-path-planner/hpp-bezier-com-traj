@@ -505,7 +505,7 @@ ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
     }
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray,Ab.first.cols());
     VectorX x = VectorX::Zero(Ab.first.cols());
-    ResultData resQp = solve(Ab,Dd,Hg, x);
+    ResultData resQp = solve(Ab,Dd,Hg, x, pData.representation_ == FORCE);
 #if QHULL
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
 #endif
