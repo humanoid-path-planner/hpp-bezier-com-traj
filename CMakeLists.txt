@@ -34,6 +34,8 @@ string (REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 MESSAGE( STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS} )
 
 OPTION (BUILD_PYTHON_INTERFACE "Build the python binding" ON)
+OPTION (USE_GLPK "Use sparse lp solver" ON)
+
 IF(BUILD_PYTHON_INTERFACE)
 # search for python
 	FINDPYTHON(2.7  REQUIRED)
@@ -47,9 +49,14 @@ ENDIF(BUILD_PYTHON_INTERFACE)
 
 
 find_package (centroidal-dynamics-lib REQUIRED)
+IF(USE_GLPK)
+find_package (glpk REQUIRED)
+add_definitions ( -DUSE_GLPK_SOLVER=1)
+ENDIF(USE_GLPK)
 find_package (Spline REQUIRED)
 
 # Declare Headers
+IF(USE_GLPK)
 SET(${PROJECT_NAME}_HEADERS
                 include/bezier-com-traj/data.hh
                 include/bezier-com-traj/utils.hh
@@ -68,9 +75,35 @@ SET(${PROJECT_NAME}_HEADERS
                 include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh
                 include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh
                 include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh
+                include/solver/solver-abstract.hpp
+                include/solver/glpk-wrapper.hpp
                 include/solver/eiquadprog-fast.hpp
 
   )
+else()
+SET(${PROJECT_NAME}_HEADERS
+                include/bezier-com-traj/data.hh
+                include/bezier-com-traj/utils.hh
+                include/bezier-com-traj/flags.hh
+                include/bezier-com-traj/definitions.hh
+                include/bezier-com-traj/config.hh
+                include/bezier-com-traj/solve.hh
+                include/bezier-com-traj/solve_end_effector.hh
+                include/bezier-com-traj/common_solve_methods.hh
+                include/bezier-com-traj/common_solve_methods.inl
+                include/bezier-com-traj/cost/costfunction_definition.hh
+                include/bezier-com-traj/waypoints/waypoints_definition.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh
+                include/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh
+                include/solver/solver-abstract.hpp
+                include/solver/eiquadprog-fast.hpp
+
+  )
+ENDIF(USE_GLPK)
 
 find_package(Eigen3)
 if (EIGEN3_INCLUDE_DIR)

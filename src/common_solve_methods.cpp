@@ -1,6 +1,7 @@
 
 #include <bezier-com-traj/common_solve_methods.hh>
 #include <solver/eiquadprog-fast.hpp>
+#include <solver/glpk-wrapper.hpp>
 #include <bezier-com-traj/waypoints/waypoints_definition.hh>
 
 namespace bezier_com_traj
@@ -27,6 +28,12 @@ MatrixXX initMatrixA(const int dimH, const std::vector<waypoint6_t>& wps, const 
 {
     int dimPb = useAngMomentum ? 6 : 3;
     return MatrixXX::Zero(dimH * wps.size() + extraConstraintSize, dimPb);
+}
+
+MatrixXX initMatrixD(const int colG, const std::vector<waypoint6_t>& wps, const long int extraConstraintSize, const bool useAngMomentum)
+{
+    int dimPb = useAngMomentum ? 6 : 3;
+    return MatrixXX::Zero(6 + extraConstraintSize, wps.size() * colG +  dimPb);
 }
 
 void addKinematic(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Kin, Cref_vectorX kin, const long int otherConstraintIndex)
@@ -93,6 +100,7 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     // gravity vector
     const point_t& g = cData.contactPhase_->m_gravity;
     // compute GIWC
+    assert (cData.contactPhase_->getAlgorithm() ==  centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP);
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     cData.contactPhase_->getPolytopeInequalities(Hrow,h);
     MatrixXX H = -Hrow;
@@ -137,50 +145,29 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     return std::make_pair(A,b);
 }
 
-template<typename Derived>
-inline bool is_nan(const Eigen::MatrixBase<Derived>& x)
+ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vectorX d, Cref_matrixXX H,
+                 Cref_vectorX g, Cref_vectorX initGuess, const solvers::SolverType solver)
 {
-    bool isnan = !((x.array()==x.array()).all());
-    return isnan;
+    return solvers::solve(A,ci0,D,d,H,g,initGuess,solver);
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess)
+ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess, const solvers::SolverType solver)
 {
-    /*
-   * solves the problem
-   * min. x' Hess x + 2 g0' x
-   * s.t. CE x + ce0 = 0
-   *      CI x + ci0 >= 0
-   * Thus CI = -A; ci0 = b
-   *      CI = 0; ce0 = 0
-   */
-
-    assert (!(is_nan(A)));
-    assert (!(is_nan(ci0)));
-    assert (!(is_nan(initGuess)));
-    assert (!(is_nan(H)));
-
-    MatrixXX CI = -A;
-    MatrixXX CE = MatrixXX::Zero(0,A.cols());
-    VectorX ce0  = VectorX::Zero(0);
-    tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
-    VectorX x = initGuess;
-    tsid::solvers::EiquadprogFast_status status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
-    ResultData res;
-    res.success_ = (status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL );
-    res.x = x;
-    if(res.success_)
-    {
-        assert (!(is_nan(x)));
-        res.cost_ = QPsolver.getObjValue();
-    }
-    return res;
+    MatrixXX D = MatrixXX::Zero(0,A.cols());
+    VectorX d  = VectorX::Zero(0);
+    return solvers::solve(A,b,D,d,H,g,initGuess,solver);
 }
 
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const Vector3& init)
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const solvers::SolverType solver)
 {
-    return solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
+    return solve(Ab.first,Ab.second,Hg.first,Hg.second, init,solver);
+}
+
+
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Dd,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const solvers::SolverType solver)
+{
+    return solve(Ab.first,Ab.second,Dd.first, Dd.second, Hg.first,Hg.second, init, solver);
 }
 
 } // namespace bezier_com_traj

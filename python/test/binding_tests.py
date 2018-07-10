@@ -73,7 +73,7 @@ try:
     cData.Kin_
 except RuntimeError,e:
     excep = True
-assert excep, "No kin assigned should have raised exception"
+assert excep, "[ERROR] No kin assigned should have raised exception"
 cData.setKinematicConstraints(Id, matrix([0.,0.,1.]).T )
 cData.Kin_
 
@@ -82,14 +82,14 @@ try:
     cData.setKinematicConstraints(Id, matrix([0.,0.,0.,1.]).T )
 except RuntimeError,e:
     excep = True
-assert excep, "Miss matching matrix and vector should raise an error"
+assert excep, "[ERROR] Miss matching matrix and vector should raise an error"
 
 excep = False
 try:
     cData.Ang_
 except RuntimeError,e:
     excep = True
-assert excep, "No Ang_ assigned should have raised exception"
+assert excep, "[ERROR] No Ang_ assigned should have raised exception"
 cData.setAngularConstraints(Id, matrix([0.,0.,1.]).T )
 cData.Ang_
 
@@ -99,7 +99,7 @@ try:
     cData.setAngularConstraints(Id, matrix([0.,0.,0.,1.]).T )
 except RuntimeError,e:
     excep = True
-assert excep, "Miss matching matrix and vector should raise an error"
+assert excep, "[ERROR] Missmatching matrix and vector should raise an error"
 
 
 #testing constraints
@@ -139,6 +139,15 @@ def initContactData(pD):
 pD.c0_ = c0
 pD.dc0_ = dc0
 res = computeCOMTraj(pD,matrix([0.4,0.4,0.4]).T,0.05)
+#test glpk only if defined
+try:
+    test = SOLVER_GLPK
+    res = computeCOMTraj(pD,matrix([0.4,0.4,0.4]).T,0.05,SOLVER_GLPK)
+except NameError,e:
+    print "[WARNING] SOLVER_GLPK is not defined. Consider installing GLPK if you are using CROC with a force formulation"
+    
+res = computeCOMTraj(pD,matrix([0.4,0.4,0.4]).T,0.05,SOLVER_QUADPROG)
+res = computeCOMTraj(pD,matrix([0.4,0.4,0.4]).T,0.05,SOLVER_QUADPROG_SPARSE)
 assert np.linalg.norm(res.c_of_t.derivate(1.2, 1)) < 0.00000001
 
 # non matching time step and contact phases
@@ -147,4 +156,6 @@ try:
     res = computeCOMTraj(pD,matrix([0.4,0.4]).T,0.05)
 except RuntimeError,e:
     excep = True
-assert excep, "computeCOMTraj should have raised exception"
+assert excep, "[ERROR] computeCOMTraj should have raised exception"
+
+print "all tests passed"

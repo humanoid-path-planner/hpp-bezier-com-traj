@@ -9,6 +9,7 @@
 #include <bezier-com-traj/config.hh>
 #include <bezier-com-traj/data.hh>
 #include <bezier-com-traj/waypoints/waypoints_definition.hh>
+#include <solver/solver-abstract.hpp>
 
 #include <Eigen/Dense>
 
@@ -40,6 +41,21 @@ BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequa
         const ContactData& cData, const std::vector<waypoint6_t>& wps,
         const std::vector<waypoint6_t>& wpL, const bool useAngMomentum, bool& fail);
 
+
+/**
+ * @brief compute6dControlPointEqualities Given linear and angular control waypoints,
+ * compute the equality matrices D and d, D [x; Beta]' = d that constrain the desired control point x and contact forces Beta.
+ * @param cData data for the current contact phase
+ * @param wps waypoints or the linear part of the trajectory
+ * @param wpL waypoints or the angular part of the trajectory
+ * @param useAngMomentum whether the angular momentum is consider or equal to 0
+ * @param fail set to true if problem is found infeasible
+ * @return
+ */
+BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointEqualities(
+        const ContactData& cData, const std::vector<waypoint6_t>& wps,
+        const std::vector<waypoint6_t>& wpL, const bool useAngMomentum, bool& fail);
+
 /**
  * @brief solve x' h x + 2 g' x, subject to A*x <= b using quadprog
  * @param A Inequality matrix
@@ -49,7 +65,21 @@ BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointInequa
  * @return
  */
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H,
-                                        Cref_vectorX  g, Cref_vectorX initGuess);
+                                        Cref_vectorX  g, Cref_vectorX initGuess, const solvers::SolverType solver = solvers::SOLVER_QUADPROG );
+/**
+ * @brief solve x' h x + 2 g' x, subject to A*x <= b and D*x = c using quadprog
+ * @param A Inequality matrix
+ * @param b Inequality vector
+ * @param D Equality matrix
+ * @param d Equality vector
+ * @param H Cost matrix
+ * @param g cost Vector
+ * @return
+ */
+BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b,
+                                        Cref_matrixXX D, Cref_vectorX d,
+                                        Cref_matrixXX H, Cref_vectorX  g,
+                                        Cref_vectorX initGuess, const solvers::SolverType solver = solvers::SOLVER_QUADPROG);
 
 
 /**
@@ -59,8 +89,20 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_ma
  * @return
  */
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
-                                        const std::pair<MatrixXX, VectorX>& Hg, const Vector3& init);
+                                        const std::pair<MatrixXX, VectorX>& Hg,
+                                        const VectorX& init, const solvers::SolverType solver = solvers::SOLVER_QUADPROG);
 
+/**
+ * @brief solve x' h x + 2 g' x, subject to A*x <= b  and D*x = c using quadprog, with x of fixed dimension 3
+ * @param Ab Inequality matrix and vector
+ * @param Dd Equality matrix and vector
+ * @param Hg Cost matrix and vector
+ * @return
+ */
+BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
+                                        const std::pair<MatrixXX, VectorX>& Dd,
+                                        const std::pair<MatrixXX, VectorX>& Hg,
+                                        const VectorX& init, const solvers::SolverType solver = solvers::SOLVER_QUADPROG);
 
 template <typename Point>
 BEZIER_COM_TRAJ_DLLAPI std::vector< std::pair<double,Point> > computeDiscretizedWaypoints

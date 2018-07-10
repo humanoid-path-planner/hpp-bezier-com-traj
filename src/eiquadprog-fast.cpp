@@ -167,6 +167,7 @@ namespace tsid
       return true;
     }
 
+
     void EiquadprogFast::delete_constraint(MatrixXd & R,
                                            MatrixXd & J,
                                            VectorXi & A,
@@ -251,6 +252,7 @@ namespace tsid
         }
       }
     }
+
 
     template<class Derived>
     void print_vector(const char* name, Eigen::MatrixBase<Derived>& x, int n){
@@ -468,6 +470,453 @@ l1:
 	  
       START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_1);
 	  
+#ifdef TRACE_SOLVER
+      print_vector("x", x, nVars);
+#endif
+      /* step 1: choose a violated constraint */
+      for (i = nEqCon; i < iq; i++)
+      {
+        ip = A(i);
+        iai(ip) = -1;
+      }
+
+      /* compute s(x) = ci^T * x + ci0 for all elements of K \ A */
+      START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_1_2);
+      ss = 0.0;
+      ip = 0; /* ip will be the index of the chosen violated constraint */
+
+#ifdef OPTIMIZE_STEP_1_2
+      s = ci0;
+      s.noalias() += CI*x;
+      iaexcl.setOnes();
+      psi = (s.cwiseMin(VectorXd::Zero(nIneqCon))).sum();
+#else
+      psi = 0.0; /* this value will contain the sum of all infeasibilities */
+      for (i = 0; i < nIneqCon; i++)
+      {
+        iaexcl(i) = 1;
+        s(i) = CI.row(i).dot(x) + ci0(i);
+        psi += std::min(0.0, s(i));
+      }
+#endif
+      STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_1_2);
+#ifdef TRACE_SOLVER
+      print_vector("s", s, nIneqCon);
+#endif
+
+
+      STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_1);
+
+      if (std::abs(psi) <= nIneqCon * std::numeric_limits<double>::epsilon() * c1 * c2* 100.0)
+      {
+        /* numerically there are not infeasibilities anymore */
+        q = iq;
+        //        DEBUG_STREAM("Optimal active set:\n"<<A.head(iq).transpose()<<"\n\n")
+        return EIQUADPROG_FAST_OPTIMAL;
+      }
+
+      /* save old values for u, x and A */
+      u_old.head(iq) = u.head(iq);
+      A_old.head(iq) = A.head(iq);
+      x_old = x;
+
+l2: /* Step 2: check for feasibility and determine a new S-pair */
+      START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2);
+      // find constraint with highest violation (what about normalizing constraints?)
+      for (i = 0; i < nIneqCon; i++)
+      {
+        if (s(i) < ss && iai(i) != -1 && iaexcl(i))
+        {
+          ss = s(i);
+          ip = i;
+        }
+      }
+      if (ss >= 0.0)
+      {
+        q = iq;
+        //        DEBUG_STREAM("Optimal active set:\n"<<A.transpose()<<"\n\n")
+        return EIQUADPROG_FAST_OPTIMAL;
+      }
+
+      /* set np = n(ip) */
+      np = CI.row(ip);
+      /* set u = (u 0)^T */
+      u(iq) = 0.0;
+      /* add ip to the active set A */
+      A(iq) = ip;
+
+      //      DEBUG_STREAM("Add constraint "<<ip<<" to active set\n")
+
+#ifdef TRACE_SOLVER
+      std::cout << "Trying with constraint " << ip << std::endl;
+      print_vector("np", np, nVars);
+#endif
+      STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2);
+
+l2a:/* Step 2a: determine step direction */
+      START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2A);
+      /* compute z = H np: the step direction in the primal space (through m_J, see the paper) */
+      compute_d(d, m_J, np);
+      //    update_z(z, m_J, d, iq);
+      if(iq >= nVars)
+      {
+        //      throw std::runtime_error("iq >= m_J.cols()");
+        z.setZero();
+      }else{
+        update_z(z, m_J, d, iq);
+      }
+      /* compute N* np (if q > 0): the negative of the step direction in the dual space */
+      update_r(R, r, d, iq);
+#ifdef TRACE_SOLVER
+      std::cout << "Step direction z" << std::endl;
+      print_vector("z", z, nVars);
+      print_vector("r", r, iq + 1);
+      print_vector("u", u, iq + 1);
+      print_vector("d", d, nVars);
+      print_vector("A", A, iq + 1);
+#endif
+      STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2A);
+
+      /* Step 2b: compute step length */
+      START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2B);
+      l = 0;
+      /* Compute t1: partial step length (maximum step in dual space without violating dual feasibility */
+      t1 = inf; /* +inf */
+      /* find the index l s.t. it reaches the minimum of u+(x) / r */
+      // l: index of constraint to drop (maybe)
+      for (k = nEqCon; k < iq; k++)
+      {
+        double tmp;
+        if (r(k) > 0.0 && ((tmp = u(k) / r(k)) < t1) )
+        {
+          t1 = tmp;
+          l = A(k);
+        }
+      }
+      /* Compute t2: full step length (minimum step in primal space such that the constraint ip becomes feasible */
+      if (std::abs(z.dot(z))  > std::numeric_limits<double>::epsilon()) // i.e. z != 0
+        t2 = -s(ip) / z.dot(np);
+      else
+        t2 = inf; /* +inf */
+
+      /* the step is chosen as the minimum of t1 and t2 */
+      t = std::min(t1, t2);
+#ifdef TRACE_SOLVER
+      std::cout << "Step sizes: " << t << " (t1 = " << t1 << ", t2 = " << t2 << ") ";
+#endif
+      STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2B);
+
+      /* Step 2c: determine new S-pair and take step: */
+      START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2C);
+      /* case (i): no step in primal or dual space */
+      if (t >= inf)
+      {
+        /* QPP is infeasible */
+        q = iq;
+        STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2C);
+        return EIQUADPROG_FAST_UNBOUNDED;
+      }
+      /* case (ii): step in dual space */
+      if (t2 >= inf)
+      {
+        /* set u = u +  t * [-r 1) and drop constraint l from the active set A */
+        u.head(iq) -= t * r.head(iq);
+        u(iq) += t;
+        iai(l) = l;
+        delete_constraint(R, m_J, A, u, nEqCon, iq, l);
+#ifdef TRACE_SOLVER
+        std::cout << " in dual space: "<< f_value << std::endl;
+        print_vector("x", x, nVars);
+        print_vector("z", z, nVars);
+        print_vector("A", A, iq + 1);
+#endif
+        STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2C);
+        goto l2a;
+      }
+
+      /* case (iii): step in primal and dual space */
+      x += t * z;
+      /* update the solution value */
+      f_value += t * z.dot(np) * (0.5 * t + u(iq));
+
+      u.head(iq) -= t * r.head(iq);
+      u(iq) += t;
+
+#ifdef TRACE_SOLVER
+      std::cout << " in both spaces: "<< f_value << std::endl;
+      print_vector("x", x, nVars);
+      print_vector("u", u, iq + 1);
+      print_vector("r", r, iq + 1);
+      print_vector("A", A, iq + 1);
+#endif
+
+      if (t == t2)
+      {
+#ifdef TRACE_SOLVER
+        std::cout << "Full step has taken " << t << std::endl;
+        print_vector("x", x, nVars);
+#endif
+        /* full step has taken */
+        /* add constraint ip to the active set*/
+        if (!add_constraint(R, m_J, d, iq, R_norm))
+        {
+          iaexcl(ip) = 0;
+          delete_constraint(R, m_J, A, u, nEqCon, iq, ip);
+#ifdef TRACE_SOLVER
+          print_matrix("R", R, nVars);
+          print_vector("A", A, iq);
+#endif
+          for (i = 0; i < nIneqCon; i++)
+            iai(i) = i;
+          for (i = 0; i < iq; i++)
+          {
+            A(i) = A_old(i);
+            iai(A(i)) = -1;
+            u(i) = u_old(i);
+          }
+          x = x_old;
+          STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2C);
+          goto l2; /* go to step 2 */
+        }
+        else
+          iai(ip) = -1;
+#ifdef TRACE_SOLVER
+        print_matrix("R", R, nVars);
+        print_vector("A", A, iq);
+#endif
+        STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2C);
+        goto l1;
+      }
+
+      /* a partial step has been taken => drop constraint l */
+      iai(l) = l;
+      delete_constraint(R, m_J, A, u, nEqCon, iq, l);
+      s(ip) = CI.row(ip).dot(x) + ci0(ip);
+
+#ifdef TRACE_SOLVER
+      std::cout << "Partial step has taken " << t << std::endl;
+      print_vector("x", x, nVars);
+      print_matrix("R", R, nVars);
+      print_vector("A", A, iq);
+      print_vector("s", s, nIneqCon);
+#endif
+      STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_2C);
+
+      goto l2a;
+    }
+
+    double trace_sparse(const EiquadprogFast::SpMat& Hess)
+    {
+        double sum =0;
+        for (int k=0; k<Hess.outerSize(); ++k)
+            sum += Hess.coeff(k,k);
+        return sum;
+    }
+
+
+
+    EiquadprogFast_status EiquadprogFast::solve_quadprog_sparse(const EiquadprogFast::SpMat & Hess,
+                                                          const VectorXd & g0,
+                                                          const MatrixXd & CE,
+                                                          const VectorXd & ce0,
+                                                          const MatrixXd & CI,
+                                                          const VectorXd & ci0,
+                                                          VectorXd & x)
+    {
+      const int nVars    = (int) g0.size();
+      const int nEqCon   = (int)ce0.size();
+      const int nIneqCon = (int)ci0.size();
+
+      if(nVars!=m_nVars || nEqCon!=m_nEqCon || nIneqCon!=m_nIneqCon)
+        reset(nVars, nEqCon, nIneqCon);
+
+      assert(Hess.rows()==m_nVars && Hess.cols()==m_nVars);
+      assert(g0.size()==m_nVars);
+      assert(CE.rows()==m_nEqCon && CE.cols()==m_nVars);
+      assert(ce0.size()==m_nEqCon);
+      assert(CI.rows()==m_nIneqCon && CI.cols()==m_nVars);
+      assert(ci0.size()==m_nIneqCon);
+
+      int i, k, l;  // indices
+      int ip;       // index of the chosen violated constraint
+      int iq;       // current number of active constraints
+      double psi;   // current sum of constraint violations
+      double c1;    // Hessian trace
+      double c2;    // Hessian Chowlesky factor trace
+      double ss;    // largest constraint violation (negative for violation)
+      double R_norm;  // norm of matrix R
+      const double inf = std::numeric_limits<double>::infinity();
+      double t, t1, t2;
+      /* t is the step length, which is the minimum of the partial step length t1
+        * and the full step length t2 */
+
+      iter = 0; // active-set iteration number
+
+      /*
+       * Preprocessing phase
+       */
+      /* compute the trace of the original matrix Hess */
+      c1 = trace_sparse(Hess);
+
+      START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_CHOWLESKY_DECOMPOSITION);
+      Eigen::SimplicialLLT< SpMat, Eigen::Lower> cholsp_(Hess);
+      STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_CHOWLESKY_DECOMPOSITION);
+
+
+      /* initialize the matrix R */
+      d.setZero(nVars);
+      R.setZero(nVars, nVars);
+      R_norm = 1.0;
+
+      /* compute the inverse of the factorized matrix Hess^-1, this is the initial value for H */
+      // m_J = L^-T
+      if(!is_inverse_provided_)
+      {
+        START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_CHOWLESKY_INVERSE);
+        m_J.setIdentity(nVars, nVars);
+#ifdef OPTIMIZE_HESSIAN_INVERSE
+        cholsp_.matrixU().solve(m_J);
+#else
+        m_J = cholsp_.matrixU().solve(m_J);
+#endif
+        STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_CHOWLESKY_INVERSE);
+      }
+
+      c2 = m_J.trace();
+#ifdef _SOLVER
+      print_matrix("m_J", m_J, nVars);
+#endif
+
+      /* c1 * c2 is an estimate for cond(Hess) */
+
+      /*
+     * Find the unconstrained minimizer of the quadratic form 0.5 * x Hess x + g0 x
+     * this is a feasible point in the dual space
+           * x = Hess^-1 * g0
+     */
+      START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_1_UNCONSTR_MINIM);
+      if(is_inverse_provided_)
+      {
+        x = m_J*(m_J.transpose()*g0);
+      }
+      else
+      {
+#ifdef OPTIMIZE_UNCONSTR_MINIM
+        //x = -g0;
+        x = cholsp_.solve(-g0);
+      }
+#else
+        x = cholsp_.solve(g0);
+      }
+      x = -x;
+#endif
+      /* and compute the current solution value */
+      f_value = 0.5 * g0.dot(x);
+#ifdef TRACE_SOLVER
+      std::cout << "Unconstrained solution: " << f_value << std::endl;
+      print_vector("x", x, nVars);
+#endif
+      STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_1_UNCONSTR_MINIM);
+
+      /* Add equality constraints to the working set A */
+
+      START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_ADD_EQ_CONSTR);
+      iq = 0;
+      for (i = 0; i < nEqCon; i++)
+      {
+        START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_ADD_EQ_CONSTR_1);
+        np = CE.row(i);
+        compute_d(d, m_J, np);
+        update_z(z, m_J, d,  iq);
+        update_r(R, r, d,  iq);
+
+#ifdef TRACE_SOLVER
+        print_matrix("R", R, iq);
+        print_vector("z", z, nVars);
+        print_vector("r", r, iq);
+        print_vector("d", d, nVars);
+#endif
+
+        /* compute full step length t2: i.e., the minimum step in primal space s.t. the contraint
+        becomes feasible */
+        t2 = 0.0;
+        if (std::abs(z.dot(z)) > std::numeric_limits<double>::epsilon()) // i.e. z != 0
+          t2 = (-np.dot(x) - ce0(i)) / z.dot(np);
+
+        x += t2 * z;
+
+        /* set u = u+ */
+        u(iq) = t2;
+        u.head(iq) -= t2 * r.head(iq);
+
+        /* compute the new solution value */
+        f_value += 0.5 * (t2 * t2) * z.dot(np);
+        A(i) = -i - 1;
+        STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_ADD_EQ_CONSTR_1);
+
+        START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_ADD_EQ_CONSTR_2);
+        if (!add_constraint(R, m_J, d, iq, R_norm))
+        {
+          // Equality constraints are linearly dependent
+          return EIQUADPROG_FAST_REDUNDANT_EQUALITIES;
+        }
+        STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_ADD_EQ_CONSTR_2);
+      }
+      STOP_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_ADD_EQ_CONSTR);
+
+      /* set iai = K \ A */
+      for (i = 0; i < nIneqCon; i++)
+        iai(i) = i;
+
+#ifdef USE_WARM_START
+      //      DEBUG_STREAM("Gonna warm start using previous active set:\n"<<A.transpose()<<"\n")
+      for (i = nEqCon; i < q; i++)
+      {
+        iai(i-nEqCon) = -1;
+        ip = A(i);
+        np = CI.row(ip);
+        compute_d(d, m_J, np);
+        update_z(z, m_J, d,  iq);
+        update_r(R, r, d,  iq);
+
+        /* compute full step length t2: i.e., the minimum step in primal space s.t. the contraint
+        becomes feasible */
+        t2 = 0.0;
+        if (std::abs(z.dot(z)) > std::numeric_limits<double>::epsilon()) // i.e. z != 0
+          t2 = (-np.dot(x) - ci0(ip)) / z.dot(np);
+        else
+          DEBUG_STREAM("[WARM START] z=0\n")
+
+              x += t2 * z;
+
+        /* set u = u+ */
+        u(iq) = t2;
+        u.head(iq) -= t2 * r.head(iq);
+
+        /* compute the new solution value */
+        f_value += 0.5 * (t2 * t2) * z.dot(np);
+
+        if (!add_constraint(R, m_J, d, iq, R_norm))
+        {
+          // constraints are linearly dependent
+          std::cout << "[WARM START] Constraints are linearly dependent\n";
+          return RT_EIQUADPROG_REDUNDANT_EQUALITIES;
+        }
+      }
+#else
+
+#endif
+
+l1:
+      iter++;
+      if(iter>=m_maxIter)
+      {
+        q = iq;
+        return EIQUADPROG_FAST_MAX_ITER_REACHED;
+      }
+
+      START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_1);
+
 #ifdef TRACE_SOLVER
       print_vector("x", x, nVars);
 #endif

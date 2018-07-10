@@ -10,7 +10,7 @@
 #include <bezier-com-traj/flags.hh>
 #include <bezier-com-traj/definitions.hh>
 #include <bezier-com-traj/utils.hh>
-
+#include <solver/solver-abstract.hpp>
 #include <spline/bezier_curve.h>
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 #include <Eigen/Dense>
@@ -104,7 +104,8 @@ namespace bezier_com_traj
             ,ddc1_(point_t::Zero())
             ,j1_(point_t::Zero())
             ,useAngularMomentum_(false)
-            ,costFunction_(ACCELERATION) {}
+            ,costFunction_(ACCELERATION)
+            ,representation_(DOUBLE_DESCRIPTION) {}
 
         std::vector<ContactData> contacts_;
         point_t  c0_,dc0_,ddc0_,j0_,c1_,dc1_,ddc1_,j1_;
@@ -112,43 +113,10 @@ namespace bezier_com_traj
         bool useAngularMomentum_;
         Constraints constraints_;
         CostFunction costFunction_;
+        GIWCRepresentation representation_;
     };
 
-
-    /**
-    * @brief Struct used to return the results of the trajectory generation
-    * problem.
-    */
-    struct BEZIER_COM_TRAJ_DLLAPI ResultData
-    {
-        ResultData():
-            success_(false)
-          , cost_(-1.)
-          , x(VectorX::Zero(0)){}
-
-        ResultData(const bool success, const double cost, Cref_vectorX x ):
-            success_(success)
-          , cost_(cost)
-          , x(x){}
-
-        ResultData(const ResultData& other):
-            success_(other.success_)
-          , cost_(other.cost_)
-          , x(other.x){}
-        ~ResultData(){}
-
-        ResultData& operator=(const ResultData& other)
-        {
-            success_= (other.success_);
-            cost_ = (other.cost_);
-            x = (other.x);
-            return *this;
-        }
-        bool success_; // whether the optimization was successful
-        double cost_; // cost evaluation for the solved control point
-        VectorX x; //control point
-    };
-
+    typedef solvers::ResultData ResultData;
 
     /**
     * @brief Specialized ResultData that computes the Bezier curves

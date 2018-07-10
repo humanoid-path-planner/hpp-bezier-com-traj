@@ -25,6 +25,7 @@ https://hal.archives-ouvertes.fr/hal-01726155v1
 ## Dependencies
 * [centroidal-dynamics-lib] Centroidal dynamics computation library (https://github.com/stonneau/centroidal-dynamics-lib)
 * [spline] Bezier curves library (https://github.com/stonneau/spline)
+* [glpk] GNU Linear Programming Kit (https://www.gnu.org/software/glpk/)
 
 ## Additional dependencies for python bindings
 * [Boost.Python](http://www.boost.org/doc/libs/1_63_0/libs/python/doc/html/index.html)

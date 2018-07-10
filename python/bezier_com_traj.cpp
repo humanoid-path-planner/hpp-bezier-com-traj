@@ -1,4 +1,5 @@
 #include "bezier-com-traj/solve.hh"
+#include "solver/solver-abstract.hpp"
 #include <eigenpy/memory.hpp>
 #include <eigenpy/eigenpy.hpp>
 
@@ -301,6 +302,16 @@ void set_costFunction_(ProblemData& res, const CostFunction val)
     res.costFunction_ = val;
 }
 
+GIWCRepresentation get_GIWC_representation_(const ProblemData& res)
+{
+    return res.representation_;
+}
+
+void set_GIWC_representation_(ProblemData& res, const GIWCRepresentation val)
+{
+    res.representation_ = val;
+}
+
 Constraints* get_constraints_(ProblemData& res)
 {
     return &res.constraints_;
@@ -337,6 +348,13 @@ ResultDataCOMTraj* computeCOMTrajPointer(const ProblemData& pData, const VectorX
     ResultDataCOMTraj  res = computeCOMTraj(pData, Ts, timeStep);
     return new ResultDataCOMTraj(res);
 }
+
+ResultDataCOMTraj* computeCOMTrajPointerChooseSolver(const ProblemData& pData, const VectorX& Ts, const double timeStep, const solvers::SolverType solver)
+{
+    ResultDataCOMTraj  res = computeCOMTraj(pData, Ts, timeStep, solver);
+    return new ResultDataCOMTraj(res);
+}
+
 
 
 /** END computeCOMTraj **/
@@ -395,6 +413,7 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
             .add_property("ddc1_",&get_ddc1_, &set_ddc1_ )
             .add_property("useAngularMomentum_",&get_useAngularMomentum_, &set_useAngularMomentum_)
             .add_property("costFunction_",&get_costFunction_, &set_costFunction_ )
+            .add_property("GIWCrepresentation_",&get_GIWC_representation_, &set_GIWC_representation_ )
             .add_property("constraints_",make_function(&get_constraints_,
                                                        return_value_policy<reference_existing_object>()), &set_constraints_ )
             .def("clearContacts", clearContacts)
@@ -416,6 +435,19 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
             .value("UNKNOWN_COST", UNKNOWN_COST)
             .export_values();
 
+    enum_<GIWCRepresentation>("GIWCRepresentation")
+            .value("DOUBLE_DESCRIPTION", DOUBLE_DESCRIPTION)
+            .value("FORCE", FORCE)
+            .value("UNKNOWN_REPRESENTATION", UNKNOWN_REPRESENTATION)
+            .export_values();
+
+    enum_<solvers::SolverType>("SolverType")
+            .value("SOLVER_QUADPROG", solvers::SOLVER_QUADPROG)
+            .value("SOLVER_QUADPROG_SPARSE", solvers::SOLVER_QUADPROG_SPARSE)
+#ifdef USE_GLPK_SOLVER
+            .value("SOLVER_GLPK", solvers::SOLVER_GLPK)
+#endif
+            .export_values();
 
     enum_<ConstraintFlag>("ConstraintFlag")
             .value("INIT_POS", INIT_POS)
@@ -432,6 +464,7 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
     def("zeroStepCapturability", &zeroStepCapturability, return_value_policy<manage_new_object>());
     def("zeroStepCapturability", &zeroStepCapturabilityWithKinConstraints, return_value_policy<manage_new_object>());
     def("computeCOMTraj", &computeCOMTrajPointer, return_value_policy<manage_new_object>());
+    def("computeCOMTraj", &computeCOMTrajPointerChooseSolver, return_value_policy<manage_new_object>());
 
 }
 
