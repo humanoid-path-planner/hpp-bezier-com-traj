@@ -33,8 +33,8 @@ SETUP_PROJECT()
 string (REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 MESSAGE( STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS} )
 
-OPTION (BUILD_PYTHON_INTERFACE "Build the python binding" ON)
-OPTION (USE_GLPK "Use sparse lp solver" ON)
+OPTION (BUILD_PYTHON_INTERFACE "Build the python binding" OFF)
+OPTION (USE_GLPK "Use sparse lp solver" OFF)
 
 IF(BUILD_PYTHON_INTERFACE)
 # search for python
