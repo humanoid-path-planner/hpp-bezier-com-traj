@@ -252,7 +252,7 @@ ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double
     if(dimPb > 3)
         init.tail(3) = pData.l0_;
     // rewriting 0.5 || Dx -d ||^2 as x'Hx  + g'x
-    ResultData resQp = solve(Ab.first,Ab.second,Hg.first,Hg.second, init);
+    ResultData resQp = solve(Ab,Hg, init);
     if(resQp.success_)
     {
         res.success_ = true;

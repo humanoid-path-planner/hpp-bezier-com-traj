@@ -304,6 +304,7 @@ ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const doub
     {
         res.success_ = true;
         res.x = resQp.x.head<3>();
+        res.cost_ = resQp.cost_;
         std::vector<Vector3> pis = computeConstantWaypoints(pData,T);
         res.c_of_t_ = computeBezierCurve<bezier_t, point_t> (pData.constraints_.flag_,T,pis,res.x);
         computeFinalVelocity(res);
@@ -372,7 +373,9 @@ long int computeNumEqContinuous(const ProblemData& pData, const int w_degree, co
 }
 
 std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pData, const VectorX& Ts,
-                                                          std::pair<MatrixXX, VectorX>& Dd){
+                                                          std::pair<MatrixXX, VectorX>& Dd,
+                                                          VectorX& minBounds,
+                                                          VectorX& /*maxBounds*/){
 
     // determine whether to use force or double description
     // based on equilibrium value
@@ -395,8 +398,9 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
     long int totalVarDim = dimVarX + forceVarDim ;
     long int id_rows = 0;
     long int id_cols = dimVarX; // start after x variable
-    MatrixXX A = MatrixXX::Zero(num_ineq+forceVarDim,totalVarDim);
-    VectorX b = VectorX::Zero(num_ineq+forceVarDim);
+    //MatrixXX A = MatrixXX::Zero(num_ineq+forceVarDim,totalVarDim);
+    MatrixXX A = MatrixXX::Zero(num_ineq,totalVarDim);
+    VectorX b = VectorX::Zero(num_ineq);
     MatrixXX& D = Dd.first;
     VectorX& d =  Dd.second;
     D = MatrixXX::Zero(num_eq,totalVarDim);
@@ -457,8 +461,11 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
     if(!useDD)
     {
         // add positive constraints on forces
-        A.block(id_rows,3,forceVarDim,forceVarDim)=MatrixXX::Identity(forceVarDim,forceVarDim)*(-1);
-        id_rows += forceVarDim;
+        //A.block(id_rows,3,forceVarDim,forceVarDim)=MatrixXX::Identity(forceVarDim,forceVarDim)*(-1);
+        //id_rows += forceVarDim;
+        minBounds = VectorX::Zero(A.cols()); // * (-std::numeric_limits<double>::infinity());
+        minBounds.head<3>() = VectorX::Ones(3) * (solvers::UNBOUNDED_DOWN);
+        minBounds.tail(forceVarDim) = VectorX::Zero(forceVarDim) ;
     }
     assert(id_rows == (A.rows()) && "The inequality constraints matrices were not fully filled.");
     assert(id_rows == (b.rows()) && "The inequality constraints matrices were not fully filled.");
@@ -496,18 +503,21 @@ ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
     T_time timeArray;
     std::pair<MatrixXX, VectorX> Ab;
     std::pair<MatrixXX, VectorX> Dd;
+    VectorX minBounds, maxBounds;
     if(timeStep > 0 ){ // discretized
         assert (pData.representation_ == DOUBLE_DESCRIPTION);
         timeArray = computeDiscretizedTime(Ts,timeStep);
         Ab = computeConstraintsOneStep(pData,Ts,T,timeArray);
         Dd = std::make_pair(MatrixXX::Zero(0,Ab.first.cols()),VectorX::Zero(0));
+        minBounds =VectorX::Zero(0);
+        maxBounds =VectorX::Zero(0);
     }else{ // continuous
-        Ab = computeConstraintsContinuous(pData,Ts, Dd);
+        Ab = computeConstraintsContinuous(pData,Ts, Dd, minBounds, maxBounds);
         timeArray = computeDiscretizedTimeFixed(Ts,7); // FIXME : hardcoded value for discretization for cost function in case of continuous formulation for the constraints
     }
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray,Ab.first.cols());
     VectorX x = VectorX::Zero(Ab.first.cols());
-    ResultData resQp = solve(Ab,Dd,Hg, x, pData.representation_ == FORCE ? solvers::SOLVER_GLPK : solvers::SOLVER_QUADPROG);
+    ResultData resQp = solve(Ab,Dd,Hg, minBounds, maxBounds, x, solver);
 #if QHULL
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
 #endif

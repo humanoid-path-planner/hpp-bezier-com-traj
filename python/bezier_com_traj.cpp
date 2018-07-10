@@ -443,7 +443,7 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
 
     enum_<solvers::SolverType>("SolverType")
             .value("SOLVER_QUADPROG", solvers::SOLVER_QUADPROG)
-            .value("SOLVER_QUADPROG_SPARSE", solvers::SOLVER_QUADPROG_SPARSE)
+            //.value("SOLVER_QUADPROG_SPARSE", solvers::SOLVER_QUADPROG_SPARSE)
 #ifdef USE_GLPK_SOLVER
             .value("SOLVER_GLPK", solvers::SOLVER_GLPK)
 #endif

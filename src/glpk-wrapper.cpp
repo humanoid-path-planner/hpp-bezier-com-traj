@@ -24,11 +24,27 @@
   namespace solvers
   {
 
-  int solve(const VectorXd & g0,
+  int getType(const VectorXd & mib, const VectorXd & mab, const int i)
+  {
+      const double& mibV = mib(i);
+      const double& mabV = mab(i);
+      int type = GLP_FR;
+      if(mibV > UNBOUNDED_DOWN && mabV < UNBOUNDED_UP)
+          type = GLP_DB;
+      else if(mibV > UNBOUNDED_DOWN)
+          type = GLP_LO;
+      else if(mabV < UNBOUNDED_UP)
+          type = GLP_UP;
+      return type;
+  }
+
+  int solveglpk(const VectorXd & g0,
                     const MatrixXd & CE,
                     const VectorXd & ce0,
                     const MatrixXd & CI,
                     const VectorXd & ci0,
+                    solvers::Cref_vectorX minBounds,
+                    solvers::Cref_vectorX maxBounds,
                     VectorXd& x,
                     double& cost)
   {
@@ -44,10 +60,8 @@
                                                   //where GLP_MAX means maximization
 
       //ROWS
-      // TODO SPECIFIC
       const int numEqConstraints = (int)(CE.rows());
-      // for inequality, x.size()-3 last constraints are not relevant as they are the positivity constraints
-      const int numIneqConstraints =(int)(CI.rows() - (x.size() -3));
+      const int numIneqConstraints =(int)(CI.rows());
       const int num_constraints_total (numEqConstraints + numIneqConstraints);
       glp_add_rows(lp, num_constraints_total);
       int idrow = 1;//adds three rows to the problem object
@@ -82,16 +96,12 @@
       }
 
       //COLUMNS
-      glp_add_cols(lp, xsize); //adds three columns to the problem object
-      // TODO SPECIFIC
-      for (int i =0; i < 3; ++i, ++idcol )
+      glp_add_cols(lp, xsize);
+      VectorXd miB =  minBounds.size() > 0 ? minBounds : VectorXd::Ones(xsize) * UNBOUNDED_DOWN;
+      VectorXd maB =  maxBounds.size() > 0 ? maxBounds : VectorXd::Ones(xsize) * UNBOUNDED_UP;
+      for (int i=0; i < xsize; ++i, ++idcol )
       {
-          glp_set_col_bnds(lp, idcol, GLP_FR, 0.0, 0.0);
-          glp_set_obj_coef(lp, idcol, g0(i));
-      }
-      for (int i =3; i < xsize; ++i, ++idcol )
-      {
-          glp_set_col_bnds(lp, idcol, GLP_LO, 0.0, 0.0);
+          glp_set_col_bnds(lp, idcol, getType(miB, maB, i), miB(i), maB(i));
           glp_set_obj_coef(lp, idcol, g0(i));
       }
       glp_load_matrix(lp,idConsMat-1,ia,ja,ar);

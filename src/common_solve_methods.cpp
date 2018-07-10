@@ -146,16 +146,18 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
 }
 
 ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vectorX d, Cref_matrixXX H,
-                 Cref_vectorX g, Cref_vectorX initGuess, const solvers::SolverType solver)
+                 Cref_vectorX g, Cref_vectorX initGuess,
+                 Cref_vectorX minBounds, Cref_vectorX maxBounds,
+                 const solvers::SolverType solver)
 {
-    return solvers::solve(A,ci0,D,d,H,g,initGuess,solver);
+    return solvers::solve(A,ci0,D,d,H,g,initGuess,minBounds, maxBounds, solver);
 }
 
 ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess, const solvers::SolverType solver)
 {
     MatrixXX D = MatrixXX::Zero(0,A.cols());
     VectorX d  = VectorX::Zero(0);
-    return solvers::solve(A,b,D,d,H,g,initGuess,solver);
+    return solvers::solve(A,b,D,d,H,g,initGuess,d,d,solver);
 }
 
 
@@ -165,9 +167,13 @@ ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX
 }
 
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Dd,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const solvers::SolverType solver)
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Dd,
+                 const std::pair<MatrixXX, VectorX>& Hg,
+                 Cref_vectorX minBounds, Cref_vectorX maxBounds,
+                 const VectorX& init,
+                 const solvers::SolverType solver)
 {
-    return solve(Ab.first,Ab.second,Dd.first, Dd.second, Hg.first,Hg.second, init, solver);
+    return solve(Ab.first,Ab.second,Dd.first, Dd.second, Hg.first,Hg.second, init, minBounds, maxBounds, solver);
 }
 
 } // namespace bezier_com_traj

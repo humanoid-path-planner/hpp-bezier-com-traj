@@ -28,11 +28,13 @@ namespace solvers
     // min g'x
     // st  CIx <= ci0
     //     CEx  = ce0
-    int solve(const VectorXd & g0,
+    int solveglpk(const VectorXd & g0,
                       const MatrixXd & CE,
                       const VectorXd & ce0,
                       const MatrixXd & CI,
                       const VectorXd & ci0,
+                      solvers::Cref_vectorX minBounds,
+                      solvers::Cref_vectorX maxBounds,
                       VectorXd& x,
                       double& cost);
 

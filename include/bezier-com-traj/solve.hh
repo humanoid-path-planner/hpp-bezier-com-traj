@@ -46,7 +46,7 @@ namespace bezier_com_traj
     * @param Ts timelength of each contact phase. Should be the same length as pData.contacts
     * @param timeStep time step used by the discretization, if -1 : use the continuous fomulation
     * @param solver solver used to perform optimization. WARNING: if the continuous force formulation is
-    * used, it is highly recommended to use the SOLVER_QUADPROG_SPARSE solver, or the SOLVER_GLPK solver if available and a quadratic
+    * used, it is highly recommended to use the SOLVER_GLPK solver if available and a quadratic
     * cost is not necessary, as these solvers are increasely more computationnaly efficient for the problem
     * @return ResultData a struct containing the resulting trajectory, if success is true.
     */

@@ -40,13 +40,59 @@ typedef Eigen::SparseMatrix<double> SpMat;
 typedef Eigen::SparseVector<double> SpVec;
 typedef Eigen::SparseVector<int>    SpVeci;
 
-ResultData solve(const MatrixXd & A,
+namespace
+{
+    void addConstraintMinBoundQuadProg(solvers::Cref_vectorX minBounds, std::pair<MatrixXd,VectorXd>&  data)
+    {
+        if(minBounds.size() == 0)
+            return;
+        MatrixXd& res = data.first; VectorXd& resv = data.second;
+        MatrixXd D( res.rows()+ res.cols(), res.cols());
+        VectorXd d(resv.rows()+ res.cols());
+        D.block(0,0, res.rows(), res.cols()) = res;
+        D.block(res.rows(),0, res.cols(), res.cols()) = (-1.) * MatrixXd::Identity(res.cols(), res.cols());
+        d.head(resv.size()) = resv;
+        d.tail(res.cols())  = -minBounds;
+        data.first = D;data.second = d;
+    }
+
+    void addConstraintMaxBoundQuadProg(solvers::Cref_vectorX maxBounds, std::pair<MatrixXd,VectorXd>&  data)
+    {
+        if(maxBounds.size() == 0)
+            return;
+        MatrixXd& res = data.first; VectorXd& resv = data.second;
+        MatrixXd D( res.rows()+ res.cols() -3, res.cols());
+        VectorXd d(resv.rows()+ res.cols());
+        D.block(0,0, res.rows(), res.cols()) = res;
+        D.block(res.rows(),0, res.cols(), res.cols()) = MatrixXd::Identity(res.cols(), res.cols());
+        d.head(resv.size()) = resv;
+        d.tail(res.cols())  = maxBounds;
+        data.first = D;data.second = d;
+    }
+
+    std::pair<MatrixXd,VectorXd> addBoundaryConstraintsQuadProg(solvers::Cref_vectorX minBounds,
+                                            solvers::Cref_vectorX maxBounds,
+                                            const MatrixXd & CI,
+                                            const VectorXd & ci0)
+    {
+        std::pair<MatrixXd,VectorXd> data;
+        data.first = CI;
+        data.second = ci0;
+        addConstraintMinBoundQuadProg(minBounds, data);
+        addConstraintMaxBoundQuadProg(maxBounds, data);
+        return data;
+    }
+}
+
+ResultData solve( const MatrixXd & A,
                   const VectorXd & b,
                   const MatrixXd & D,
                   const VectorXd & d,
                   const MatrixXd & Hess,
                   const VectorXd & g,
                   const VectorXd & initGuess,
+                  solvers::Cref_vectorX minBounds,
+                  solvers::Cref_vectorX maxBounds,
                   const SolverType solver)
 {
     assert (!(is_nan(A)));
@@ -68,17 +114,19 @@ ResultData solve(const MatrixXd & A,
        * CI = D; ce0 = -d
        */
         case SOLVER_QUADPROG:
-        case SOLVER_QUADPROG_SPARSE:
+        //case SOLVER_QUADPROG_SPARSE:
         {
-            MatrixXd CI = -A;
-            //MatrixXd CE = D;
+            std::pair<MatrixXd,VectorXd> CIp = addBoundaryConstraintsQuadProg(minBounds, maxBounds, A, b);
             VectorXd ce0  = -d;
             tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
             tsid::solvers::EiquadprogFast_status status;
-            if(solver == SOLVER_QUADPROG)
-                status = QPsolver.solve_quadprog(Hess,g,D,ce0,CI,b,res.x);
-            else
-                status = QPsolver.solve_quadprog_sparse(Hess.sparseView(),g,D,ce0,CI,b,res.x);
+            //if(solver == SOLVER_QUADPROG)
+            status = QPsolver.solve_quadprog(Hess,g,D,ce0,-CIp.first,CIp.second,res.x);
+           /* else
+            {
+                SpMat Hsp = Hess.sparseView();
+                status = QPsolver.solve_quadprog_sparse(Hsp,g,D,ce0,CI,b,res.x);
+            }*/
             res.success_ = (status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL );
             if(res.success_)
                 res.cost_ = QPsolver.getObjValue();
@@ -87,7 +135,7 @@ ResultData solve(const MatrixXd & A,
 #ifdef USE_GLPK_SOLVER
         case SOLVER_GLPK:
     {
-        res.success_ = (solvers::solve(g,D,d,A,b,res.x,res.cost_) == 0);
+        res.success_ = (solvers::solveglpk(g,D,d,A,b,minBounds, maxBounds,res.x,res.cost_) == 0);
         return res;
     }
 #endif

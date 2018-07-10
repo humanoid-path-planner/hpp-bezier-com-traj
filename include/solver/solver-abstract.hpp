@@ -33,6 +33,9 @@ enum optim_status
   OPTIM_INFEASIBLE=1
 };
 
+static const double UNBOUNDED_UP   =  100000.;
+static const double UNBOUNDED_DOWN = -100000.;
+
 typedef Eigen::MatrixXd MatrixXd;
 typedef Eigen::VectorXd VectorXd;
 typedef Eigen::VectorXi VectorXi;
@@ -40,10 +43,10 @@ typedef const Eigen::Ref<const VectorXd>     & Cref_vectorX;
 
 enum BEZIER_COM_TRAJ_DLLAPI SolverType
 {
-    SOLVER_QUADPROG         = 0x00001,
-    SOLVER_QUADPROG_SPARSE  = 0x00002
+    SOLVER_QUADPROG         = 0x00001
+    //SOLVER_QUADPROG_SPARSE  = 0x00002
 #ifdef USE_GLPK_SOLVER
-    ,SOLVER_GLPK            = 0x00004
+    ,SOLVER_GLPK            = 0x00002
 #endif
 };
 
@@ -100,6 +103,7 @@ ResultData BEZIER_COM_TRAJ_DLLAPI solve(const MatrixXd & A,
                   const MatrixXd & Hess,
                   const VectorXd & g,
                   const VectorXd & initGuess,
+                  Cref_vectorX minBounds, Cref_vectorX maxBounds,
                   const SolverType solver);
 
 

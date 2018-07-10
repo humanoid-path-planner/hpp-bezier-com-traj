@@ -62,10 +62,18 @@ BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointEquali
  * @param b Inequality vector
  * @param H Cost matrix
  * @param g cost Vector
+ * @param x initGuess initial guess
+ * @param minBounds lower bounds on x values. Can be of size 0 if all elements of x are unbounded in that direction, or a size equal to x.
+ * Unbounded elements should be lesser or equal to solvers::UNBOUNDED_UP;
+ * @param maxBounds upper bounds on x values. Can be of size 0 if all elements of x are unbounded in that direction, or a size equal to x
+ * Unbounded elements should be higher or lower than solvers::UNBOUNDED_DOWN;
+ * @param solver solver used to solve QP or LP. If LGPK is used, Hessian is not considered as an lp is solved
  * @return
  */
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H,
-                                        Cref_vectorX  g, Cref_vectorX initGuess, const solvers::SolverType solver = solvers::SOLVER_QUADPROG );
+                                        Cref_vectorX  g, Cref_vectorX initGuess,
+                                        Cref_vectorX minBounds, Cref_vectorX maxBounds,
+                                        const solvers::SolverType solver = solvers::SOLVER_QUADPROG );
 /**
  * @brief solve x' h x + 2 g' x, subject to A*x <= b and D*x = c using quadprog
  * @param A Inequality matrix
@@ -97,11 +105,17 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
  * @param Ab Inequality matrix and vector
  * @param Dd Equality matrix and vector
  * @param Hg Cost matrix and vector
+ * @param minBounds lower bounds on x values. Can be of size 0 if all elements of x are unbounded in that direction, or a size equal to x.
+ * Unbounded elements should be equal to -std::numeric_limits<double>::infinity();
+ * @param maxBounds upper bounds on x values. Can be of size 0 if all elements of x are unbounded in that direction, or a size equal to x
+ * Unbounded elements should be equal to  std::numeric_limits<double>::infinity();
+ * @param solver solver used to solve QP or LP. If LGPK is used, Hessian is not considered as an lp is solved
  * @return
  */
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
                                         const std::pair<MatrixXX, VectorX>& Dd,
                                         const std::pair<MatrixXX, VectorX>& Hg,
+                                        Cref_vectorX minBounds, Cref_vectorX maxBounds,
                                         const VectorX& init, const solvers::SolverType solver = solvers::SOLVER_QUADPROG);
 
 template <typename Point>

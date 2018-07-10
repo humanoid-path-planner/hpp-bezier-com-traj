@@ -117,19 +117,31 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
     if(continuous)
     {
         // testing all available solvers
-        res = bezier_com_traj::computeCOMTraj(pData,Ts);
+        res = bezier_com_traj::computeCOMTraj(pData,Ts,-1,solvers::SOLVER_QUADPROG);
         if(pData.representation_ ==  bezier_com_traj::FORCE)
         {
-            bezier_com_traj::ResultDataCOMTraj res2 =
+            /*bezier_com_traj::ResultDataCOMTraj res2 =
                     bezier_com_traj::computeCOMTraj(pData,Ts,-1,solvers::SOLVER_QUADPROG_SPARSE);
             BOOST_CHECK(res.success_ == res2.success_);
-            BOOST_CHECK(!res.success_ || (res.x.head<3>() - res2.x.head<3>()).norm() < EPSILON);
+            if(res.success_)
+            {
+                std::cout << " x " << res.cost_ << std::endl;
+                std::cout << " x2 " << res2.cost_ << std::endl;
+                discretized_check(pData,Ts,res2,pointsPerPhase,t_total);
+                BOOST_CHECK(!res.success_ || (res.x.head<3>() - res2.x.head<3>()).norm() < EPSILON);
+            }*/
 #ifdef USE_GLPK_SOLVER
+            //clock_t s0,e0;
+            //s0 = clock();
             bezier_com_traj::ResultDataCOMTraj res3 =
                     bezier_com_traj::computeCOMTraj(pData,Ts,-1,solvers::SOLVER_GLPK);
+            //e0 = clock();
+            //std::cout<<"Time to perform full lp : "<<((double)(e0-s0)/CLOCKS_PER_SEC)*1000.<<" ms "<<std::endl;
             BOOST_CHECK(res.success_ == res3.success_);
             if(res3.success_)
+            {
                 discretized_check(pData,Ts,res3,pointsPerPhase,t_total);
+            }
 #endif
         }
     }
