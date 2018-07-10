@@ -55,6 +55,53 @@ bool check_constraints(const bezier_com_traj::ContactData& contactPhase, Vector3
     return true;
 }
 
+void discretized_check(const bezier_com_traj::ProblemData& pData, const VectorX& Ts,
+                       const bezier_com_traj::ResultDataCOMTraj& res, const int pointsPerPhase,
+                       const double t_total)
+{
+     // check if timing is respected
+    std::vector<double> timings = computeDiscretizedTime(Ts,pointsPerPhase);
+    BOOST_CHECK_EQUAL(timings.back(),t_total);
+
+    Vector3 c,dc,ddc;
+    bezier_com_traj::bezier_t ct = res.c_of_t_;
+    bezier_com_traj::bezier_t dct = ct.compute_derivate(1);
+    bezier_com_traj::bezier_t ddct = dct.compute_derivate(1);
+
+    BOOST_CHECK_EQUAL(ct.min(),0);
+    BOOST_CHECK_EQUAL(dct.min(),0);
+    BOOST_CHECK_EQUAL(ddct.min(),0);
+    BOOST_CHECK_EQUAL(ct.max(),t_total);
+    BOOST_CHECK_EQUAL(dct.max(),t_total);
+    BOOST_CHECK_EQUAL(ddct.max(),t_total);
+
+    // check if each discretized point is feasible :
+
+    std::vector<int> stepIdForPhase; // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
+    for(int i = 0 ; i < Ts.size() ; ++i)
+        stepIdForPhase.push_back(pointsPerPhase*(i+1)-1);
+    std::size_t id_phase = 0;
+    bezier_com_traj::ContactData phase = pData.contacts_[id_phase];
+
+    for(size_t id_step = 0 ; id_step < timings.size() ; ++id_step){
+        c = ct(timings[id_step]);
+        dc = dct(timings[id_step]);
+        ddc = ddct(timings[id_step]);
+
+        // check i (c,dc,ddc) verify the constraints of current phase
+        check_constraints(phase,c,dc,ddc);
+
+        // check if we switch phases
+        for(std::size_t i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
+            if(id_step == (std::size_t)stepIdForPhase[i]){
+                id_phase=i+1;
+                phase = pData.contacts_[id_phase];
+                check_constraints(phase,c,dc,ddc);
+            }
+        }
+    }
+}
+
 
 void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shouldFail=false,bool continuous = false, bool test_continuous = true ){
     BOOST_CHECK_EQUAL(pData.contacts_.size(),Ts.size());
@@ -69,7 +116,22 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
     bezier_com_traj::ResultDataCOMTraj res;
     if(continuous)
     {
+        // testing all available solvers
         res = bezier_com_traj::computeCOMTraj(pData,Ts);
+        if(pData.representation_ ==  bezier_com_traj::FORCE)
+        {
+            bezier_com_traj::ResultDataCOMTraj res2 =
+                    bezier_com_traj::computeCOMTraj(pData,Ts,-1,solvers::SOLVER_QUADPROG_SPARSE);
+            BOOST_CHECK(res.success_ == res2.success_);
+            BOOST_CHECK(!res.success_ || (res.x.head<3>() - res2.x.head<3>()).norm() < EPSILON);
+#ifdef USE_GLPK_SOLVER
+            bezier_com_traj::ResultDataCOMTraj res3 =
+                    bezier_com_traj::computeCOMTraj(pData,Ts,-1,solvers::SOLVER_GLPK);
+            BOOST_CHECK(res.success_ == res3.success_);
+            if(res3.success_)
+                discretized_check(pData,Ts,res3,pointsPerPhase,t_total);
+#endif
+        }
     }
     else
         res = bezier_com_traj::computeCOMTrajFixedSize(pData,Ts,pointsPerPhase);
@@ -81,49 +143,8 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
 
     BOOST_CHECK(res.success_);
 
-    if(res.success_){
-         // check if timing is respected
-        std::vector<double> timings = computeDiscretizedTime(Ts,pointsPerPhase);
-        BOOST_CHECK_EQUAL(timings.back(),t_total);
-
-        Vector3 c,dc,ddc;
-        bezier_com_traj::bezier_t ct = res.c_of_t_;
-        bezier_com_traj::bezier_t dct = ct.compute_derivate(1);
-        bezier_com_traj::bezier_t ddct = dct.compute_derivate(1);
-
-        BOOST_CHECK_EQUAL(ct.min(),0);
-        BOOST_CHECK_EQUAL(dct.min(),0);
-        BOOST_CHECK_EQUAL(ddct.min(),0);
-        BOOST_CHECK_EQUAL(ct.max(),t_total);
-        BOOST_CHECK_EQUAL(dct.max(),t_total);
-        BOOST_CHECK_EQUAL(ddct.max(),t_total);
-
-        // check if each discretized point is feasible :
-
-        std::vector<int> stepIdForPhase; // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
-        for(int i = 0 ; i < Ts.size() ; ++i)
-            stepIdForPhase.push_back(pointsPerPhase*(i+1)-1);
-        std::size_t id_phase = 0;
-        bezier_com_traj::ContactData phase = pData.contacts_[id_phase];
-
-        for(size_t id_step = 0 ; id_step < timings.size() ; ++id_step){
-            c = ct(timings[id_step]);
-            dc = dct(timings[id_step]);
-            ddc = ddct(timings[id_step]);
-
-            // check i (c,dc,ddc) verify the constraints of current phase
-            check_constraints(phase,c,dc,ddc);
-
-            // check if we switch phases
-            for(std::size_t i = 0 ; i < (stepIdForPhase.size()-1) ; ++i){
-                if(id_step == (std::size_t)stepIdForPhase[i]){
-                    id_phase=i+1;
-                    phase = pData.contacts_[id_phase];
-                    check_constraints(phase,c,dc,ddc);
-                }
-            }
-        }
-    }
+    if(res.success_)
+        discretized_check(pData,Ts,res,pointsPerPhase,t_total);
     if(continuous && pData.representation_ == bezier_com_traj::DOUBLE_DESCRIPTION)
     {
         pData.representation_ = bezier_com_traj::FORCE;

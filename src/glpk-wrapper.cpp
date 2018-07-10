@@ -24,7 +24,7 @@
   namespace solvers
   {
 
-  glpk_status solve(const VectorXd & g0,
+  int solve(const VectorXd & g0,
                     const MatrixXd & CE,
                     const VectorXd & ce0,
                     const MatrixXd & CI,
@@ -96,20 +96,17 @@
       }
       glp_load_matrix(lp,idConsMat-1,ia,ja,ar);
 
-      int res = glp_simplex(lp, &opts);                      //calls the routine glp_simplex
-      glpk_status ret = glpk_INFEASIBLE;
+      int res = glp_simplex(lp, &opts);
       if(res == 0)
       {
-          ret = glpk_OPTIMAL;
           cost = glp_get_obj_val(lp);                    //obtains a computed value of the objective function
-
           idrow = 1;
           for (int i =0; i < xsize; ++i, ++idrow)
               x(i) = glp_get_col_prim(lp, idrow);
       }
       glp_delete_prob(lp);                        //calls the routine glp_delete_prob, which frees all the memory
       glp_free_env();
-      return ret;
+      return res;
   }
 
   } /* namespace solvers */

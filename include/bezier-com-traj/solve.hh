@@ -43,11 +43,14 @@ namespace bezier_com_traj
     * an initial and final com position and velocity,
     * try to compute the CoM trajectory (as a Bezier curve) that connect them
     * @param pData problem Data.
-    * @param Ts timelength of each contact phase. Should be the same legnth as pData.contacts
+    * @param Ts timelength of each contact phase. Should be the same length as pData.contacts
     * @param timeStep time step used by the discretization, if -1 : use the continuous fomulation
+    * @param solver solver used to perform optimization. WARNING: if the continuous force formulation is
+    * used, it is highly recommended to use the SOLVER_QUADPROG_SPARSE solver, or the SOLVER_GLPK solver if available and a quadratic
+    * cost is not necessary, as these solvers are increasely more computationnaly efficient for the problem
     * @return ResultData a struct containing the resulting trajectory, if success is true.
     */
-   BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts, const double timeStep = -1);
+   BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts, const double timeStep = -1, const solvers::SOLVER_TYPE solver = solvers::SOLVER_QUADPROG );
 
 
 } // end namespace bezier_com_traj

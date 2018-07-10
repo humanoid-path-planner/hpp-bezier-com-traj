@@ -18,26 +18,17 @@
 #ifndef GLPKWRAPPER_HH_
 #define GLPKWRAPPER_HH_
 
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-#define DEFAULT_MAX_ITER 1000
+#include <solver/solver-abstract.hpp>
 
+#include <Eigen/Dense>
 
 namespace solvers
 {
-    typedef Eigen::MatrixXd MatrixXd;
-    typedef Eigen::VectorXd VectorXd;
-    typedef Eigen::VectorXi VectorXi;
-    enum glpk_status
-    {
-      glpk_OPTIMAL=0,
-      glpk_INFEASIBLE=1
-    };
 
     // min g'x
     // st  CIx <= ci0
     //     CEx  = ce0
-    glpk_status solve(const VectorXd & g0,
+    int solve(const VectorXd & g0,
                       const MatrixXd & CE,
                       const VectorXd & ce0,
                       const MatrixXd & CI,

@@ -8,6 +8,8 @@
 #include <bezier-com-traj/waypoints/waypoints_definition.hh>
 #include <bezier-com-traj/cost/costfunction_definition.hh>
 
+#include <solver/solver-abstract.hpp>
+
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 
 #include  <limits>
@@ -486,7 +488,7 @@ ResultDataCOMTraj computeCOMTrajFixedSize(const ProblemData& pData, const Vector
 }
 
 ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
-                               const double timeStep)
+                               const double timeStep, const solvers::SOLVER_TYPE solver)
 {
     if(Ts.size() != (int) pData.contacts_.size())
         throw std::runtime_error("Time phase vector has different size than the number of contact phases");
@@ -505,7 +507,7 @@ ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
     }
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray,Ab.first.cols());
     VectorX x = VectorX::Zero(Ab.first.cols());
-    ResultData resQp = solve(Ab,Dd,Hg, x, pData.representation_ == FORCE);
+    ResultData resQp = solve(Ab,Dd,Hg, x, pData.representation_ == FORCE ? solvers::SOLVER_GLPK : solvers::SOLVER_QUADPROG);
 #if QHULL
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
 #endif

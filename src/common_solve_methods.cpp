@@ -145,88 +145,29 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
     return std::make_pair(A,b);
 }
 
-template<typename Derived>
-inline bool is_nan(const Eigen::MatrixBase<Derived>& x)
-{
-    bool isnan = !((x.array()==x.array()).all());
-    return isnan;
-}
-
-
-typedef Eigen::SparseMatrix<double> SpMat;
-typedef Eigen::SparseVector<double> SpVec;
-typedef Eigen::SparseVector<int>    SpVeci;
-
 ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vectorX d, Cref_matrixXX H,
-                 Cref_vectorX g, Cref_vectorX initGuess, const bool sparse)
+                 Cref_vectorX g, Cref_vectorX initGuess, const solvers::SOLVER_TYPE solver)
 {
-    /*
-   * solves the problem
-   * min. x' Hess x + 2 g0' x
-   * s.t. CE x + ce0 = 0
-   *      CI x + ci0 >= 0
-   * Thus CI = -A; ci0 = b
-   *      CI = D; ce0 = -d
-   */
-
-    assert (!(is_nan(A)));
-    assert (!(is_nan(ci0)));
-    assert (!(is_nan(D)));
-    assert (!(is_nan(d)));
-    assert (!(is_nan(initGuess)));
-    assert (!(is_nan(H)));
-
-    ResultData res;
-    VectorX x = initGuess;
-
-    if(sparse)
-    {
-        double obj;
-        solvers::glpk_status ret = solvers::solve(g,D,d,A,ci0,x,obj);
-        res.success_ = (ret == solvers::glpk_OPTIMAL);
-        if(res.success_)
-            res.cost_ = obj;
-    }
-    else
-    {
-        MatrixXX CI = -A;
-        MatrixXX CE = D;
-        VectorX ce0  = -d;
-        tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
-        tsid::solvers::EiquadprogFast_status status;
-        status = QPsolver.solve_quadprog(H,g,CE,ce0,CI,ci0,x);
-        res.success_ = (status == tsid::solvers::EIQUADPROG_FAST_OPTIMAL );
-        if(res.success_)
-            res.cost_ = QPsolver.getObjValue();
-    }
-    res.x = x;
-    if(res.success_)
-    {
-        assert (!(is_nan(x)));
-        assert(x.rows() < 4 || x.tail(x.rows()-3).minCoeff() >= -1e-6);
-        assert((A*x-ci0).maxCoeff() <= 1e-6 );
-        assert(ce0.rows() == 0 || (D*x + ce0).norm() <= 1e-6 );
-    }
-    return res;
+    return solvers::solve(A,ci0,D,d,H,g,initGuess,solver);
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess, const bool sparse)
+ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess, const solvers::SOLVER_TYPE solver)
 {
     MatrixXX D = MatrixXX::Zero(0,A.cols());
     VectorX d  = VectorX::Zero(0);
-    return solve(A,b,D,d,H,g,initGuess,sparse);
+    return solvers::solve(A,b,D,d,H,g,initGuess,solver);
 }
 
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const bool sparse)
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const solvers::SOLVER_TYPE solver)
 {
-    return solve(Ab.first,Ab.second,Hg.first,Hg.second, init,sparse);
+    return solve(Ab.first,Ab.second,Hg.first,Hg.second, init,solver);
 }
 
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Dd,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const bool sparse)
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Dd,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const solvers::SOLVER_TYPE solver)
 {
-    return solve(Ab.first,Ab.second,Dd.first, Dd.second, Hg.first,Hg.second, init, sparse);
+    return solve(Ab.first,Ab.second,Dd.first, Dd.second, Hg.first,Hg.second, init, solver);
 }
 
 } // namespace bezier_com_traj
