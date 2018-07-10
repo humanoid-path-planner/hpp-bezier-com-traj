@@ -23,6 +23,7 @@
 #include <solver/eiquadprog-fast.hpp>
 
 #include <Eigen/Sparse>
+#include <stdexcept>
 
 namespace solvers
 {
