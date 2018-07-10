@@ -1,4 +1,5 @@
 #include "bezier-com-traj/solve.hh"
+#include "solver/solver-abstract.hpp"
 #include <eigenpy/memory.hpp>
 #include <eigenpy/eigenpy.hpp>
 
@@ -348,6 +349,13 @@ ResultDataCOMTraj* computeCOMTrajPointer(const ProblemData& pData, const VectorX
     return new ResultDataCOMTraj(res);
 }
 
+ResultDataCOMTraj* computeCOMTrajPointerChooseSolver(const ProblemData& pData, const VectorX& Ts, const double timeStep, const solvers::SolverType solver)
+{
+    ResultDataCOMTraj  res = computeCOMTraj(pData, Ts, timeStep, solver);
+    return new ResultDataCOMTraj(res);
+}
+
+
 
 /** END computeCOMTraj **/
 
@@ -433,6 +441,13 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
             .value("UNKNOWN_REPRESENTATION", UNKNOWN_REPRESENTATION)
             .export_values();
 
+    enum_<solvers::SolverType>("SolverType")
+            .value("SOLVER_QUADPROG", solvers::SOLVER_QUADPROG)
+            .value("SOLVER_QUADPROG_SPARSE", solvers::SOLVER_QUADPROG_SPARSE)
+#ifdef USE_GLPK_SOLVER
+            .value("SOLVER_GLPK", solvers::SOLVER_GLPK)
+#endif
+            .export_values();
 
     enum_<ConstraintFlag>("ConstraintFlag")
             .value("INIT_POS", INIT_POS)
@@ -449,6 +464,7 @@ BOOST_PYTHON_MODULE(bezier_com_traj)
     def("zeroStepCapturability", &zeroStepCapturability, return_value_policy<manage_new_object>());
     def("zeroStepCapturability", &zeroStepCapturabilityWithKinConstraints, return_value_policy<manage_new_object>());
     def("computeCOMTraj", &computeCOMTrajPointer, return_value_policy<manage_new_object>());
+    def("computeCOMTraj", &computeCOMTrajPointerChooseSolver, return_value_policy<manage_new_object>());
 
 }
 

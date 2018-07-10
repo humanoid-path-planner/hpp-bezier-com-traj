@@ -38,7 +38,7 @@ typedef Eigen::VectorXd VectorXd;
 typedef Eigen::VectorXi VectorXi;
 typedef const Eigen::Ref<const VectorXd>     & Cref_vectorX;
 
-enum BEZIER_COM_TRAJ_DLLAPI SOLVER_TYPE
+enum BEZIER_COM_TRAJ_DLLAPI SolverType
 {
     SOLVER_QUADPROG         = 0x00001,
     SOLVER_QUADPROG_SPARSE  = 0x00002
@@ -93,14 +93,14 @@ struct BEZIER_COM_TRAJ_DLLAPI ResultData
 * @param timeStep time that the solver has to stop.
 * @return ResultData a struct containing the resulting trajectory, if success is true.
 */
-ResultData solve(const MatrixXd & A,
+ResultData BEZIER_COM_TRAJ_DLLAPI solve(const MatrixXd & A,
                   const VectorXd & b,
                   const MatrixXd & D,
                   const VectorXd & d,
                   const MatrixXd & Hess,
                   const VectorXd & g,
                   const VectorXd & initGuess,
-                  const SOLVER_TYPE solver);
+                  const SolverType solver);
 
 
 } /* namespace solvers */

@@ -146,12 +146,12 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
 }
 
 ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vectorX d, Cref_matrixXX H,
-                 Cref_vectorX g, Cref_vectorX initGuess, const solvers::SOLVER_TYPE solver)
+                 Cref_vectorX g, Cref_vectorX initGuess, const solvers::SolverType solver)
 {
     return solvers::solve(A,ci0,D,d,H,g,initGuess,solver);
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess, const solvers::SOLVER_TYPE solver)
+ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess, const solvers::SolverType solver)
 {
     MatrixXX D = MatrixXX::Zero(0,A.cols());
     VectorX d  = VectorX::Zero(0);
@@ -159,13 +159,13 @@ ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX 
 }
 
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const solvers::SOLVER_TYPE solver)
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const solvers::SolverType solver)
 {
     return solve(Ab.first,Ab.second,Hg.first,Hg.second, init,solver);
 }
 
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Dd,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const solvers::SOLVER_TYPE solver)
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Dd,const std::pair<MatrixXX, VectorX>& Hg,  const VectorX& init, const solvers::SolverType solver)
 {
     return solve(Ab.first,Ab.second,Dd.first, Dd.second, Hg.first,Hg.second, init, solver);
 }

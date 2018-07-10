@@ -488,7 +488,7 @@ ResultDataCOMTraj computeCOMTrajFixedSize(const ProblemData& pData, const Vector
 }
 
 ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
-                               const double timeStep, const solvers::SOLVER_TYPE solver)
+                               const double timeStep, const solvers::SolverType solver)
 {
     if(Ts.size() != (int) pData.contacts_.size())
         throw std::runtime_error("Time phase vector has different size than the number of contact phases");

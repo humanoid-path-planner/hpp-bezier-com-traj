@@ -46,7 +46,7 @@ ResultData solve(const MatrixXd & A,
                   const MatrixXd & Hess,
                   const VectorXd & g,
                   const VectorXd & initGuess,
-                  const SOLVER_TYPE solver)
+                  const SolverType solver)
 {
     assert (!(is_nan(A)));
     assert (!(is_nan(b)));

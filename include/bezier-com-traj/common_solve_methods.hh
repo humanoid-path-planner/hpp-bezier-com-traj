@@ -65,7 +65,7 @@ BEZIER_COM_TRAJ_DLLAPI  std::pair<MatrixXX, VectorX> compute6dControlPointEquali
  * @return
  */
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H,
-                                        Cref_vectorX  g, Cref_vectorX initGuess, const solvers::SOLVER_TYPE solver = solvers::SOLVER_QUADPROG );
+                                        Cref_vectorX  g, Cref_vectorX initGuess, const solvers::SolverType solver = solvers::SOLVER_QUADPROG );
 /**
  * @brief solve x' h x + 2 g' x, subject to A*x <= b and D*x = c using quadprog
  * @param A Inequality matrix
@@ -79,7 +79,7 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_ma
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b,
                                         Cref_matrixXX D, Cref_vectorX d,
                                         Cref_matrixXX H, Cref_vectorX  g,
-                                        Cref_vectorX initGuess, const solvers::SOLVER_TYPE solver = solvers::SOLVER_QUADPROG);
+                                        Cref_vectorX initGuess, const solvers::SolverType solver = solvers::SOLVER_QUADPROG);
 
 
 /**
@@ -90,7 +90,7 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(Cref_matrixXX A, Cref_vectorX b,
  */
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
                                         const std::pair<MatrixXX, VectorX>& Hg,
-                                        const VectorX& init, const solvers::SOLVER_TYPE solver = solvers::SOLVER_QUADPROG);
+                                        const VectorX& init, const solvers::SolverType solver = solvers::SOLVER_QUADPROG);
 
 /**
  * @brief solve x' h x + 2 g' x, subject to A*x <= b  and D*x = c using quadprog, with x of fixed dimension 3
@@ -102,7 +102,7 @@ BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
 BEZIER_COM_TRAJ_DLLAPI ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
                                         const std::pair<MatrixXX, VectorX>& Dd,
                                         const std::pair<MatrixXX, VectorX>& Hg,
-                                        const VectorX& init, const solvers::SOLVER_TYPE solver = solvers::SOLVER_QUADPROG);
+                                        const VectorX& init, const solvers::SolverType solver = solvers::SOLVER_QUADPROG);
 
 template <typename Point>
 BEZIER_COM_TRAJ_DLLAPI std::vector< std::pair<double,Point> > computeDiscretizedWaypoints

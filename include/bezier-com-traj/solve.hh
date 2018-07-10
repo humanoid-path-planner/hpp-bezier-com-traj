@@ -50,7 +50,7 @@ namespace bezier_com_traj
     * cost is not necessary, as these solvers are increasely more computationnaly efficient for the problem
     * @return ResultData a struct containing the resulting trajectory, if success is true.
     */
-   BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts, const double timeStep = -1, const solvers::SOLVER_TYPE solver = solvers::SOLVER_QUADPROG );
+   BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts, const double timeStep = -1, const solvers::SolverType solver = solvers::SOLVER_QUADPROG );
 
 
 } // end namespace bezier_com_traj
