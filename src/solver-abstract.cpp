@@ -19,6 +19,7 @@
 #include "solver/solver-abstract.hpp"
 #ifdef USE_GLPK_SOLVER
 #include <solver/glpk-wrapper.hpp>
+#include <glpk.h>
 #endif
 #include <solver/eiquadprog-fast.hpp>
 
@@ -135,7 +136,7 @@ ResultData solve( const MatrixXd & A,
 #ifdef USE_GLPK_SOLVER
         case SOLVER_GLPK:
     {
-        res.success_ = (solvers::solveglpk(g,D,d,A,b,minBounds, maxBounds,res.x,res.cost_) == 0);
+        res.success_ = (solvers::solveglpk(g,D,d,A,b,minBounds, maxBounds,res.x,res.cost_) == GLP_OPT);
         return res;
     }
 #endif

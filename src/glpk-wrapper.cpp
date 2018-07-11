@@ -107,7 +107,8 @@
       glp_load_matrix(lp,idConsMat-1,ia,ja,ar);
 
       int res = glp_simplex(lp, &opts);
-      if(res == 0)
+      res = glp_get_status(lp);
+      if(res == GLP_OPT)
       {
           cost = glp_get_obj_val(lp);                    //obtains a computed value of the objective function
           idrow = 1;

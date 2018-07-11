@@ -150,6 +150,18 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,bool shoul
 
     if(shouldFail){
         BOOST_CHECK(!res.success_);
+        if(test_continuous)
+        {
+            res = bezier_com_traj::computeCOMTraj(pData,Ts,-1,solvers::SOLVER_QUADPROG);
+            BOOST_CHECK(!res.success_);
+            pData.representation_ ==  bezier_com_traj::FORCE;
+            res = bezier_com_traj::computeCOMTraj(pData,Ts,-1,solvers::SOLVER_QUADPROG);
+            BOOST_CHECK(!res.success_);
+#ifdef USE_GLPK_SOLVER
+            res = bezier_com_traj::computeCOMTraj(pData,Ts,-1,solvers::SOLVER_GLPK);
+            BOOST_CHECK(!res.success_);
+#endif
+        }
         return;
     }
 
