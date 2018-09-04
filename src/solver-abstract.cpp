@@ -101,7 +101,6 @@ ResultData solve( const MatrixXd & A,
     assert (!(is_nan(D)));
     assert (!(is_nan(d)));
     assert (!(is_nan(initGuess)));
-    assert (!(is_nan(Hess)));
     ResultData res;
     res.x = initGuess;
     switch(solver)
@@ -117,6 +116,7 @@ ResultData solve( const MatrixXd & A,
         case SOLVER_QUADPROG:
         //case SOLVER_QUADPROG_SPARSE:
         {
+            assert (!(is_nan(Hess)));
             std::pair<MatrixXd,VectorXd> CIp = addBoundaryConstraintsQuadProg(minBounds, maxBounds, A, b);
             VectorXd ce0  = -d;
             tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
