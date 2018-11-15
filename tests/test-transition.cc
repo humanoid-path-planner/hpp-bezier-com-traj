@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(transition_no_terminal_constraints){
     pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::INIT_ACC;
     VectorX Ts(1);
     Ts<<0.2;
-    check_transition(pData,Ts,false,false,false);
+    check_transition(pData,Ts,false,false,true);
 }
 
 BOOST_AUTO_TEST_CASE(transition_noDc1){
