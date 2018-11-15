@@ -302,13 +302,12 @@ BOOST_AUTO_TEST_CASE(transition_noc1){
 
 BOOST_AUTO_TEST_CASE(transition_no_terminal_constraints){
     bezier_com_traj::ProblemData pData = gen_problem_data_flat();
-    std::cout << pData.contacts_.size() << std::endl;
     pData.contacts_.pop_back();
-    std::cout << pData.contacts_.size() << std::endl;
+    pData.contacts_.pop_back();
     pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::INIT_ACC;
-    VectorX Ts(2);
-    Ts<<0.6,0.2;
-    check_transition(pData,Ts,false);
+    VectorX Ts(1);
+    Ts<<0.2;
+    check_transition(pData,Ts,false,false,false);
 }
 
 BOOST_AUTO_TEST_CASE(transition_noDc1){
