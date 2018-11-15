@@ -377,7 +377,9 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
    // init =pData.c0_;
     if(verbose)
       std::cout<<"Init = "<<std::endl<<init.transpose()<<std::endl;
-    ResultData resQp = solve(A,b,H,g, init);
+    std::pair<MatrixXX, VectorX> Ab = std::make_pair(A,b);
+    std::pair<MatrixXX, VectorX> Hg = std::make_pair(H,g);
+    ResultData resQp = solve(Ab,Hg, init);
 
     ResultDataCOMTraj res;
     if(resQp.success_)

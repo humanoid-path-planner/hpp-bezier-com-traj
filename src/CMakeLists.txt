@@ -28,6 +28,7 @@ if (USE_GLPK)
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1.hh
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh
+        ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0.hh
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh
@@ -59,6 +60,7 @@ else()
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1.hh
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh
+        ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0.hh
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh
         ${INCLUDE_DIR}/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh

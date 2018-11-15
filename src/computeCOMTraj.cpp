@@ -494,7 +494,7 @@ ResultDataCOMTraj computeCOMTrajFixedSize(const ProblemData& pData, const Vector
     return genTraj(resQp, pData, T);
 }
 
-ResultDataCOMTraj computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
+ResultDataCOMTraj   computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
                                const double timeStep, const solvers::SolverType solver)
 {
     if(Ts.size() != (int) pData.contacts_.size())
