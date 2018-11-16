@@ -15,10 +15,6 @@
 #include  <limits>
 #include  <algorithm>
 
-#ifndef QHULL
-#define QHULL 0
-#endif
-
 static const int dimVarX = 3;
 static const int numRowsForce = 6;
 
@@ -488,7 +484,7 @@ ResultDataCOMTraj computeCOMTrajFixedSize(const ProblemData& pData, const Vector
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray, dimVarX);
     VectorX x = VectorX::Zero(dimVarX);
     ResultData resQp = solve(Ab,Hg, x);
-#if QHULL
+#if PRINT_QHULL_INEQ
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
 #endif
     return genTraj(resQp, pData, T);
@@ -518,7 +514,7 @@ ResultDataCOMTraj   computeCOMTraj(const ProblemData& pData, const VectorX& Ts,
     std::pair<MatrixXX, VectorX> Hg = genCostFunction(pData,Ts,T,timeArray,Ab.first.cols());
     VectorX x = VectorX::Zero(Ab.first.cols());
     ResultData resQp = solve(Ab,Dd,Hg, minBounds, maxBounds, x, solver);
-#if QHULL
+#if PRINT_QHULL_INEQ
     if (resQp.success_) printQHullFile(Ab,resQp.x, "bezier_wp.txt");
 #endif
     return genTraj(resQp, pData, T);

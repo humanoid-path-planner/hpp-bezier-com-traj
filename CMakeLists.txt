@@ -35,6 +35,7 @@ MESSAGE( STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS} )
 
 OPTION (BUILD_PYTHON_INTERFACE "Build the python binding" OFF)
 OPTION (USE_GLPK "Use sparse lp solver" OFF)
+OPTION (PRINT_QHULL_INEQ "generate text file containing last inequality computed" OFF)
 
 IF(BUILD_PYTHON_INTERFACE)
 # search for python
