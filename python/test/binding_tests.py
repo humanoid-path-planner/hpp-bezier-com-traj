@@ -147,7 +147,7 @@ except NameError,e:
     print "[WARNING] SOLVER_GLPK is not defined. Consider installing GLPK if you are using CROC with a force formulation"
     
 res = computeCOMTraj(pD,matrix([0.4,0.4,0.4]).T,0.05,SOLVER_QUADPROG)
-res = computeCOMTraj(pD,matrix([0.4,0.4,0.4]).T,0.05,SOLVER_QUADPROG_SPARSE)
+#~ res = computeCOMTraj(pD,matrix([0.4,0.4,0.4]).T,0.05,SOLVER_QUADPROG_SPARSE)
 assert np.linalg.norm(res.c_of_t.derivate(1.2, 1)) < 0.00000001
 
 # non matching time step and contact phases
