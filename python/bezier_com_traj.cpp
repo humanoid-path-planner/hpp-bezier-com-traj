@@ -359,7 +359,7 @@ ResultDataCOMTraj* computeCOMTrajPointerChooseSolver(const ProblemData& pData, c
 
 /** END computeCOMTraj **/
 
-BOOST_PYTHON_MODULE(bezier_com_traj)
+BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
 {
     using namespace boost::python;
     register_exception_translator<res_data_exception>(&translate);

@@ -14,7 +14,17 @@ IF(APPLE)
 ENDIF(APPLE)
 PKG_CONFIG_USE_DEPENDENCY(${PY_NAME} eigenpy)
 PKG_CONFIG_USE_DEPENDENCY(${PY_NAME} hpp-centroidal-dynamics)
+TARGET_LINK_LIBRARIES(${PY_NAME} hpp-centroidal-dynamics)
 
 INSTALL(
   TARGETS ${PY_NAME}	DESTINATION ${PYTHON_SITELIB}
   )
+
+SET(${PROJECT_NAME}_PYTHON_TESTS
+  binding_tests.py
+  #compare_pin_inv_dyn.py requires pinocchio_inv_dyn
+  )
+
+FOREACH(test ${${PROJECT_NAME}_PYTHON_TESTS})
+    ADD_PYTHON_UNIT_TEST(${test} "python/test/${test}" "python")
+ENDFOREACH(test)
