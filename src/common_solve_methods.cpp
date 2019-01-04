@@ -1,8 +1,8 @@
 
-#include <bezier-com-traj/common_solve_methods.hh>
-#include <solver/eiquadprog-fast.hpp>
-#include <solver/glpk-wrapper.hpp>
-#include <bezier-com-traj/waypoints/waypoints_definition.hh>
+#include <hpp/bezier-com-traj/common_solve_methods.hh>
+#include <hpp/bezier-com-traj/solver/eiquadprog-fast.hpp>
+#include <hpp/bezier-com-traj/solver/glpk-wrapper.hpp>
+#include <hpp/bezier-com-traj/waypoints/waypoints_definition.hh>
 
 namespace bezier_com_traj
 {

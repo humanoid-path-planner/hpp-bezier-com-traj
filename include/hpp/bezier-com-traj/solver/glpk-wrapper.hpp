@@ -18,7 +18,7 @@
 #ifndef GLPKWRAPPER_HH_
 #define GLPKWRAPPER_HH_
 
-#include <solver/solver-abstract.hpp>
+#include <hpp/bezier-com-traj/solver/solver-abstract.hpp>
 
 #include <Eigen/Dense>
 

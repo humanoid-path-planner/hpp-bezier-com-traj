@@ -16,7 +16,7 @@
 //
 
 
-#include "solver/glpk-wrapper.hpp"
+#include "hpp/bezier-com-traj/solver/glpk-wrapper.hpp"
 #include <glpk.h>
 #include <iostream>
 

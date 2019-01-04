@@ -6,13 +6,13 @@
 #ifndef BEZIER_COM_TRAJ_LIB_DATA_H
 #define BEZIER_COM_TRAJ_LIB_DATA_H
 
-#include <bezier-com-traj/config.hh>
-#include <bezier-com-traj/flags.hh>
-#include <bezier-com-traj/definitions.hh>
-#include <bezier-com-traj/utils.hh>
-#include <solver/solver-abstract.hpp>
-#include <spline/bezier_curve.h>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+#include <hpp/bezier-com-traj/local_config.hh>
+#include <hpp/bezier-com-traj/flags.hh>
+#include <hpp/bezier-com-traj/definitions.hh>
+#include <hpp/bezier-com-traj/utils.hh>
+#include <hpp/bezier-com-traj/solver/solver-abstract.hpp>
+#include <hpp/spline/bezier_curve.h>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include <Eigen/Dense>
 
 #include <vector>

@@ -1,23 +1,20 @@
-cmake_minimum_required( VERSION 2.8 )
-
-include_directories("${INCLUDE_DIR}")
-include_directories("${EIGEN3_INCLUDE_DIR}")
-
 ADD_REQUIRED_DEPENDENCY("eigenpy")
 
+STRING(REGEX REPLACE "-" "_" PY_NAME ${PROJECT_NAME})
 
 # Define the wrapper library that wraps our library
-add_library( bezier_com_traj SHARED bezier_com_traj.cpp )
-target_link_libraries( bezier_com_traj ${Boost_LIBRARIES} ${PROJECT_NAME} )
+add_library( ${PY_NAME} SHARED bezier_com_traj.cpp )
+target_link_libraries( ${PY_NAME} ${Boost_LIBRARIES} ${PROJECT_NAME} )
 # don't prepend wrapper library name with lib
-set_target_properties( bezier_com_traj PROPERTIES PREFIX "" )
+set_target_properties( ${PY_NAME} PROPERTIES PREFIX "" )
 
 IF(APPLE)
-	# We need to change the extension for python bindings
-	SET_TARGET_PROPERTIES(bezier_com_traj PROPERTIES SUFFIX ".so")
+  # We need to change the extension for python bindings
+  SET_TARGET_PROPERTIES(${PY_NAME} PROPERTIES SUFFIX ".so")
 ENDIF(APPLE)
-PKG_CONFIG_USE_DEPENDENCY(bezier_com_traj eigenpy)
+PKG_CONFIG_USE_DEPENDENCY(${PY_NAME} eigenpy)
+PKG_CONFIG_USE_DEPENDENCY(${PY_NAME} hpp-centroidal-dynamics)
 
 INSTALL(
-	FILES ${LIBRARY_OUTPUT_PATH}/bezier_com_traj.so	DESTINATION ${PYTHON_SITELIB}
-)
+  TARGETS ${PY_NAME}	DESTINATION ${PYTHON_SITELIB}
+  )

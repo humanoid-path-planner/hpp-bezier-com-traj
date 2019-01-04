@@ -1,5 +1,5 @@
-#include "bezier-com-traj/solve.hh"
-#include "solver/solver-abstract.hpp"
+#include "hpp/bezier-com-traj/solve.hh"
+#include "hpp/bezier-com-traj/solver/solver-abstract.hpp"
 #include <eigenpy/memory.hpp>
 #include <eigenpy/eigenpy.hpp>
 

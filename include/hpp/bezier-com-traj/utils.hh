@@ -6,9 +6,9 @@
 #ifndef BEZIER_COM_TRAJ_LIB_UTILS_H
 #define BEZIER_COM_TRAJ_LIB_UTILS_H
 
-#include <bezier-com-traj/config.hh>
-#include <bezier-com-traj/definitions.hh>
-#include <bezier-com-traj/flags.hh>
+#include <hpp/bezier-com-traj/local_config.hh>
+#include <hpp/bezier-com-traj/definitions.hh>
+#include <hpp/bezier-com-traj/flags.hh>
 
 #include <Eigen/Dense>
 

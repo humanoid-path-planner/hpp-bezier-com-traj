@@ -3,14 +3,14 @@
  * Author: Pierre Fernbach
  */
 
-#include <bezier-com-traj/solve.hh>
-#include <bezier-com-traj/common_solve_methods.hh>
-#include <bezier-com-traj/waypoints/waypoints_definition.hh>
-#include <bezier-com-traj/cost/costfunction_definition.hh>
+#include <hpp/bezier-com-traj/solve.hh>
+#include <hpp/bezier-com-traj/common_solve_methods.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_definition.hh>
+#include <hpp/bezier-com-traj/cost/costfunction_definition.hh>
 
-#include <solver/solver-abstract.hpp>
+#include <hpp/bezier-com-traj/solver/solver-abstract.hpp>
 
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 
 #include  <limits>
 #include  <algorithm>

@@ -3,9 +3,9 @@
  * Author: Steve Tonneau
  */
 
-#include <bezier-com-traj/cost/costfunction_definition.hh>
-#include <bezier-com-traj/waypoints/waypoints_definition.hh>
-#include <bezier-com-traj/common_solve_methods.hh>
+#include <hpp/bezier-com-traj/cost/costfunction_definition.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_definition.hh>
+#include <hpp/bezier-com-traj/common_solve_methods.hh>
 
 namespace bezier_com_traj
 {

@@ -3,10 +3,10 @@
  * Author: Pierre Fernbach
  */
 
-#include <bezier-com-traj/solve.hh>
-#include <bezier-com-traj/common_solve_methods.hh>
+#include <hpp/bezier-com-traj/solve.hh>
+#include <hpp/bezier-com-traj/common_solve_methods.hh>
 #include <limits>
-#include <bezier-com-traj/waypoints/waypoints_definition.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_definition.hh>
 
 using namespace bezier_com_traj;
 

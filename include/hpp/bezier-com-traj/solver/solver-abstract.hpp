@@ -18,7 +18,7 @@
 #ifndef SOLVERABSTRACT_HH_
 #define SOLVERABSTRACT_HH_
 
-#include <bezier-com-traj/config.hh>
+#include <hpp/bezier-com-traj/local_config.hh>
 #include <Eigen/Dense>
 
 namespace solvers

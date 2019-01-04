@@ -20,12 +20,12 @@
 
 #define BOOST_TEST_MODULE transition
 #include <boost/test/included/unit_test.hpp>
-#include <bezier-com-traj/solve.hh>
-#include <bezier-com-traj/common_solve_methods.hh>
-#include <bezier-com-traj/data.hh>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
-#include <test_helper.hh>
-#include <spline/bezier_curve.h>
+#include <hpp/bezier-com-traj/solve.hh>
+#include <hpp/bezier-com-traj/common_solve_methods.hh>
+#include <hpp/bezier-com-traj/data.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
+#include "test_helper.hh"
+#include <hpp/spline/bezier_curve.h>
 
 using namespace bezier_com_traj;
 const double T = 1.5;
@@ -250,6 +250,3 @@ BOOST_AUTO_TEST_CASE(symbolic_split_w_bench){
 
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
-

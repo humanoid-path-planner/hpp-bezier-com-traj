@@ -1,9 +1,9 @@
 #ifndef TEST_HELPER_HH
 #define TEST_HELPER_HH
 
-#include <bezier-com-traj/solve.hh>
-#include <bezier-com-traj/common_solve_methods.hh>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+#include <hpp/bezier-com-traj/solve.hh>
+#include <hpp/bezier-com-traj/common_solve_methods.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include <boost/test/included/unit_test.hpp>
 
 using bezier_com_traj::MatrixXX;

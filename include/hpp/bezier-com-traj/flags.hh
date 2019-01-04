@@ -6,7 +6,7 @@
 #ifndef BEZIER_COM_TRAJ_FLAGS_H
 #define BEZIER_COM_TRAJ_FLAGS_H
 
-#include <bezier-com-traj/config.hh>
+#include <hpp/bezier-com-traj/local_config.hh>
 
 namespace bezier_com_traj
 {

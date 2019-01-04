@@ -5,9 +5,9 @@
 
 #include <vector>
 #include <iostream>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
-#include <bezier-com-traj/solve.hh>
-#include <bezier-com-traj/data.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
+#include <hpp/bezier-com-traj/solve.hh>
+#include <hpp/bezier-com-traj/data.hh>
 #include <math.h>
 
 using namespace centroidal_dynamics;
@@ -199,7 +199,7 @@ int main()
         {
             bezier_com_traj::ContactData data;
             data.contactPhase_ = &solver_PP;
-            bezier_com_traj::ProblemData pData;            
+            bezier_com_traj::ProblemData pData;
             pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::END_VEL;
             pData.c0_ = c0;
             pData.dc0_ << fRandom(-1.,1.) , fRandom(-1.,1.) , fRandom(-1.,1.);
@@ -220,7 +220,7 @@ int main()
                 Ts.push_back(T);
                 bezier_com_traj::ResultDataCOMTraj rData = bezier_com_traj::solve0step(pData,Ts);
                 if(rData.success_)
-                {                    
+                {
                     assert ((rData.c_of_t_(0.) - pData.c0_).norm() < 0.0001);
                     succCont = true;
                     succContinuous += 1;

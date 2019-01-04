@@ -6,10 +6,10 @@
 #ifndef BEZIER_COM_TRAJ_LIB_COMMON_SOLVE_H
 #define BEZIER_COM_TRAJ_LIB_COMMON_SOLVE_H
 
-#include <bezier-com-traj/config.hh>
-#include <bezier-com-traj/data.hh>
-#include <bezier-com-traj/waypoints/waypoints_definition.hh>
-#include <solver/solver-abstract.hpp>
+#include <hpp/bezier-com-traj/local_config.hh>
+#include <hpp/bezier-com-traj/data.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_definition.hh>
+#include <hpp/bezier-com-traj/solver/solver-abstract.hpp>
 
 #include <Eigen/Dense>
 

@@ -6,7 +6,7 @@
 #ifndef BEZIER_COM_TRAJ_WP_DEF_H
 #define BEZIER_COM_TRAJ_WP_DEF_H
 
-#include <bezier-com-traj/data.hh>
+#include <hpp/bezier-com-traj/data.hh>
 
 
 

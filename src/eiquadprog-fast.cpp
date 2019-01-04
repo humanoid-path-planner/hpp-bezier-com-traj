@@ -16,7 +16,7 @@
 //
 
 
-#include "solver/eiquadprog-fast.hpp"
+#include "hpp/bezier-com-traj/solver/eiquadprog-fast.hpp"
 #include <iostream>
 namespace tsid
 {
@@ -43,7 +43,7 @@ namespace tsid
         }
       return a1 * std::sqrt(2.0);
     }
-    
+
     EiquadprogFast::EiquadprogFast()
     {
       m_maxIter = DEFAULT_MAX_ITER;
@@ -467,9 +467,9 @@ l1:
         q = iq;
         return EIQUADPROG_FAST_MAX_ITER_REACHED;
       }
-	  
+
       START_PROFILER_EIQUADPROG_FAST(EIQUADPROG_FAST_STEP_1);
-	  
+
 #ifdef TRACE_SOLVER
       print_vector("x", x, nVars);
 #endif
@@ -1151,6 +1151,6 @@ l2a:/* Step 2a: determine step direction */
 
       goto l2a;
     }
-    
+
   } /* namespace solvers */
 } /* namespace tsid */

@@ -16,12 +16,12 @@
 //
 
 
-#include "solver/solver-abstract.hpp"
+#include "hpp/bezier-com-traj/solver/solver-abstract.hpp"
 #ifdef USE_GLPK_SOLVER
-#include <solver/glpk-wrapper.hpp>
+#include <hpp/bezier-com-traj/solver/glpk-wrapper.hpp>
 #include <glpk.h>
 #endif
-#include <solver/eiquadprog-fast.hpp>
+#include <hpp/bezier-com-traj/solver/eiquadprog-fast.hpp>
 
 #include <Eigen/Sparse>
 #include <stdexcept>

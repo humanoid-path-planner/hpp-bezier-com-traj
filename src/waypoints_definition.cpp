@@ -6,18 +6,18 @@
 #ifndef BEZIER_COM_TRAJ_WP_DEF_H
 #define BEZIER_COM_TRAJ_WP_DEF_H
 
-#include <bezier-com-traj/data.hh>
-#include <bezier-com-traj/waypoints/waypoints_definition.hh>
-#include <bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh>
-#include <bezier-com-traj/waypoints/waypoints_c0_dc0_dc1.hh>
-#include <bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh>
-#include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0.hh>
-#include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh>
-#include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh>
-#include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh>
-#include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_j0_j1_ddc1_dc1_c1.hh>
-#include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1.hh>
-#include <bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1.hh>
+#include <hpp/bezier-com-traj/data.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_definition.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_c0_dc0_c1.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_c0_dc0_dc1_c1.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_c1.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_j0_j1_ddc1_dc1_c1.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1.hh>
+#include <hpp/bezier-com-traj/waypoints/waypoints_c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1.hh>
 
 #include "boost/assign.hpp"
 

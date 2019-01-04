@@ -3,7 +3,7 @@
  * Author: Steve Tonneau
  */
 
-#include <bezier-com-traj/utils.hh>
+#include <hpp/bezier-com-traj/utils.hh>
 namespace bezier_com_traj
 {
 

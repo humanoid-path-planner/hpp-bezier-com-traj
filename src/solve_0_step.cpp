@@ -3,9 +3,9 @@
  * Author: Steve Tonneau
  */
 
-#include <bezier-com-traj/solve.hh>
-#include <bezier-com-traj/utils.hh>
-#include <bezier-com-traj/common_solve_methods.hh>
+#include <hpp/bezier-com-traj/solve.hh>
+#include <hpp/bezier-com-traj/utils.hh>
+#include <hpp/bezier-com-traj/common_solve_methods.hh>
 
 using namespace bezier_com_traj;
 namespace bezier_com_traj
@@ -236,7 +236,7 @@ void computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts, Res
 
 // no angular momentum for now
 ResultDataCOMTraj solve0step(const ProblemData& pData,  const std::vector<double>& Ts, const double timeStep)
-{    
+{
     assert (pData.representation_ == DOUBLE_DESCRIPTION);
     assert(pData.contacts_.size() ==1);
     assert(Ts.size() == pData.contacts_.size());

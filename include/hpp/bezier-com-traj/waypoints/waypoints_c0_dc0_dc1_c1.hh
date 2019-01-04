@@ -6,7 +6,7 @@
 #ifndef BEZIER_COM_TRAJ_C0DC0D1C1_H
 #define BEZIER_COM_TRAJ_C0DC0D1C1_H
 
-#include <bezier-com-traj/data.hh>
+#include <hpp/bezier-com-traj/data.hh>
 
 namespace bezier_com_traj{
 namespace c0_dc0_dc1_c1{
