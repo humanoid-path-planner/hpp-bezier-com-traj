@@ -8,21 +8,13 @@ SET(${PROJECT_NAME}_HEADERS
   solve_end_effector.hh
   common_solve_methods.hh
   common_solve_methods.inl
-  cost/costfunction_definition.hh
-  waypoints/waypoints_definition.hh
-  waypoints/waypoints_c0_dc0_c1.hh
-  waypoints/waypoints_c0_dc0_dc1.hh
-  waypoints/waypoints_c0_dc0_dc1_c1.hh
-  waypoints/waypoints_c0_dc0_ddc0_c1.hh
-  waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh
-  waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh
-  include/solver/solver-abstract.hpp
-  include/solver/eiquadprog-fast.hpp
-
   )
 
-IF(USE_GLPK)
-  SET(${PROJECT_NAME}_HEADERS ${${PROJECT_NAME}_HEADERS}
-    include/solver/glpk-wrapper.hpp
-    )
-ENDIF(USE_GLPK)
+INSTALL(FILES
+  ${${PROJECT_NAME}_HEADERS}
+  DESTINATION include/${CUSTOM_HEADER_DIR}
+  )
+
+ADD_SUBDIRECTORY(cost)
+ADD_SUBDIRECTORY(waypoints)
+ADD_SUBDIRECTORY(solver)

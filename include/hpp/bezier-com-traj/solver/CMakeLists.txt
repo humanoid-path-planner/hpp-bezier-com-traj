@@ -1,0 +1,15 @@
+SET(${PROJECT_NAME}_SOLVER_HEADERS
+  solver-abstract.hpp
+  eiquadprog-fast.hpp
+  )
+
+IF(USE_GLPK)
+  SET(${PROJECT_NAME}_SOLVER_HEADERS ${${PROJECT_NAME}_SOLVER_HEADERS}
+    glpk-wrapper.hpp
+    )
+ENDIF(USE_GLPK)
+
+INSTALL(FILES
+  ${${PROJECT_NAME}_SOLVER_HEADERS}
+  DESTINATION include/${CUSTOM_HEADER_DIR}/solver
+  )
