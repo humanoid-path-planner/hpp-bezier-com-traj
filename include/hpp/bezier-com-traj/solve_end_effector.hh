@@ -15,7 +15,7 @@ namespace bezier_com_traj
 typedef std::pair<double,point3_t> coefs_t;
 const int DIM_POINT=3;
 //const int NUM_DISCRETIZATION = 11;
-const bool verbose = true;
+const bool verbose = false;
 
 
 /**
