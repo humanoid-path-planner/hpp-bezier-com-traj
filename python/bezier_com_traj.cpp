@@ -453,9 +453,11 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
             .value("INIT_POS", INIT_POS)
             .value("INIT_VEL", INIT_VEL)
             .value("INIT_ACC", INIT_ACC)
-            .value("END_POS", END_POS)
+            .value("INIT_JERK",INIT_JERK)
             .value("END_POS", END_POS)
             .value("END_VEL", END_VEL)
+            .value("END_ACC", END_ACC)
+            .value("END_JERK",END_JERK)
             .value("UNKNOWN", UNKNOWN)
             .export_values();
 
