@@ -15,7 +15,7 @@ namespace bezier_com_traj
 typedef std::pair<double,point3_t> coefs_t;
 const int DIM_POINT=3;
 //const int NUM_DISCRETIZATION = 11;
-const bool verbose = true;
+const bool verbose = false;
 
 
 /**
@@ -364,13 +364,13 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     if(verbose){
       std::cout<<"End eff H = "<<std::endl<<H<<std::endl;
       std::cout<<"End eff g = "<<std::endl<<g<<std::endl;
+      std::cout<<"Dim Var = "<<dimVar(pData)<<std::endl;
+      std::cout<<"Dim H   = "<<H.rows()<<" x "<<H.cols()<<std::endl;
+      std::cout<<"Dim g   = "<<g.rows()<<std::endl;
+      std::cout<<"Dim A   = "<<A.rows()<<" x "<<A.cols()<<std::endl;
+      std::cout<<"Dim b   = "<<b.rows()<<std::endl;
     }
-    // call the solver
-    std::cout<<"Dim Var = "<<dimVar(pData)<<std::endl;
-    std::cout<<"Dim H   = "<<H.rows()<<" x "<<H.cols()<<std::endl;
-    std::cout<<"Dim g   = "<<g.rows()<<std::endl;
-    std::cout<<"Dim A   = "<<A.rows()<<" x "<<A.cols()<<std::endl;
-    std::cout<<"Dim b   = "<<b.rows()<<std::endl;
+
 
     VectorX init = VectorX(dimVar(pData));
    // init = (pData.c0_ + pData.c1_)/2.;

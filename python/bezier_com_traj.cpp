@@ -1,5 +1,6 @@
 #include "hpp/bezier-com-traj/solve.hh"
 #include "hpp/bezier-com-traj/solver/solver-abstract.hpp"
+#include "hpp/bezier-com-traj/solve_end_effector.hh"
 #include <eigenpy/memory.hpp>
 #include <eigenpy/eigenpy.hpp>
 
@@ -358,6 +359,25 @@ ResultDataCOMTraj* computeCOMTrajPointerChooseSolver(const ProblemData& pData, c
 
 
 /** END computeCOMTraj **/
+/** BEGIN end effector **/
+
+struct DummyPath{
+
+  point3_t operator()(double /*u*/)const{
+    return point3_t::Zero();
+  }
+
+};
+
+
+ResultDataCOMTraj* computeEndEffector(const ProblemData& pData, const double time){
+
+   ResultDataCOMTraj  res =solveEndEffector<DummyPath>(pData,DummyPath(),time, 0);
+   return new ResultDataCOMTraj(res);
+}
+
+/** END end effector **/
+
 
 BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
 {
@@ -453,9 +473,11 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
             .value("INIT_POS", INIT_POS)
             .value("INIT_VEL", INIT_VEL)
             .value("INIT_ACC", INIT_ACC)
-            .value("END_POS", END_POS)
+            .value("INIT_JERK",INIT_JERK)
             .value("END_POS", END_POS)
             .value("END_VEL", END_VEL)
+            .value("END_ACC", END_ACC)
+            .value("END_JERK",END_JERK)
             .value("UNKNOWN", UNKNOWN)
             .export_values();
 
@@ -465,6 +487,7 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
     def("zeroStepCapturability", &zeroStepCapturabilityWithKinConstraints, return_value_policy<manage_new_object>());
     def("computeCOMTraj", &computeCOMTrajPointer, return_value_policy<manage_new_object>());
     def("computeCOMTraj", &computeCOMTrajPointerChooseSolver, return_value_policy<manage_new_object>());
+    def("computeEndEffector", &computeEndEffector, return_value_policy<manage_new_object>());
 
 }
 
