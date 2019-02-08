@@ -12,7 +12,7 @@ SET(PROJECT_DESCRIPTION
 
 SET(CUSTOM_HEADER_DIR "hpp/bezier-com-traj")
 
-SETUP_PROJECT()
+SETUP_HPP_PROJECT()
 
 # Inhibit all warning messages.
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
