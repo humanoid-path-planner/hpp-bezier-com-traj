@@ -35,16 +35,21 @@ IF(BUILD_PYTHON_INTERFACE)
   include_directories( ${Boost_INCLUDE_DIR} )
 ENDIF(BUILD_PYTHON_INTERFACE)
 
+SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/CDD")
 
 ADD_REQUIRED_DEPENDENCY(eigen3)
 ADD_REQUIRED_DEPENDENCY(hpp-centroidal-dynamics)
 ADD_REQUIRED_DEPENDENCY(hpp-spline)
+FIND_PACKAGE(CDD REQUIRED)
+INCLUDE_DIRECTORIES(${CDD_INCLUDE_DIRS})
+
 IF(USE_GLPK)
-  set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/glpk")
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/find-external/glpk")
   find_package (glpk REQUIRED)
   add_definitions ( -DUSE_GLPK_SOLVER=1)
   INCLUDE_DIRECTORIES(${glpk_INCLUDE_DIR})
 ENDIF(USE_GLPK)
+
 
 add_subdirectory(include/${CUSTOM_HEADER_DIR})
 add_subdirectory(src)
