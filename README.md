@@ -1,5 +1,9 @@
 #  bezier_COM_Traj
 
+[![Pipeline status](https://gepgitlab.laas.fr/humanoid-path-planner/hpp-bezier-com-traj/badges/master/pipeline.svg)](https://gepgitlab.laas.fr/humanoid-path-planner/hpp-bezier-com-traj/commits/master)
+[![Coverage report](https://gepgitlab.laas.fr/humanoid-path-planner/hpp-bezier-com-traj/badges/master/coverage.svg?job=doc-coverage)](http://projects.laas.fr/gepetto/doc/humanoid-path-planner/hpp-bezier-com-traj/master/coverage/)
+
+
 Copyright 2018 LAAS-CNRS
 
 Authors: Pierre Fernbach and Steve Tonneau
@@ -11,7 +15,7 @@ The trajectories are genererated through the resolution of convex optimization (
 
 The library is implemented in C++, but also provides Python bindings.
 
-Two types of applications can be used so far: 
+Two types of applications can be used so far:
 - First, zero step capturability: Given the centroidal state of a robot, determines whether it is possible for the robot to come to a stop without violating frictional constraints. In this formulation, the problem can be solved continuously, and angular momentum constraints can be used.
 
 - Second, the general case (which encompasses zero step capturability):
@@ -79,7 +83,7 @@ from bezier_com_traj import * #the actual library
 
 
 # create an Equilibrium solver, for a robot of 54 kilos. We linearize the friction cone to four generating rays
-eq = Equilibrium("test", 54., 4) 
+eq = Equilibrium("test", 54., 4)
 
 # Now define some contact points ...
 from numpy import array, asmatrix, matrix
@@ -91,7 +95,7 @@ P = asmatrix(array([array([x,y,0]) for x in [-0.05,0.05] for y in [-0.1,0.1]]))
 z = array([0.,0.,1.])
 N = asmatrix(array([z for _ in range(4)]))
 
-#setting contact positions and normals, as well as friction coefficient of 0.3 
+#setting contact positions and normals, as well as friction coefficient of 0.3
 #EQUILIBRIUM_ALGORITHM_PP is the algorithm that will always be used for our problems
 eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_PP)
 
@@ -105,13 +109,13 @@ c0 = matrix([0.,0.,1.]) .T
 
 #we set the inital speed dc0 to a rather slow 10 cm / s along the x axis
 dc0 =  matrix([0.1,0.,0.]).T
-l0 = matrix([0.,0.,0.]).T 
+l0 = matrix([0.,0.,0.]).T
 T = 1.2
 tstep = -1.
 ```
 
 And finally, some optimization parameters:
-The total duration of the trajectory, as well as 
+The total duration of the trajectory, as well as
 the discretization step. If the discretization step is < 0,
 then the continuous formulation is used
 
@@ -133,7 +137,7 @@ print result.success
 ```
 
 The found centroidal trajectory is accessible from the returned object, only if the problem
-was feasible 
+was feasible
 ```
 res.c_of_t # a bezier curve object describing the com trajectory
 
@@ -145,6 +149,6 @@ print np.linalg.norm(dc_of_t(dc_of_t.max()))
 ```
 
 refer to the [test file](https://gitlab.com/stonneau/bezier_COM_traj/blob/master/python/test/binding_tests.py) for more advanced problems, including kinematic constraints,
-mutiple contact phases handling and angular momentum 
+mutiple contact phases handling and angular momentum
 
 
