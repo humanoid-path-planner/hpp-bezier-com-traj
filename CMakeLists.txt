@@ -2,15 +2,13 @@ cmake_minimum_required(VERSION 2.6)
 INCLUDE(cmake/base.cmake)
 INCLUDE(cmake/python.cmake)
 INCLUDE(cmake/test.cmake)
+INCLUDE(cmake/hpp.cmake)
 
-SET(PROJECT_ORG stonneau)
 SET(PROJECT_NAME hpp-bezier-com-traj)
 SET(PROJECT_DESCRIPTION
   "Multi contact trajectory generation for the COM using Bezier curves"
   )
-SET(PROJECT_URL "https://gitlab.com/${PROJECT_ORG}/${PROJECT_NAME}")
 
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/;${PROJECT_SOURCE_DIR}/cmake2/")
 
 SET(CUSTOM_HEADER_DIR "hpp/bezier-com-traj")
 
@@ -42,9 +40,10 @@ ADD_REQUIRED_DEPENDENCY(eigen3)
 ADD_REQUIRED_DEPENDENCY(hpp-centroidal-dynamics)
 ADD_REQUIRED_DEPENDENCY(hpp-spline)
 IF(USE_GLPK)
+  set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/glpk")
   find_package (glpk REQUIRED)
   add_definitions ( -DUSE_GLPK_SOLVER=1)
-  INCLUDE_DIRECTORIES(${GLPK_INCLUDE_DIR})
+  INCLUDE_DIRECTORIES(${glpk_INCLUDE_DIR})
 ENDIF(USE_GLPK)
 
 add_subdirectory(include/${CUSTOM_HEADER_DIR})
