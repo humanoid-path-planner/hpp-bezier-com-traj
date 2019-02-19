@@ -1,6 +1,6 @@
-#include "hpp/bezier-com-traj/solve.hh"
-#include "hpp/bezier-com-traj/solver/solver-abstract.hpp"
-#include "hpp/bezier-com-traj/solve_end_effector.hh"
+#include <hpp/bezier-com-traj/solve.hh>
+#include <hpp/bezier-com-traj/solver/solver-abstract.hpp>
+#include <hpp/bezier-com-traj/solve_end_effector.hh>
 #include <eigenpy/memory.hpp>
 #include <eigenpy/eigenpy.hpp>
 
@@ -16,6 +16,7 @@ EIGENPY_DEFINE_STRUCT_ALLOCATOR_SPECIALIZATION(bezier_com_traj::bezier_t)
 namespace bezier_com_traj
 {
 using namespace boost::python;
+typedef double real;
 
 ResultDataCOMTraj* zeroStepCapturability(centroidal_dynamics::Equilibrium* eq, const Vector3& com ,const Vector3& dCom ,const Vector3& l0, const bool useAngMomentum
                               , const double timeDuration, const double timeStep)
@@ -370,10 +371,36 @@ struct DummyPath{
 };
 
 
+typedef std::pair<Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic>,
+                  Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> > linear_points_t;
+
+
+struct MatrixVector
+{
+    linear_points_t res;
+    Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> A() {return res.first;}
+    Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> b() {return res.second;}
+};
+
+
 ResultDataCOMTraj* computeEndEffector(const ProblemData& pData, const double time){
 
    ResultDataCOMTraj  res =solveEndEffector<DummyPath>(pData,DummyPath(),time, 0);
    return new ResultDataCOMTraj(res);
+}
+
+MatrixVector* computeEndEffectorConstraintsPython(const ProblemData& pData, const double time){
+   std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,time);
+   MatrixVector* res = new MatrixVector();
+   res->res =computeEndEffectorConstraints(pData,time, pi);
+   return res;
+}
+
+MatrixVector* computeEndEffectorCostPython(const ProblemData& pData, const double time){
+   std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,time);
+   MatrixVector* res = new MatrixVector();
+   res->res = computeEndEffectorCost<DummyPath>(pData,DummyPath(),time, 0,false,pi);
+   return res;
 }
 
 /** END end effector **/
@@ -481,6 +508,9 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
             .value("UNKNOWN", UNKNOWN)
             .export_values();
 
+    class_<MatrixVector>("MatrixVector", no_init)
+          .def_readonly("A", &MatrixVector::A)
+          .def_readonly("b", &MatrixVector::b);
 
 
     def("zeroStepCapturability", &zeroStepCapturability, return_value_policy<manage_new_object>());
@@ -488,6 +518,8 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
     def("computeCOMTraj", &computeCOMTrajPointer, return_value_policy<manage_new_object>());
     def("computeCOMTraj", &computeCOMTrajPointerChooseSolver, return_value_policy<manage_new_object>());
     def("computeEndEffector", &computeEndEffector, return_value_policy<manage_new_object>());
+    def("computeEndEffectorConstraints", &computeEndEffectorConstraintsPython, return_value_policy<manage_new_object>());
+    def("computeEndEffectorCost", &computeEndEffectorCostPython, return_value_policy<manage_new_object>());
 
 }
 
