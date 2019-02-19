@@ -309,31 +309,26 @@ void computeJerkCostFunctionDiscretized(int numPoints,const ProblemData& pData,d
 
 
 
-
-
-template <typename Path>
-ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, const double T, const double weightDistance, bool useVelCost){
-
-
-    if(verbose)
-      std::cout<<"solve end effector, T = "<<T<<std::endl;
-    assert (weightDistance>=0. && weightDistance<=1. && "WeightDistance must be between 0 and 1");
-    double weightSmooth = 1. - weightDistance;
-    std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,T);
+std::pair<MatrixXX,VectorX> computeEndEffectorConstraints(const ProblemData& pData, const double T,std::vector<bezier_t::point_t> pi){
     std::vector<waypoint_t> wps_jerk=computeJerkWaypoints(pData,T,pi);
     std::vector<waypoint_t> wps_acc=computeAccelerationWaypoints(pData,T,pi);
     std::vector<waypoint_t> wps_vel=computeVelocityWaypoints(pData,T,pi);
     // stack the constraint for each waypoint :
-    MatrixXX A;
-    VectorX b;
-    Vector3 jerk_bounds(10000,10000,10000);
+    Vector3 jerk_bounds(10000,10000,10000);    //TODO : read it from somewhere (ProblemData ?)
     Vector3 acc_bounds(10000,10000,10000);
     Vector3 vel_bounds(10000,10000,10000);
-    const int DIM_VAR = dimVar(pData);
+    MatrixXX A;
+    VectorX b;
     computeConstraintsMatrix(pData,wps_acc,wps_vel,acc_bounds,vel_bounds,A,b,wps_jerk,jerk_bounds);
-  //  std::cout<<"End eff A = "<<std::endl<<A<<std::endl;
- //   std::cout<<"End eff b = "<<std::endl<<b<<std::endl;
-    // compute cost function (discrete integral under the curve defined by 'path')
+    return std::make_pair<MatrixXX,VectorX>(A,b);
+}
+
+template <typename Path>
+std::pair<MatrixXX,VectorX> computeEndEffectorCost(const ProblemData& pData,const Path& path, const double T,const double weightDistance, bool /*useVelCost*/,std::vector<bezier_t::point_t> pi){
+ assert (weightDistance>=0. && weightDistance<=1. && "WeightDistance must be between 0 and 1");
+    double weightSmooth = 1. - weightDistance;
+    const int DIM_VAR = dimVar(pData);
+    // compute distance cost function (discrete integral under the curve defined by 'path')
     MatrixXX H_rrt,H;
     VectorX g_rrt,g;
     std::pair<MatrixXX,VectorX> Hg_smooth;
@@ -347,13 +342,11 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
 
     Hg_smooth = computeVelocityCost(pData,T,pi);
 
-
   /*  std::cout<<"End eff H_rrt = "<<std::endl<<H_rrt<<std::endl;
     std::cout<<"End eff g_rrt = "<<std::endl<<g_rrt<<std::endl;
     std::cout<<"End eff H_acc = "<<std::endl<<H_acc<<std::endl;
     std::cout<<"End eff g_acc = "<<std::endl<<g_acc<<std::endl;
 */
-
     // add the costs :
     H = MatrixXX::Zero(DIM_VAR,DIM_VAR);
     g  = VectorX::Zero(DIM_VAR);
@@ -361,14 +354,28 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     g = weightSmooth*(Hg_smooth.second) + weightDistance*g_rrt;
    // H = Hg_smooth.first;
   //  g = Hg_smooth.second;
+
+    return std::make_pair<MatrixXX,VectorX>(H,g);
+}
+
+
+template <typename Path>
+ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, const double T, const double weightDistance, bool useVelCost){
+
+
+    if(verbose)
+      std::cout<<"solve end effector, T = "<<T<<std::endl;
+    std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,T);
+    std::pair<MatrixXX, VectorX> Ab = computeEndEffectorConstraints(pData,T,pi);
+    std::pair<MatrixXX, VectorX> Hg = computeEndEffectorCost(pData,path,T,weightDistance,useVelCost,pi);
     if(verbose){
-      std::cout<<"End eff H = "<<std::endl<<H<<std::endl;
-      std::cout<<"End eff g = "<<std::endl<<g<<std::endl;
+      std::cout<<"End eff H = "<<std::endl<<Hg.first<<std::endl;
+      std::cout<<"End eff g = "<<std::endl<<Hg.second<<std::endl;
       std::cout<<"Dim Var = "<<dimVar(pData)<<std::endl;
-      std::cout<<"Dim H   = "<<H.rows()<<" x "<<H.cols()<<std::endl;
-      std::cout<<"Dim g   = "<<g.rows()<<std::endl;
-      std::cout<<"Dim A   = "<<A.rows()<<" x "<<A.cols()<<std::endl;
-      std::cout<<"Dim b   = "<<b.rows()<<std::endl;
+      std::cout<<"Dim H   = "<<Hg.first.rows()<<" x "<<Hg.first.cols()<<std::endl;
+      std::cout<<"Dim g   = "<<Hg.second.rows()<<std::endl;
+      std::cout<<"Dim A   = "<<Ab.first.rows()<<" x "<<Ab.first.cols()<<std::endl;
+      std::cout<<"Dim b   = "<<Ab.first.rows()<<std::endl;
     }
 
 
@@ -377,8 +384,7 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
    // init =pData.c0_;
     if(verbose)
       std::cout<<"Init = "<<std::endl<<init.transpose()<<std::endl;
-    std::pair<MatrixXX, VectorX> Ab = std::make_pair(A,b);
-    std::pair<MatrixXX, VectorX> Hg = std::make_pair(H,g);
+
     ResultData resQp = solve(Ab,Hg, init);
 
     ResultDataCOMTraj res;
