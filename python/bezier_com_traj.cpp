@@ -505,6 +505,11 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
             .value("END_VEL", END_VEL)
             .value("END_ACC", END_ACC)
             .value("END_JERK",END_JERK)
+            .value("ONE_FREE_VAR",ONE_FREE_VAR)
+            .value("TWO_FREE_VAR",TWO_FREE_VAR)
+            .value("THREE_FREE_VAR",THREE_FREE_VAR)
+            .value("FOUR_FREE_VAR",FOUR_FREE_VAR)
+            .value("FIVE_FREE_VAR",FIVE_FREE_VAR)
             .value("UNKNOWN", UNKNOWN)
             .export_values();
 
