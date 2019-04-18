@@ -403,6 +403,15 @@ MatrixVector* computeEndEffectorCostPython(const ProblemData& pData, const doubl
    return res;
 }
 
+Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> computeEndEffectorConstantWaypoints(const ProblemData& pData, const double time){
+   std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,time);
+   Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> res (3, pi.size());
+   int col = 0;
+   for(std::vector<bezier_t::point_t>::const_iterator cit = pi.begin(); cit != pi.end(); ++cit, ++col)
+    res.block<3,1>(0,col) = *cit;
+   return res;
+ }
+
 /** END end effector **/
 
 
@@ -525,6 +534,8 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
     def("computeEndEffector", &computeEndEffector, return_value_policy<manage_new_object>());
     def("computeEndEffectorConstraints", &computeEndEffectorConstraintsPython, return_value_policy<manage_new_object>());
     def("computeEndEffectorCost", &computeEndEffectorCostPython, return_value_policy<manage_new_object>());
+    def("computeEndEffectorConstantWaypoints", &computeEndEffectorConstantWaypoints);
+
 
 }
 
