@@ -188,31 +188,37 @@ void computeConstraintsMatrix(const ProblemData& pData,const std::vector<waypoin
     b.segment<DIM_POINT>(i*DIM_POINT)   =  Vector3(10,10,10);*/
 }
 
-
-template <typename Path>
-void computeDistanceCostFunction(int numPoints,const ProblemData& pData, double T,const Path& path, MatrixXX& H,VectorX& g){
+std::pair<MatrixXX,VectorX> computeDistanceCostFunction(int numPoints,const ProblemData& pData, double T,std::vector<point3_t> pts_path){
+    assert(numPoints == pts_path.size() && "Pts_path size must be equal to numPoints");
     double step = 1./(numPoints-1);
     std::vector<point_t> pi = computeConstantWaypoints(pData,T);
-    std::vector<waypoint_t> cks;
-    for(size_t i = 0 ; i < numPoints ; ++i){
-        cks.push_back(evaluateCurveWaypointAtTime(pData,pi,i*step));
-    }
-    H = MatrixXX::Zero(dimVar(pData),dimVar(pData));
-    g  = VectorX::Zero(dimVar(pData));
+    waypoint_t c_wp;
+    MatrixXX H = MatrixXX::Zero(dimVar(pData),dimVar(pData));
+    VectorX g  = VectorX::Zero(dimVar(pData));
     point3_t pk;
-    size_t i = 0;
-    for (std::vector<waypoint_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit){
-        pk=path(i*step);
+    for(size_t i = 0 ; i < numPoints ; ++i){
+        c_wp = evaluateCurveWaypointAtTime(pData,pi,i*step);
+        pk = pts_path[i];
       //  std::cout<<"pk = "<<pk.transpose()<<std::endl;
       //  std::cout<<"coef First : "<<ckcit->first<<std::endl;
       //  std::cout<<"coef second : "<<ckcit->second.transpose()<<std::endl;
-        H += (ckcit->first.transpose() * ckcit->first);
-        g += ((ckcit->second - pk).transpose() * ckcit->first).transpose();
-        i++;
+        H += (c_wp.first.transpose() * c_wp.first);
+        g += ((c_wp.second - pk).transpose() * c_wp.first).transpose();
     }
     double norm=H.norm();
     H /= norm;
     g /= norm;
+    return std::make_pair(H,g);
+}
+
+
+template <typename Path>
+std::pair<MatrixXX,VectorX> computeDistanceCostFunction(int numPoints,const ProblemData& pData, double T,const Path& path){
+    double step = 1./(numPoints-1);
+    std::vector<point3_t> pts_path;
+    for(size_t i = 0 ; i < numPoints ; ++i)
+      pts_path.push_back(path((double)(i*step)));
+    return computeDistanceCostFunction(numPoints,pData,T,pts_path);
 }
 
 //TODO
@@ -329,15 +335,15 @@ std::pair<MatrixXX,VectorX> computeEndEffectorCost(const ProblemData& pData,cons
     double weightSmooth = 1. - weightDistance;
     const int DIM_VAR = dimVar(pData);
     // compute distance cost function (discrete integral under the curve defined by 'path')
-    MatrixXX H_rrt,H;
-    VectorX g_rrt,g;
-    std::pair<MatrixXX,VectorX> Hg_smooth;
+    MatrixXX H;
+    VectorX g;
+    std::pair<MatrixXX,VectorX> Hg_smooth,Hg_rrt;
 
     if(weightDistance>0)
-        computeDistanceCostFunction<Path>(50,pData,T,path,H_rrt,g_rrt);
+        Hg_rrt = computeDistanceCostFunction<Path>(50,pData,T,path);
     else{
-        H_rrt=MatrixXX::Zero(DIM_VAR,DIM_VAR);
-        g_rrt=VectorX::Zero(DIM_VAR);
+        Hg_rrt.first=MatrixXX::Zero(DIM_VAR,DIM_VAR);
+        Hg_rrt.second=VectorX::Zero(DIM_VAR);
     }
 
     Hg_smooth = computeVelocityCost(pData,T,pi);
@@ -350,8 +356,8 @@ std::pair<MatrixXX,VectorX> computeEndEffectorCost(const ProblemData& pData,cons
     // add the costs :
     H = MatrixXX::Zero(DIM_VAR,DIM_VAR);
     g  = VectorX::Zero(DIM_VAR);
-    H = weightSmooth*(Hg_smooth.first) + weightDistance*H_rrt;
-    g = weightSmooth*(Hg_smooth.second) + weightDistance*g_rrt;
+    H = weightSmooth*(Hg_smooth.first) + weightDistance*Hg_rrt.first;
+    g = weightSmooth*(Hg_smooth.second) + weightDistance*Hg_rrt.second;
    // H = Hg_smooth.first;
   //  g = Hg_smooth.second;
 
@@ -369,6 +375,8 @@ ResultDataCOMTraj solveEndEffector(const ProblemData& pData,const Path& path, co
     std::pair<MatrixXX, VectorX> Ab = computeEndEffectorConstraints(pData,T,pi);
     std::pair<MatrixXX, VectorX> Hg = computeEndEffectorCost(pData,path,T,weightDistance,useVelCost,pi);
     if(verbose){
+      std::cout<<"End eff A = "<<std::endl<<Ab.first<<std::endl;
+      std::cout<<"End eff b = "<<std::endl<<Ab.second<<std::endl;
       std::cout<<"End eff H = "<<std::endl<<Hg.first<<std::endl;
       std::cout<<"End eff g = "<<std::endl<<Hg.second<<std::endl;
       std::cout<<"Dim Var = "<<dimVar(pData)<<std::endl;
