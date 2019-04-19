@@ -326,7 +326,7 @@ std::pair<MatrixXX,VectorX> computeEndEffectorConstraints(const ProblemData& pDa
     MatrixXX A;
     VectorX b;
     computeConstraintsMatrix(pData,wps_acc,wps_vel,acc_bounds,vel_bounds,A,b,wps_jerk,jerk_bounds);
-    return std::make_pair<MatrixXX,VectorX>(A,b);
+    return std::make_pair(A,b);
 }
 
 template <typename Path>
@@ -361,7 +361,7 @@ std::pair<MatrixXX,VectorX> computeEndEffectorCost(const ProblemData& pData,cons
    // H = Hg_smooth.first;
   //  g = Hg_smooth.second;
 
-    return std::make_pair<MatrixXX,VectorX>(H,g);
+    return std::make_pair(H,g);
 }
 
 
