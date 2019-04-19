@@ -373,6 +373,7 @@ struct DummyPath{
 
 typedef std::pair<Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic>,
                   Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> > linear_points_t;
+typedef Eigen::Matrix<real, 3, Eigen::Dynamic> point_list_t;
 
 
 struct MatrixVector
@@ -400,6 +401,19 @@ MatrixVector* computeEndEffectorVelocityCostPython(const ProblemData& pData, con
    std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,time);
    MatrixVector* res = new MatrixVector();
    res->res = computeVelocityCost(pData,time,pi);
+   return res;
+}
+
+
+MatrixVector* computeEndEffectorDistanceCostPython(const ProblemData& pData,const double time,const int numPoints,point_list_t pts_l){
+   std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,time);
+    // transform the matrice 3xN in a std::vector<point3_t> of size N :
+   std::vector<point3_t> pts_path;
+   for(size_t c = 0 ; c < pts_l.cols() ; ++c){
+      pts_path.push_back(pts_l.block<3,1>(0,c));
+   }
+   MatrixVector* res = new MatrixVector();
+   res->res =computeDistanceCostFunction(numPoints,pData,time,pts_path);
    return res;
 }
 
@@ -535,6 +549,7 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
     def("computeEndEffector", &computeEndEffector, return_value_policy<manage_new_object>());
     def("computeEndEffectorConstraints", &computeEndEffectorConstraintsPython, return_value_policy<manage_new_object>());
     def("computeEndEffectorVelocityCost", &computeEndEffectorVelocityCostPython, return_value_policy<manage_new_object>());
+    def("computeEndEffectorDistanceCost", &computeEndEffectorDistanceCostPython, return_value_policy<manage_new_object>());
     def("computeEndEffectorConstantWaypoints", &computeEndEffectorConstantWaypoints);
 
 
