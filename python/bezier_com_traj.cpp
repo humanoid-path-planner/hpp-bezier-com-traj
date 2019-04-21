@@ -1,6 +1,6 @@
-#include "hpp/bezier-com-traj/solve.hh"
-#include "hpp/bezier-com-traj/solver/solver-abstract.hpp"
-#include "hpp/bezier-com-traj/solve_end_effector.hh"
+#include <hpp/bezier-com-traj/solve.hh>
+#include <hpp/bezier-com-traj/solver/solver-abstract.hpp>
+#include <hpp/bezier-com-traj/solve_end_effector.hh>
 #include <eigenpy/memory.hpp>
 #include <eigenpy/eigenpy.hpp>
 
@@ -16,6 +16,7 @@ EIGENPY_DEFINE_STRUCT_ALLOCATOR_SPECIALIZATION(bezier_com_traj::bezier_t)
 namespace bezier_com_traj
 {
 using namespace boost::python;
+typedef double real;
 
 ResultDataCOMTraj* zeroStepCapturability(centroidal_dynamics::Equilibrium* eq, const Vector3& com ,const Vector3& dCom ,const Vector3& l0, const bool useAngMomentum
                               , const double timeDuration, const double timeStep)
@@ -370,11 +371,61 @@ struct DummyPath{
 };
 
 
+typedef std::pair<Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic>,
+                  Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> > linear_points_t;
+typedef Eigen::Matrix<real, 3, Eigen::Dynamic> point_list_t;
+
+
+struct MatrixVector
+{
+    linear_points_t res;
+    Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> A() {return res.first;}
+    Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> b() {return res.second;}
+};
+
+
 ResultDataCOMTraj* computeEndEffector(const ProblemData& pData, const double time){
 
    ResultDataCOMTraj  res =solveEndEffector<DummyPath>(pData,DummyPath(),time, 0);
    return new ResultDataCOMTraj(res);
 }
+
+MatrixVector* computeEndEffectorConstraintsPython(const ProblemData& pData, const double time){
+   std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,time);
+   MatrixVector* res = new MatrixVector();
+   res->res =computeEndEffectorConstraints(pData,time, pi);
+   return res;
+}
+
+MatrixVector* computeEndEffectorVelocityCostPython(const ProblemData& pData, const double time){
+   std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,time);
+   MatrixVector* res = new MatrixVector();
+   res->res = computeVelocityCost(pData,time,pi);
+   return res;
+}
+
+
+MatrixVector* computeEndEffectorDistanceCostPython(const ProblemData& pData,const double time,const int numPoints,point_list_t pts_l){
+   std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,time);
+    // transform the matrice 3xN in a std::vector<point3_t> of size N :
+   std::vector<point3_t> pts_path;
+   for(size_t c = 0 ; c < pts_l.cols() ; ++c){
+      pts_path.push_back(pts_l.block<3,1>(0,c));
+   }
+   MatrixVector* res = new MatrixVector();
+   res->res =computeDistanceCostFunction(numPoints,pData,time,pts_path);
+   return res;
+}
+
+Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> computeEndEffectorConstantWaypoints(const ProblemData& pData, const double time){
+   std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData,time);
+   Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> res (3, pi.size());
+   int col = 0;
+   for(std::vector<bezier_t::point_t>::const_iterator cit = pi.begin(); cit != pi.end(); ++cit, ++col)
+    res.block<3,1>(0,col) = *cit;
+   return res;
+ }
+
 
 /** END end effector **/
 
@@ -478,9 +529,17 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
             .value("END_VEL", END_VEL)
             .value("END_ACC", END_ACC)
             .value("END_JERK",END_JERK)
+            .value("ONE_FREE_VAR",ONE_FREE_VAR)
+            .value("TWO_FREE_VAR",TWO_FREE_VAR)
+            .value("THREE_FREE_VAR",THREE_FREE_VAR)
+            .value("FOUR_FREE_VAR",FOUR_FREE_VAR)
+            .value("FIVE_FREE_VAR",FIVE_FREE_VAR)
             .value("UNKNOWN", UNKNOWN)
             .export_values();
 
+    class_<MatrixVector>("MatrixVector", no_init)
+          .def_readonly("A", &MatrixVector::A)
+          .def_readonly("b", &MatrixVector::b);
 
 
     def("zeroStepCapturability", &zeroStepCapturability, return_value_policy<manage_new_object>());
@@ -488,6 +547,11 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj)
     def("computeCOMTraj", &computeCOMTrajPointer, return_value_policy<manage_new_object>());
     def("computeCOMTraj", &computeCOMTrajPointerChooseSolver, return_value_policy<manage_new_object>());
     def("computeEndEffector", &computeEndEffector, return_value_policy<manage_new_object>());
+    def("computeEndEffectorConstraints", &computeEndEffectorConstraintsPython, return_value_policy<manage_new_object>());
+    def("computeEndEffectorVelocityCost", &computeEndEffectorVelocityCostPython, return_value_policy<manage_new_object>());
+    def("computeEndEffectorDistanceCost", &computeEndEffectorDistanceCostPython, return_value_policy<manage_new_object>());
+    def("computeEndEffectorConstantWaypoints", &computeEndEffectorConstantWaypoints);
+
 
 }
 
