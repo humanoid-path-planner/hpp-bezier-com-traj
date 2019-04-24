@@ -58,7 +58,7 @@ bezier_wp_t::t_point_t computeDiscretizedWwaypoints(const ProblemData& pData,dou
      Normalize(A,b);
      // add 1 for the slack variable :
      A.block(0,3,dimH,1) = VectorX::Ones(dimH);
-     return std::make_pair<MatrixXX,VectorX>(A,b);
+     return std::make_pair(A,b);
 }
 
 std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const VectorX& h,const Vector3& g,const waypoint_t& w){
@@ -70,7 +70,7 @@ std::pair<MatrixXX,VectorX> dynamicStabilityConstraints(const MatrixXX& mH,const
     A.block(0,0,dimH,3) = mH*w.first;
     b = h + mH*(g_ - w.second);
     Normalize(A,b);
-    return std::make_pair<MatrixXX,VectorX>(A,b);
+    return std::make_pair(A,b);
 }
 
 std::vector<int> stepIdPerPhase(const T_time& timeArray) // const int pointsPerPhase)
