@@ -9,14 +9,11 @@
 #include <hpp/bezier-com-traj/data.hh>
 #include "boost/assign.hpp"
 
-
-
-namespace bezier_com_traj{
+namespace bezier_com_traj {
 /**
-* This file contains definitions for the different cost functions used in qp minimization
-*/
+ * This file contains definitions for the different cost functions used in qp minimization
+ */
 namespace cost {
-
 
 /** @brief genCostFunction generate a cost function according to the constraints
  * of the problem, and the flag selected in ProblemData.
@@ -26,10 +23,10 @@ namespace cost {
  * @param H hessian cost matrix to be filled
  * @param g vector matrix
  */
-void genCostFunction(const ProblemData& pData,const VectorX& Ts, const double T,
-                     const T_time& timeArray, MatrixXX& H, VectorX& g);
+void genCostFunction(const ProblemData& pData, const VectorX& Ts, const double T, const T_time& timeArray, MatrixXX& H,
+                     VectorX& g);
 
-} // namespace cost
-} // namespace bezier_com_traj
+}  // namespace cost
+}  // namespace bezier_com_traj
 
 #endif
