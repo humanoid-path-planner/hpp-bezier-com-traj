@@ -1,11 +1,12 @@
+import hpp_spline  # noqa - necessary to register spline::bezier_curve
 import numpy as np
-from hpp_centroidal_dynamics import *
-from hpp_spline import *
+from hpp_centroidal_dynamics import Equilibrium, EquilibriumAlgorithm, SolverLP
 from numpy import array, asmatrix, matrix
 
-from hpp_bezier_com_traj import *
+from hpp_bezier_com_traj import (SOLVER_QUADPROG, ConstraintFlag, Constraints, ContactData, ProblemData,
+                                 computeCOMTraj, zeroStepCapturability)
 
-#testing constructors
+# testing constructors
 eq = Equilibrium("test", 54., 4)
 eq = Equilibrium("test", 54., 4, SolverLP.SOLVER_LP_QPOASES)
 eq = Equilibrium("test", 54., 4, SolverLP.SOLVER_LP_QPOASES)
@@ -13,26 +14,26 @@ eq = Equilibrium("test", 54., 4, SolverLP.SOLVER_LP_QPOASES, False)
 eq = Equilibrium("test", 54., 4, SolverLP.SOLVER_LP_QPOASES, False, 1)
 eq = Equilibrium("test", 54., 4, SolverLP.SOLVER_LP_QPOASES, True, 1, True)
 
-#whether useWarmStart is enable (True by default)
+# whether useWarmStart is enable (True by default)
 previous = eq.useWarmStart()
-#enable warm start in solver (only for QPOases)
+# enable warm start in solver (only for QPOases)
 eq.setUseWarmStart(False)
 assert (previous != eq.useWarmStart())
 
-#access solver name
+# access solver name
 assert (eq.getName() == "test")
 
 z = array([0., 0., 1.])
 P = asmatrix(array([array([x, y, 0]) for x in [-0.05, 0.05] for y in [-0.1, 0.1]]))
 N = asmatrix(array([z for _ in range(4)]))
 
-#setting contact positions and normals, as well as friction coefficients
+# setting contact positions and normals, as well as friction coefficients
 eq.setNewContacts(asmatrix(P), asmatrix(N), 0.3, EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_PP)
-#~ eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_LP)
+# eq.setNewContacts(asmatrix(P),asmatrix(N),0.3,EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_LP)
 
 # setting up optimization problem
 c0 = matrix([0., 0., 1.]).T
-#~ dc0 = matrix(np.random.uniform(-1, 1, size=3));
+# dc0 = matrix(np.random.uniform(-1, 1, size=3));
 dc0 = matrix([0.1, 0., 0.]).T
 l0 = matrix([0., 0., 0.]).T
 T = 1.2
@@ -56,7 +57,7 @@ kin = 10 * np.ones(3)
 #
 # a = zeroStepCapturability(eq, c0, dc0, l0, True, T, tstep, Kin, matrix(kin))
 
-#testing contactData
+# testing contactData
 cData = ContactData(Equilibrium("test", 54., 4))
 ceq = cData.contactPhase_
 ceq.setNewContacts(asmatrix(P), asmatrix(N), 0.3, EquilibriumAlgorithm.EQUILIBRIUM_ALGORITHM_PP)
@@ -68,7 +69,7 @@ Id = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
 excep = False
 try:
     cData.Kin_
-except RuntimeError, e:
+except RuntimeError:
     excep = True
 assert excep, "[ERROR] No kin assigned should have raised exception"
 cData.setKinematicConstraints(Id, matrix([0., 0., 1.]).T)
@@ -77,14 +78,14 @@ cData.Kin_
 excep = False
 try:
     cData.setKinematicConstraints(Id, matrix([0., 0., 0., 1.]).T)
-except RuntimeError, e:
+except RuntimeError:
     excep = True
 assert excep, "[ERROR] Miss matching matrix and vector should raise an error"
 
 excep = False
 try:
     cData.Ang_
-except RuntimeError, e:
+except RuntimeError:
     excep = True
 assert excep, "[ERROR] No Ang_ assigned should have raised exception"
 cData.setAngularConstraints(Id, matrix([0., 0., 1.]).T)
@@ -93,11 +94,11 @@ cData.Ang_
 excep = False
 try:
     cData.setAngularConstraints(Id, matrix([0., 0., 0., 1.]).T)
-except RuntimeError, e:
+except RuntimeError:
     excep = True
 assert excep, "[ERROR] Missmatching matrix and vector should raise an error"
 
-#testing constraints
+# testing constraints
 c = Constraints()
 old = c.constrainAcceleration_
 c.constrainAcceleration_ = not old
@@ -113,7 +114,7 @@ old = c.reduce_h_
 c.reduce_h_ = .235
 assert c.reduce_h_ != old
 
-#testing problem data
+# testing problem data
 c = ProblemData()
 
 nv = matrix([0., 0., 10.]).T
@@ -159,23 +160,24 @@ def initContactData(pD):
 pD.c0_ = c0
 pD.dc0_ = dc0
 res = computeCOMTraj(pD, matrix([0.4, 0.4, 0.4]).T, 0.05)
-#test glpk only if defined
+# test glpk only if defined
 try:
     test = SOLVER_GLPK
     res = computeCOMTraj(pD, matrix([0.4, 0.4, 0.4]).T, 0.05, SOLVER_GLPK)
-except NameError, e:
-    print "[WARNING] SOLVER_GLPK is not defined. Consider installing GLPK if you are using CROC with a force formulation"
+except NameError:
+    print("[WARNING] SOLVER_GLPK is not defined.")
+    print("Consider installing GLPK if you are using CROC with a force formulation")
 
 res = computeCOMTraj(pD, matrix([0.4, 0.4, 0.4]).T, 0.05, SOLVER_QUADPROG)
-#~ res = computeCOMTraj(pD,matrix([0.4,0.4,0.4]).T,0.05,SOLVER_QUADPROG_SPARSE)
+#  res = computeCOMTraj(pD,matrix([0.4,0.4,0.4]).T,0.05,SOLVER_QUADPROG_SPARSE)
 assert np.linalg.norm(res.c_of_t.derivate(1.2, 1)) < 0.00000001
 
 # non matching time step and contact phases
 excep = False
 try:
     res = computeCOMTraj(pD, matrix([0.4, 0.4]).T, 0.05)
-except RuntimeError, e:
+except RuntimeError:
     excep = True
 assert excep, "[ERROR] computeCOMTraj should have raised exception"
 
-print "all tests passed"
+print("all tests passed")
