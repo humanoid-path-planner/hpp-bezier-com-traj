@@ -1,19 +1,17 @@
-cmake_minimum_required(VERSION 2.6)
-INCLUDE(cmake/base.cmake)
+cmake_minimum_required(VERSION 2.8)
+
+SET(PROJECT_NAME hpp-bezier-com-traj)
+SET(PROJECT_DESCRIPTION "Multi contact trajectory generation for the COM using Bezier curves")
+
+INCLUDE(cmake/hpp.cmake)
 INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/python.cmake)
 INCLUDE(cmake/test.cmake)
-INCLUDE(cmake/hpp.cmake)
-
-SET(PROJECT_NAME hpp-bezier-com-traj)
-SET(PROJECT_DESCRIPTION
-  "Multi contact trajectory generation for the COM using Bezier curves"
-  )
-
 
 SET(CUSTOM_HEADER_DIR "hpp/bezier-com-traj")
 
-SETUP_HPP_PROJECT()
+COMPUTE_PROJECT_ARGS(PROJECT_ARGS LANGUAGES CXX)
+PROJECT(${PROJECT_NAME} ${PROJECT_ARGS})
 
 # Inhibit all warning messages.
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
@@ -58,5 +56,3 @@ add_subdirectory(tests)
 IF(BUILD_PYTHON_INTERFACE)
   add_subdirectory (python)
 ENDIF(BUILD_PYTHON_INTERFACE)
-
-SETUP_HPP_PROJECT_FINALIZE()
