@@ -154,8 +154,8 @@ BOOST_AUTO_TEST_CASE(symbolic_split_c) {
     bezier_wp_t c_sym_e = c_sym.extract(t1, t2);
     t = t1;
     while (t < t2) {
-      vectorEqual(c_e(t - t1), eval(c_sym_e(t - t1), y));
-      vectorEqual(c(t), eval(c_sym_e(t - t1), y));
+      vectorEqual(c_e(t), eval(c_sym_e(t), y));
+      vectorEqual(c(t), eval(c_sym_e(t), y));
       t += 0.01;
     }
   }
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(symbolic_split_w) {
     bezier_wp_t w_e = w.extract(t1, t2);
     t = t1;
     while (t < t2) {
-      vectorEqual(eval(w(t), y), eval(w_e(t - t1), y), 1e-12);
+      vectorEqual(eval(w(t), y), eval(w_e(t), y), 1e-12);
       t += 0.01;
     }
   }
