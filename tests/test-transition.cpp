@@ -141,7 +141,7 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts, bool shou
     if (test_continuous) {
       res = bezier_com_traj::computeCOMTraj(pData, Ts, -1, solvers::SOLVER_QUADPROG);
       BOOST_CHECK(!res.success_);
-      pData.representation_ == bezier_com_traj::FORCE;
+      pData.representation_ = bezier_com_traj::FORCE;
       res = bezier_com_traj::computeCOMTraj(pData, Ts, -1, solvers::SOLVER_QUADPROG);
       BOOST_CHECK(!res.success_);
 #ifdef USE_GLPK_SOLVER
