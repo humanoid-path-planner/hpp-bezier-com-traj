@@ -23,7 +23,7 @@
 #include <hpp/bezier-com-traj/data.hh>
 #include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include "test_helper.hh"
-#include <hpp/spline/bezier_curve.h>
+#include <curves/bezier_curve.h>
 
 using namespace bezier_com_traj;
 const double T = 1.5;

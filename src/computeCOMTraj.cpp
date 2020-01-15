@@ -25,7 +25,7 @@ bezier_wp_t::t_point_t computeDiscretizedWwaypoints(const ProblemData& pData, do
   bezier_wp_t::t_point_t wps = computeWwaypoints(pData, T);
   bezier_wp_t::t_point_t res;
   const int DIM_VAR = (int)dimVar(pData);
-  std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms((int)wps.size() - 1);
+  std::vector<curves::Bern<double> > berns = ComputeBersteinPolynoms((int)wps.size() - 1);
   double t, b;
   for (CIT_time cit = timeArray.begin(); cit != timeArray.end(); ++cit) {
     waypoint_t w = initwp(6, DIM_VAR);
@@ -277,7 +277,7 @@ ResultDataCOMTraj genTraj(ResultData resQp, const ProblemData& pData, const doub
     res.c_of_t_ = computeBezierCurve<bezier_t, point_t>(pData.constraints_.flag_, T, pis, res.x);
     computeFinalVelocity(res);
     computeFinalAcceleration(res);
-    res.dL_of_t_ = bezier_t::zero(T);
+    res.dL_of_t_ = bezier_t::zero(3,T);
   }
   return res;
 }

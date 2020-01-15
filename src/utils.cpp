@@ -64,9 +64,9 @@ Matrix3 skew(point_t_tC x) {
   return res;
 }
 
-std::vector<spline::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree) {
-  std::vector<spline::Bern<double> > res;
-  for (unsigned int i = 0; i <= (unsigned int)degree; ++i) res.push_back(spline::Bern<double>(degree, i));
+std::vector<curves::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree) {
+  std::vector<curves::Bern<double> > res;
+  for (unsigned int i = 0; i <= (unsigned int)degree; ++i) res.push_back(curves::Bern<double>(degree, i));
   return res;
 }
 

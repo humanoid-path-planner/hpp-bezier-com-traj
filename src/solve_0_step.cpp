@@ -121,7 +121,7 @@ std::vector<waypoint6_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, poin
   wps.push_back(w3(p0, p1, g, p0X, p1X, gX, alpha));
   wps.push_back(w4(p0, p1, g, p0X, p1X, gX, alpha));
   if (numSteps > 0) {
-    std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms(4);
+    std::vector<curves::Bern<double> > berns = ComputeBersteinPolynoms(4);
     wps = ComputeDiscretizedWaypoints(wps, berns, numSteps);
   }
   return wps;
@@ -137,7 +137,7 @@ std::vector<waypoint6_t> ComputeAllWaypointsAngularMomentum(point_t_tC l0, const
   wps.push_back(u3(l0, alpha));
   wps.push_back(u4(l0, alpha));
   if (numSteps > 0) {
-    std::vector<spline::Bern<double> > berns = ComputeBersteinPolynoms(4);
+    std::vector<curves::Bern<double> > berns = ComputeBersteinPolynoms(4);
     wps = ComputeDiscretizedWaypoints(wps, berns, numSteps);
   }
   return wps;
@@ -207,7 +207,7 @@ void computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts, Res
     wps.push_back(Vector3::Zero());
     res.dL_of_t_ = bezier_t(wps.begin(), wps.end(), Ts[0], 1. / Ts[0]);
   } else
-    res.dL_of_t_ = bezier_t::zero(Ts[0]);
+    res.dL_of_t_ = bezier_t::zero(3,Ts[0]);
 }
 
 // no angular momentum for now

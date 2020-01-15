@@ -11,7 +11,7 @@
 #include <hpp/bezier-com-traj/definitions.hh>
 #include <hpp/bezier-com-traj/utils.hh>
 #include <hpp/bezier-com-traj/solver/solver-abstract.hpp>
-#include <hpp/spline/bezier_curve.h>
+#include <curves/bezier_curve.h>
 #include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include <Eigen/Dense>
 
@@ -117,8 +117,8 @@ typedef solvers::ResultData ResultData;
 struct BEZIER_COM_TRAJ_DLLAPI ResultDataCOMTraj : public ResultData {
   ResultDataCOMTraj()
       : ResultData(),
-        c_of_t_(bezier_t::zero()),
-        dL_of_t_(bezier_t::zero()),
+        c_of_t_(bezier_t::zero(3)),
+        dL_of_t_(bezier_t::zero(3)),
         dc1_(point_t::Zero()),
         ddc1_(point_t::Zero()) {}
   ~ResultDataCOMTraj() {}

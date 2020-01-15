@@ -50,7 +50,7 @@ struct waypoint_t {
  * @param degree required degree
  * @return the bernstein polynoms
  */
-BEZIER_COM_TRAJ_DLLAPI std::vector<spline::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree);
+BEZIER_COM_TRAJ_DLLAPI std::vector<curves::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree);
 
 /**
  * @brief given the constraints of the problem, and a set of waypoints, return
