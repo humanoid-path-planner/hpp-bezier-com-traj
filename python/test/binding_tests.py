@@ -1,4 +1,4 @@
-import hpp_spline  # noqa - necessary to register spline::bezier_curve
+import curves  # noqa - necessary to register curves::bezier_curve
 import numpy as np
 from hpp_centroidal_dynamics import Equilibrium, EquilibriumAlgorithm, SolverLP
 from numpy import array, asmatrix, matrix
