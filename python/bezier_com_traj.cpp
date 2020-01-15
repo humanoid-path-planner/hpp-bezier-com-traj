@@ -259,7 +259,7 @@ MatrixVector* computeEndEffectorDistanceCostPython(const ProblemData& pData, con
   std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData, time);
   // transform the matrice 3xN in a std::vector<point3_t> of size N :
   std::vector<point3_t> pts_path;
-  for (size_t c = 0; c < pts_l.cols(); ++c) {
+  for (int c = 0; c < pts_l.cols(); ++c) {
     pts_path.push_back(pts_l.block<3, 1>(0, c));
   }
   MatrixVector* res = new MatrixVector();

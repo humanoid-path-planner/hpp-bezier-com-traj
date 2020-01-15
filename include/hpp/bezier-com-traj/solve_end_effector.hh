@@ -168,7 +168,7 @@ void computeConstraintsMatrix(const ProblemData& pData, const std::vector<waypoi
   // test : constraint x[z] to be always higher than init[z] and goal[z].
   // TODO replace z with the direction of the contact normal ... need to change the API
   MatrixXX mxz = MatrixXX::Zero(DIM_VAR, DIM_VAR);
-  size_t j = DIM_POINT - 1;
+  int j = DIM_POINT - 1;
   VectorX nxz = VectorX::Zero(DIM_VAR);
   while (j < (DIM_VAR)) {
     mxz(j, j) = -1;
@@ -189,17 +189,17 @@ void computeConstraintsMatrix(const ProblemData& pData, const std::vector<waypoi
     b.segment<DIM_POINT>(i*DIM_POINT)   =  Vector3(10,10,10);*/
 }
 
-std::pair<MatrixXX, VectorX> computeDistanceCostFunction(int numPoints, const ProblemData& pData, double T,
+std::pair<MatrixXX, VectorX> computeDistanceCostFunction(size_t numPoints, const ProblemData& pData, double T,
                                                          std::vector<point3_t> pts_path) {
   assert(numPoints == pts_path.size() && "Pts_path size must be equal to numPoints");
-  double step = 1. / (numPoints - 1);
+  double step = 1. / (double)(numPoints - 1);
   std::vector<point_t> pi = computeConstantWaypoints(pData, T);
   waypoint_t c_wp;
   MatrixXX H = MatrixXX::Zero(dimVar(pData), dimVar(pData));
   VectorX g = VectorX::Zero(dimVar(pData));
   point3_t pk;
   for (size_t i = 0; i < numPoints; ++i) {
-    c_wp = evaluateCurveWaypointAtTime(pData, pi, i * step);
+    c_wp = evaluateCurveWaypointAtTime(pData, pi, (double)i * step);
     pk = pts_path[i];
     //  std::cout<<"pk = "<<pk.transpose()<<std::endl;
     //  std::cout<<"coef First : "<<ckcit->first<<std::endl;
@@ -214,11 +214,11 @@ std::pair<MatrixXX, VectorX> computeDistanceCostFunction(int numPoints, const Pr
 }
 
 template <typename Path>
-std::pair<MatrixXX, VectorX> computeDistanceCostFunction(int numPoints, const ProblemData& pData, double T,
+std::pair<MatrixXX, VectorX> computeDistanceCostFunction(size_t numPoints, const ProblemData& pData, double T,
                                                          const Path& path) {
-  double step = 1. / (numPoints - 1);
+  double step = 1. /(double)(numPoints - 1);
   std::vector<point3_t> pts_path;
-  for (size_t i = 0; i < numPoints; ++i) pts_path.push_back(path((double)(i * step)));
+  for (size_t i = 0; i < numPoints; ++i) pts_path.push_back(path(((double)i * step)));
   return computeDistanceCostFunction(numPoints, pData, T, pts_path);
 }
 
@@ -254,7 +254,7 @@ void computeVelCostFunctionDiscretized(int numPoints, const ProblemData& pData, 
   for (std::vector<waypoint_t>::const_iterator ckcit = cks.begin(); ckcit != cks.end(); ++ckcit) {
     // H+=(ckcit->first.transpose() * ckcit->first);
     // g+=ckcit->second.transpose() * ckcit->first;
-    for (size_t i = 0; i < (dimVar(pData) / 3); ++i) {
+    for (int i = 0; i < (dimVar(pData) / 3); ++i) {
       H.block<3, 3>(i * 3, i * 3) += Matrix3::Identity() * ckcit->first(0, i * 3) * ckcit->first(0, i * 3);
       g.segment<3>(i * 3) += ckcit->second.segment<3>(0) * ckcit->first(0, i * 3);
     }

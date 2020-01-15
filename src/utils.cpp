@@ -77,7 +77,7 @@ T_time computeDiscretizedTimeFixed(const VectorX& phaseTimings, const unsigned i
   timeArray.push_back(std::make_pair(0., 0));
   for (int i = 0; i < phaseTimings.size(); ++i) {
     double step = (double)phaseTimings[i] / pointsPerPhase;
-    for (int j = 0; j < pointsPerPhase; ++j) {
+    for (size_t j = 0; j < pointsPerPhase; ++j) {
       t += step;
       timeArray.push_back(std::make_pair(t, i));
     }
