@@ -141,7 +141,7 @@ Bezier bezier_com_traj::computeBezierCurve(const ConstraintFlag& flag, const dou
       i++;
     }
   }
-  return Bezier(wps.begin(), wps.end(), T);
+  return Bezier(wps.begin(), wps.end(), 0.,T);
 }
 
 #endif

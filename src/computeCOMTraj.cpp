@@ -354,9 +354,9 @@ std::pair<MatrixXX, VectorX> computeConstraintsContinuous(const ProblemData& pDa
   // create the curves for c and w with symbolic waypoints (ie. depend on y)
   bezier_wp_t::t_point_t wps_c = computeConstantWaypointsSymbolic(pData, T);
   bezier_wp_t::t_point_t wps_w = computeWwaypoints(pData, T);
-  bezier_wp_t c(wps_c.begin(), wps_c.end(), T);
+  bezier_wp_t c(wps_c.begin(), wps_c.end(),0., T);
   bezier_wp_t ddc = c.compute_derivate(2);
-  bezier_wp_t w(wps_w.begin(), wps_w.end(), T);
+  bezier_wp_t w(wps_w.begin(), wps_w.end(),0., T);
 
   // for each splitted curves : add the constraints for each waypoints
   const long int num_ineq = computeNumIneqContinuous(pData, Ts, (int)c.degree_, (int)w.degree_, useDD);

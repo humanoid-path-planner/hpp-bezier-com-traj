@@ -196,7 +196,7 @@ void computeC_of_T(const ProblemData& pData, const std::vector<double>& Ts, Resu
   wps.push_back(pData.dc0_ * Ts[0] / 3 + pData.c0_);
   wps.push_back(res.x.head(3));
   wps.push_back(res.x.head(3));
-  res.c_of_t_ = bezier_t(wps.begin(), wps.end(), Ts[0]);
+  res.c_of_t_ = bezier_t(wps.begin(), wps.end(),0., Ts[0]);
 }
 
 void computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts, ResultDataCOMTraj& res) {
@@ -205,7 +205,7 @@ void computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts, Res
     wps.push_back(3 * (res.x.tail(3) - pData.l0_));
     wps.push_back(3 * (-res.x.tail(3)));
     wps.push_back(Vector3::Zero());
-    res.dL_of_t_ = bezier_t(wps.begin(), wps.end(), Ts[0], 1. / Ts[0]);
+    res.dL_of_t_ = bezier_t(wps.begin(), wps.end(),0.,Ts[0], 1. / Ts[0]);
   } else
     res.dL_of_t_ = bezier_t::zero(3,Ts[0]);
 }
