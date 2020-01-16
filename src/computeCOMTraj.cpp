@@ -109,7 +109,7 @@ long int computeNumIneq(const ProblemData& pData, const VectorX& Ts, const std::
 void updateH(const ProblemData& pData, const ContactData& phase, MatrixXX& mH, VectorX& h, int& dimH) {
   VectorX hrow;
   centroidal_dynamics::MatrixXX Hrow;
-  phase.contactPhase_->getPolytopeInequalities(Hrow, hrow);
+  centroidal_dynamics::LP_status status = phase.contactPhase_->getPolytopeInequalities(Hrow, hrow);
   assert(status == centroidal_dynamics::LP_STATUS_OPTIMAL &&
          "Error in centroidal dynamics lib while computing inequalities");
   mH = -Hrow * phase.contactPhase_->m_mass;
