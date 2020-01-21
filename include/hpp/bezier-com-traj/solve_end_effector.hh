@@ -238,7 +238,7 @@ void computeC_of_T(const ProblemData& pData, double T, ResultDataCOMTraj& res) {
     wps[7] = res.x.segment<3>(9);
     wps[8] = res.x.segment<3>(12);
   }
-  res.c_of_t_ = bezier_t(wps.begin(), wps.end(), T);
+  res.c_of_t_ = bezier_t(wps.begin(), wps.end(),0, T);
   if (verbose) std::cout << "bezier curve created, size = " << res.c_of_t_.size_ << std::endl;
 }
 
