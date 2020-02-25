@@ -83,8 +83,6 @@ inline waypoint_t evaluateVelocityCurveWaypointAtTime(const std::vector<point_t>
   const double t7 = t6 * t;
   const double t8 = t7 * t;
   const double t9 = t8 * t;
-  const double t10 = t9 * t;
-  const double t11 = t10 * t;
 
   // equation found with sympy
   wp.first.block<3, 3>(0, 0) = Matrix3::Identity() * alpha;   // x0
@@ -214,17 +212,17 @@ inline std::vector<point_t> computeConstantWaypoints(const ProblemData& pData, d
 // TODO
 inline bezier_wp_t::t_point_t computeWwaypoints(const ProblemData& pData, double T) {
   bezier_wp_t::t_point_t wps;
-  const int DIM_POINT = 6;
-  const int DIM_VAR = 15;
+  //const int DIM_POINT = 6;
+  //const int DIM_VAR = 15;
   std::vector<point_t> pi = computeConstantWaypoints(pData, T);
   std::vector<Matrix3> Cpi;
   for (std::size_t i = 0; i < pi.size(); ++i) {
     Cpi.push_back(skew(pi[i]));
   }
-  const Vector3 g = pData.contacts_.front().contactPhase_->m_gravity;
-  const Matrix3 Cg = skew(g);
-  const double T2 = T * T;
-  const double alpha = 1 / (T2);
+  //const Vector3 g = pData.contacts_.front().contactPhase_->m_gravity;
+  //const Matrix3 Cg = skew(g);
+  //const double T2 = T * T;
+  //const double alpha = 1 / (T2);
   std::cout << "NOT IMPLEMENTED YET" << std::endl;
   return wps;
 }

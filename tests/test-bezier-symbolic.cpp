@@ -23,7 +23,7 @@
 #include <hpp/bezier-com-traj/data.hh>
 #include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include "test_helper.hh"
-#include <hpp/spline/bezier_curve.h>
+#include <curves/bezier_curve.h>
 
 using namespace bezier_com_traj;
 const double T = 1.5;
@@ -70,8 +70,8 @@ BOOST_AUTO_TEST_CASE(symbolic_eval_c) {
   point_t y(1, 0.2, 4.5);
   pts[2] = y;
 
-  bezier_t c(pts.begin(), pts.end(), T);
-  bezier_wp_t c_sym(wps.begin(), wps.end(), T);
+  bezier_t c(pts.begin(), pts.end(),0., T);
+  bezier_wp_t c_sym(wps.begin(), wps.end(),0., T);
 
   double t = 0.;
   while (t < T) {
@@ -86,9 +86,9 @@ BOOST_AUTO_TEST_CASE(symbolic_eval_dc) {
   point_t y(1, 0.2, 4.5);
   pts[2] = y;
 
-  bezier_t c(pts.begin(), pts.end(), T);
+  bezier_t c(pts.begin(), pts.end(),0., T);
   bezier_t dc = c.compute_derivate(1);
-  bezier_wp_t c_sym(wps.begin(), wps.end(), T);
+  bezier_wp_t c_sym(wps.begin(), wps.end(),0., T);
   bezier_wp_t dc_sym = c_sym.compute_derivate(1);
 
   double t = 0.;
@@ -104,9 +104,9 @@ BOOST_AUTO_TEST_CASE(symbolic_eval_ddc) {
   point_t y(1, 0.2, 4.5);
   pts[2] = y;
 
-  bezier_t c(pts.begin(), pts.end(), T);
+  bezier_t c(pts.begin(), pts.end(),0., T);
   bezier_t ddc = c.compute_derivate(2);
-  bezier_wp_t c_sym(wps.begin(), wps.end(), T);
+  bezier_wp_t c_sym(wps.begin(), wps.end(),0., T);
   bezier_wp_t ddc_sym = c_sym.compute_derivate(2);
 
   double t = 0.;
@@ -122,9 +122,9 @@ BOOST_AUTO_TEST_CASE(symbolic_eval_jc) {
   point_t y(1, 0.2, 4.5);
   pts[2] = y;
 
-  bezier_t c(pts.begin(), pts.end(), T);
+  bezier_t c(pts.begin(), pts.end(),0., T);
   bezier_t jc = c.compute_derivate(3);
-  bezier_wp_t c_sym(wps.begin(), wps.end(), T);
+  bezier_wp_t c_sym(wps.begin(), wps.end(),0., T);
   bezier_wp_t jc_sym = c_sym.compute_derivate(3);
 
   double t = 0.;
@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(symbolic_split_c) {
   point_t y(1, 0.2, 4.5);
   pts[2] = y;
 
-  bezier_t c(pts.begin(), pts.end(), T);
-  bezier_wp_t c_sym(wps.begin(), wps.end(), T);
+  bezier_t c(pts.begin(), pts.end(),0., T);
+  bezier_wp_t c_sym(wps.begin(), wps.end(),0., T);
 
   double a, b, t, t1, t2;
   for (size_t i = 0; i < 100; ++i) {
@@ -154,8 +154,8 @@ BOOST_AUTO_TEST_CASE(symbolic_split_c) {
     bezier_wp_t c_sym_e = c_sym.extract(t1, t2);
     t = t1;
     while (t < t2) {
-      vectorEqual(c_e(t - t1), eval(c_sym_e(t - t1), y));
-      vectorEqual(c(t), eval(c_sym_e(t - t1), y));
+      vectorEqual(c_e(t), eval(c_sym_e(t), y));
+      vectorEqual(c(t), eval(c_sym_e(t), y));
       t += 0.01;
     }
   }
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(symbolic_split_c_bench) {
   point_t y(1, 0.2, 4.5);
   pts[2] = y;
 
-  bezier_wp_t c_sym(wps.begin(), wps.end(), T);
+  bezier_wp_t c_sym(wps.begin(), wps.end(),0., T);
 
   std::vector<double> values;
   for (int i = 0; i < 100000; ++i) values.push_back((double)rand() / RAND_MAX);
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(symbolic_split_w) {
   bezier_wp_t::t_point_t wps = computeWwaypoints(buildPData(), T);
   point_t y(1, 0.2, 4.5);
 
-  bezier_wp_t w(wps.begin(), wps.end(), T);
+  bezier_wp_t w(wps.begin(), wps.end(),0., T);
 
   double a, b, t, t1, t2;
   for (size_t i = 0; i < 100; ++i) {
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(symbolic_split_w) {
     bezier_wp_t w_e = w.extract(t1, t2);
     t = t1;
     while (t < t2) {
-      vectorEqual(eval(w(t), y), eval(w_e(t - t1), y), 1e-12);
+      vectorEqual(eval(w(t), y), eval(w_e(t), y), 1e-12);
       t += 0.01;
     }
   }
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(symbolic_split_w_bench) {
   bezier_wp_t::t_point_t wps = computeWwaypoints(buildPData(), T);
   point_t y(1, 0.2, 4.5);
 
-  bezier_wp_t w(wps.begin(), wps.end(), T);
+  bezier_wp_t w(wps.begin(), wps.end(),0., T);
 
   std::vector<double> values;
   for (int i = 0; i < 100000; ++i) values.push_back((double)rand() / RAND_MAX);

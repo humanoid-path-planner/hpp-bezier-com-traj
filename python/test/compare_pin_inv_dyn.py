@@ -18,7 +18,7 @@ from centroidal_dynamics import Equilibrium, EquilibriumAlgorithm
 from pinocchio_inv_dyn.multi_contact.bezier.bezier_0_step_capturability import (BezierZeroStepCapturability,
                                                                                 compute_CWC)
 from pinocchio_inv_dyn.multi_contact.utils import (check_static_eq, find_static_equilibrium_com, generate_contacts)
-from spline import bezier
+from curves import bezier
 
 __EPS = 1e-5
 np.set_printoptions(precision=2, suppress=True, linewidth=100)

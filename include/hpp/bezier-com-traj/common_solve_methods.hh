@@ -24,7 +24,7 @@ namespace bezier_com_traj {
  * @return a vector of waypoint representing the discretization of the curve
  */
 BEZIER_COM_TRAJ_DLLAPI std::vector<waypoint6_t> ComputeDiscretizedWaypoints(
-    const std::vector<waypoint6_t>& wps, const std::vector<spline::Bern<double> >& bernstein, int numSteps);
+    const std::vector<waypoint6_t>& wps, const std::vector<curves::Bern<double> >& bernstein, int numSteps);
 
 /**
  * @brief compute6dControlPointInequalities Given linear and angular control waypoints,

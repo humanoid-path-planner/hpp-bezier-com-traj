@@ -33,6 +33,16 @@ struct waypoint_t {
   waypoint_t(MatrixXX A, VectorX b) : first(A), second(b) {}
 
   static waypoint_t Zero(size_t dim) { return initwp(dim, dim); }
+
+  size_t size() const{return second.size();}
+
+  bool isApprox(const waypoint_t& other, const value_type prec = Eigen::NumTraits<value_type>::dummy_precision()) const{
+    return first.isApprox(other.first,prec) && second.isApprox(other.second,prec);
+  }
+
+  bool operator==(const waypoint_t& other) const{ return isApprox(other); }
+
+  bool operator!=(const waypoint_t& other) const{ return !(*this == other); }
 };
 
 /**
@@ -40,7 +50,7 @@ struct waypoint_t {
  * @param degree required degree
  * @return the bernstein polynoms
  */
-BEZIER_COM_TRAJ_DLLAPI std::vector<spline::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree);
+BEZIER_COM_TRAJ_DLLAPI std::vector<curves::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree);
 
 /**
  * @brief given the constraints of the problem, and a set of waypoints, return
@@ -131,7 +141,7 @@ Bezier bezier_com_traj::computeBezierCurve(const ConstraintFlag& flag, const dou
       i++;
     }
   }
-  return Bezier(wps.begin(), wps.end(), T);
+  return Bezier(wps.begin(), wps.end(), 0.,T);
 }
 
 #endif

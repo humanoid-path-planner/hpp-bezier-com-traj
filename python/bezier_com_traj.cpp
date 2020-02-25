@@ -259,7 +259,7 @@ MatrixVector* computeEndEffectorDistanceCostPython(const ProblemData& pData, con
   std::vector<bezier_t::point_t> pi = computeConstantWaypoints(pData, time);
   // transform the matrice 3xN in a std::vector<point3_t> of size N :
   std::vector<point3_t> pts_path;
-  for (size_t c = 0; c < pts_l.cols(); ++c) {
+  for (int c = 0; c < pts_l.cols(); ++c) {
     pts_path.push_back(pts_l.block<3, 1>(0, c));
   }
   MatrixVector* res = new MatrixVector();
@@ -285,12 +285,10 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj) {
   register_exception_translator<contact_data_exception>(&translateContactData);
   /** BEGIN eigenpy init**/
   eigenpy::enableEigenPy();
-
-  eigenpy::enableEigenPySpecific<point_t, point_t>();
-  eigenpy::enableEigenPySpecific<Vector3, Vector3>();
-  eigenpy::enableEigenPySpecific<VectorX, VectorX>();
-  eigenpy::enableEigenPySpecific<MatrixX3, MatrixX3>();
-  eigenpy::enableEigenPySpecific<MatrixX3, MatrixX3>();
+  ENABLE_SPECIFIC_MATRIX_TYPE(point_t);
+  ENABLE_SPECIFIC_MATRIX_TYPE(Vector3);
+  ENABLE_SPECIFIC_MATRIX_TYPE(VectorX);
+  ENABLE_SPECIFIC_MATRIX_TYPE(MatrixX3);
 
   /** END eigenpy init**/
   /*eigenpy::exposeAngleAxis();

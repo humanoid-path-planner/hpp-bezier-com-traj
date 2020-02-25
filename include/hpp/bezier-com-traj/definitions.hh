@@ -7,7 +7,7 @@
 #define BEZIER_COM_TRAJ_DEFINITIONS_H
 
 #include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
-#include <hpp/spline/bezier_curve.h>
+#include <curves/bezier_curve.h>
 #include <Eigen/Dense>
 
 namespace bezier_com_traj {
@@ -51,9 +51,9 @@ typedef std::pair<matrix3_t, point3_t> waypoint3_t;
 typedef std::pair<Matrix39, point3_t> waypoint9_t;
 struct waypoint_t;  // forward declaration
 
-typedef spline::bezier_curve<double, double, 3, true, point_t> bezier_t;
-typedef spline::bezier_curve<double, double, 3, true, waypoint_t> bezier_wp_t;
-typedef spline::bezier_curve<double, double, 6, true, point6_t> bezier6_t;
+typedef curves::bezier_curve<double, double, true, point_t> bezier_t;
+typedef curves::bezier_curve<double, double, true, waypoint_t> bezier_wp_t;
+typedef curves::bezier_curve<double, double, true, point6_t> bezier6_t;
 
 typedef std::vector<std::pair<double, int> > T_time;
 typedef T_time::const_iterator CIT_time;
