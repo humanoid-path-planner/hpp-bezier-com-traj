@@ -224,15 +224,13 @@ struct DummyPath {
   point3_t operator()(double /*u*/) const { return point3_t::Zero(); }
 };
 
-typedef std::pair<Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic>,
-                  Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> >
-    linear_points_t;
+typedef std::pair<MatrixXX,VectorX> linear_points_t;
 typedef Eigen::Matrix<real, 3, Eigen::Dynamic> point_list_t;
 
 struct MatrixVector {
   linear_points_t res;
-  Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> A() { return res.first; }
-  Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> b() { return res.second; }
+  MatrixXX A() { return res.first; }
+  VectorX b() { return res.second; }
 };
 
 ResultDataCOMTraj* computeEndEffector(const ProblemData& pData, const double time) {
@@ -289,6 +287,7 @@ BOOST_PYTHON_MODULE(hpp_bezier_com_traj) {
   ENABLE_SPECIFIC_MATRIX_TYPE(Vector3);
   ENABLE_SPECIFIC_MATRIX_TYPE(VectorX);
   ENABLE_SPECIFIC_MATRIX_TYPE(MatrixX3);
+  ENABLE_SPECIFIC_MATRIX_TYPE(MatrixXX);
 
   /** END eigenpy init**/
   /*eigenpy::exposeAngleAxis();
