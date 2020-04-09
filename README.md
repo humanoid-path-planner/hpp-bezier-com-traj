@@ -4,7 +4,7 @@
 [![Coverage report](https://gepgitlab.laas.fr/humanoid-path-planner/hpp-bezier-com-traj/badges/master/coverage.svg?job=doc-coverage)](http://projects.laas.fr/gepetto/doc/humanoid-path-planner/hpp-bezier-com-traj/master/coverage/)
 
 
-Copyright 2018 LAAS-CNRS
+Copyright 2018-2020 LAAS-CNRS
 
 Authors: Pierre Fernbach and Steve Tonneau
 
@@ -27,9 +27,9 @@ https://hal.archives-ouvertes.fr/hal-01726155v1
 
 
 ## Dependencies
-* [centroidal-dynamics-lib] Centroidal dynamics computation library (https://github.com/stonneau/centroidal-dynamics-lib)
-* [spline] Bezier curves library (https://github.com/stonneau/spline)
-* [glpk] GNU Linear Programming Kit (https://www.gnu.org/software/glpk/)
+* [centroidal-dynamics-lib](https://github.com/stonneau/centroidal-dynamics-lib) Centroidal dynamics computation library
+* [curves](https://github.com/loco-3d/curves) Bezier curves library
+* [glpk](https://www.gnu.org/software/glpk/) GNU Linear Programming Kit
 
 ## Additional dependencies for python bindings
 * [Boost.Python](http://www.boost.org/doc/libs/1_63_0/libs/python/doc/html/index.html)
@@ -150,5 +150,3 @@ print np.linalg.norm(dc_of_t(dc_of_t.max()))
 
 refer to the [test file](https://gitlab.com/stonneau/bezier_COM_traj/blob/master/python/test/binding_tests.py) for more advanced problems, including kinematic constraints,
 mutiple contact phases handling and angular momentum
-
-
