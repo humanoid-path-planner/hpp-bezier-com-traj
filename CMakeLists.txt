@@ -1,58 +1,101 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
+# Project properties
 SET(PROJECT_NAME hpp-bezier-com-traj)
 SET(PROJECT_DESCRIPTION "Multi contact trajectory generation for the COM using Bezier curves")
 
+# Project options
+OPTION(BUILD_PYTHON_INTERFACE "Build the python bindings" ON)
+OPTION(USE_GLPK "Use sparse lp solver" OFF)
+OPTION(PRINT_QHULL_INEQ "generate text file containing last inequality computed" OFF)
+
+# Project configuration
+SET(PROJECT_USE_CMAKE_EXPORT TRUE)
+SET(CUSTOM_HEADER_DIR "hpp/bezier-com-traj")
+SET(CXX_DISABLE_WERROR TRUE)
+
+# JRL-cmakemodule setup
 INCLUDE(cmake/hpp.cmake)
 INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/python.cmake)
-INCLUDE(cmake/test.cmake)
 
-SET(CUSTOM_HEADER_DIR "hpp/bezier-com-traj")
-
+# Project definition
 COMPUTE_PROJECT_ARGS(PROJECT_ARGS LANGUAGES CXX)
 PROJECT(${PROJECT_NAME} ${PROJECT_ARGS})
 
-# Inhibit all warning messages.
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
-
-# remove flag that makes all warnings into errors
-string (REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-MESSAGE( STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS} )
-
-OPTION (BUILD_PYTHON_INTERFACE "Build the python binding" ON)
-OPTION (USE_GLPK "Use sparse lp solver" OFF)
-OPTION (PRINT_QHULL_INEQ "generate text file containing last inequality computed" OFF)
-
 IF(BUILD_PYTHON_INTERFACE)
-  # search for python
   FINDPYTHON()
-  INCLUDE_DIRECTORIES(SYSTEM ${PYTHON_INCLUDE_DIRS} )
-
+  FIND_NUMPY()
+  STRING(REGEX REPLACE "-" "_" PY_NAME ${PROJECT_NAME})
+  ADD_PROJECT_DEPENDENCY(eigenpy REQUIRED)
   SET(BOOST_COMPONENTS python)
   SEARCH_FOR_BOOST()
-  INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIR} )
 ENDIF(BUILD_PYTHON_INTERFACE)
 
-SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/CDD")
+# Project dependencies
 
-ADD_REQUIRED_DEPENDENCY(eigen3)
-ADD_REQUIRED_DEPENDENCY(hpp-centroidal-dynamics)
-ADD_REQUIRED_DEPENDENCY("curves >= 0.3")
-FIND_PACKAGE(CDD REQUIRED)
-INCLUDE_DIRECTORIES(${CDD_INCLUDE_DIRS})
+ADD_PROJECT_DEPENDENCY(hpp-centroidal-dynamics REQUIRED)
+ADD_PROJECT_DEPENDENCY(curves REQUIRED)
 
 IF(USE_GLPK)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/find-external/glpk")
-  find_package (glpk REQUIRED)
+  ADD_PROJECT_DEPENDENCY(glpk REQUIRED)
   add_definitions ( -DUSE_GLPK_SOLVER=1)
-  INCLUDE_DIRECTORIES(${glpk_INCLUDE_DIR})
 ENDIF(USE_GLPK)
 
+# Main Library
+SET(${PROJECT_NAME}_HEADERS
+  include/${CUSTOM_HEADER_DIR}/data.hh
+  include/${CUSTOM_HEADER_DIR}/utils.hh
+  include/${CUSTOM_HEADER_DIR}/flags.hh
+  include/${CUSTOM_HEADER_DIR}/definitions.hh
+  include/${CUSTOM_HEADER_DIR}/local_config.hh
+  include/${CUSTOM_HEADER_DIR}/solve.hh
+  include/${CUSTOM_HEADER_DIR}/solve_end_effector.hh
+  include/${CUSTOM_HEADER_DIR}/common_solve_methods.hh
+  include/${CUSTOM_HEADER_DIR}/common_solve_methods.inl
+  include/${CUSTOM_HEADER_DIR}/cost/costfunction_definition.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_definition.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_c1.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_dc1.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_dc1_c1.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_ddc0_c1.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh
+  include/${CUSTOM_HEADER_DIR}/solver/solver-abstract.hpp
+  include/${CUSTOM_HEADER_DIR}/solver/eiquadprog-fast.hpp  # TODO: use stack-of-task/eiquadprog
+  )
 
-add_subdirectory(include/${CUSTOM_HEADER_DIR})
-add_subdirectory(src)
-add_subdirectory(tests)
+SET(${PROJECT_NAME}_SOURCES
+  src/common_solve_methods.cpp
+  src/costfunction_definition.cpp
+  src/solver-abstract.cpp
+  src/eiquadprog-fast.cpp
+  src/computeCOMTraj.cpp
+  src/solve_0_step.cpp
+  src/utils.cpp
+  src/waypoints_definition.cpp
+  )
+
+if(USE_GLPK)
+  SET(${PROJECT_NAME}_SOURCES ${${PROJECT_NAME}_SOURCES}
+    glpk-wrapper.cpp
+    )
+endif(USE_GLPK)
+
+ADD_LIBRARY(${PROJECT_NAME} SHARED
+  ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
+TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} curves::curves hpp-centroidal-dynamics::hpp-centroidal-dynamics)
+
+if(USE_GLPK)
+  TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} ${glpk_INCLUDE_DIR})
+  TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${glpk_LIBRARY})
+endif(USE_GLPK)
+
+INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
+
+ADD_SUBDIRECTORY(tests)
 IF(BUILD_PYTHON_INTERFACE)
-  add_subdirectory (python)
+  ADD_SUBDIRECTORY(python)
 ENDIF(BUILD_PYTHON_INTERFACE)
