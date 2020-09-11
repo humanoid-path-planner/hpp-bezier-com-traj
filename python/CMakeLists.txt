@@ -1,6 +1,6 @@
 # Define the wrapper library that wraps our library
 add_library(${PY_NAME} SHARED bezier_com_traj.cpp )
-target_link_libraries(${PY_NAME} ${Boost_LIBRARIES} ${PROJECT_NAME} eigenpy::eigenpy)
+target_link_libraries(${PY_NAME} ${PROJECT_NAME} eigenpy::eigenpy)
 # don't prepend wrapper library name with lib
 set_target_properties(${PY_NAME} PROPERTIES PREFIX "")
 
