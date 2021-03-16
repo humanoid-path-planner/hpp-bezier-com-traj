@@ -6,7 +6,7 @@
 
 namespace bezier_com_traj {
 std::vector<waypoint6_t> ComputeDiscretizedWaypoints(const std::vector<waypoint6_t>& wps,
-                                                     const std::vector<curves::Bern<double> >& berns, int numSteps) {
+                                                     const std::vector<ndcurves::Bern<double> >& berns, int numSteps) {
   double dt = 1. / double(numSteps);
   std::vector<waypoint6_t> res;
   for (int i = 0; i < numSteps + 1; ++i) {

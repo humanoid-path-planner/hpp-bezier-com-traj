@@ -28,7 +28,7 @@ https://hal.archives-ouvertes.fr/hal-01726155v1
 
 ## Dependencies
 * [centroidal-dynamics-lib](https://github.com/stonneau/centroidal-dynamics-lib) Centroidal dynamics computation library
-* [curves](https://github.com/loco-3d/curves) Bezier curves library
+* [ndcurves](https://github.com/loco-3d/ndcurves) Bezier curves library
 * [glpk](https://www.gnu.org/software/glpk/) GNU Linear Programming Kit
 
 ## Additional dependencies for python bindings
@@ -77,7 +77,7 @@ to python.
 For the zero step capturability, we will first define a contact phase using the objects from centroidal_dynamics:
 ```
 #importing the libraries of interest
-import curves  # noqa - necessary to register curves::bezier_curve
+import ndcurves  # noqa - necessary to register ndcurves::bezier_curve
 import numpy as np
 from numpy import array
 from hpp_centroidal_dynamics import Equilibrium, EquilibriumAlgorithm, SolverLP
