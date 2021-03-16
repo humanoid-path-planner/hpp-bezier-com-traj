@@ -44,25 +44,30 @@ ENDIF(USE_GLPK)
 
 # Main Library
 SET(${PROJECT_NAME}_HEADERS
-  include/${CUSTOM_HEADER_DIR}/data.hh
-  include/${CUSTOM_HEADER_DIR}/utils.hh
-  include/${CUSTOM_HEADER_DIR}/flags.hh
-  include/${CUSTOM_HEADER_DIR}/definitions.hh
-  include/${CUSTOM_HEADER_DIR}/local_config.hh
-  include/${CUSTOM_HEADER_DIR}/solve.hh
-  include/${CUSTOM_HEADER_DIR}/solve_end_effector.hh
   include/${CUSTOM_HEADER_DIR}/common_solve_methods.hh
   include/${CUSTOM_HEADER_DIR}/common_solve_methods.inl
   include/${CUSTOM_HEADER_DIR}/cost/costfunction_definition.hh
-  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_definition.hh
+  include/${CUSTOM_HEADER_DIR}/data.hh
+  include/${CUSTOM_HEADER_DIR}/definitions.hh
+  include/${CUSTOM_HEADER_DIR}/flags.hh
+  include/${CUSTOM_HEADER_DIR}/local_config.hh
+  include/${CUSTOM_HEADER_DIR}/solve_end_effector.hh
+  include/${CUSTOM_HEADER_DIR}/solve.hh
+  include/${CUSTOM_HEADER_DIR}/solver/eiquadprog-fast.hpp  # TODO: use stack-of-task/eiquadprog
+  include/${CUSTOM_HEADER_DIR}/solver/glpk-wrapper.hpp
+  include/${CUSTOM_HEADER_DIR}/solver/solver-abstract.hpp
+  include/${CUSTOM_HEADER_DIR}/utils.hh
   include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_c1.hh
-  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_dc1.hh
   include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_dc1_c1.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_dc1.hh
   include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_ddc0_c1.hh
   include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_ddc0_dc1_c1.hh
   include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_ddc0_ddc1_dc1_c1.hh
-  include/${CUSTOM_HEADER_DIR}/solver/solver-abstract.hpp
-  include/${CUSTOM_HEADER_DIR}/solver/eiquadprog-fast.hpp  # TODO: use stack-of-task/eiquadprog
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_ddc0.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_ddc0_j0_j1_ddc1_dc1_c1.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_ddc0_j0_x3_j1_ddc1_dc1_c1.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_c0_dc0_ddc0_j0_x5_j1_ddc1_dc1_c1.hh
+  include/${CUSTOM_HEADER_DIR}/waypoints/waypoints_definition.hh
   )
 
 SET(${PROJECT_NAME}_SOURCES
