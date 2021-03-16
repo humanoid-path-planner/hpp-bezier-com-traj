@@ -1,8 +1,0 @@
-SET(${PROJECT_NAME}_COST_HEADERS
-  costfunction_definition.hh
-  )
-
-INSTALL(FILES
-  ${${PROJECT_NAME}_COST_HEADERS}
-  DESTINATION include/${CUSTOM_HEADER_DIR}/cost
-  )
