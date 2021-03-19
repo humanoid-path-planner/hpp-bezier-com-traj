@@ -11,7 +11,7 @@
 #include <hpp/bezier-com-traj/definitions.hh>
 #include <hpp/bezier-com-traj/utils.hh>
 #include <hpp/bezier-com-traj/solver/solver-abstract.hpp>
-#include <curves/bezier_curve.h>
+#include <ndcurves/bezier_curve.h>
 #include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include <Eigen/Dense>
 

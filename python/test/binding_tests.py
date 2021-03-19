@@ -1,4 +1,4 @@
-import curves  # noqa - necessary to register curves::bezier_curve
+import ndcurves  # noqa - necessary to register ndcurves::bezier_curve
 import numpy as np
 from numpy import array
 from hpp_centroidal_dynamics import Equilibrium, EquilibriumAlgorithm, SolverLP
