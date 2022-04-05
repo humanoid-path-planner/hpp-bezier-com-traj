@@ -17,12 +17,12 @@
 
 #include "hpp/bezier-com-traj/solver/solver-abstract.hpp"
 #ifdef USE_GLPK_SOLVER
-#include <hpp/bezier-com-traj/solver/glpk-wrapper.hpp>
 #include <glpk.h>
-#endif
-#include <hpp/bezier-com-traj/solver/eiquadprog-fast.hpp>
 
+#include <hpp/bezier-com-traj/solver/glpk-wrapper.hpp>
+#endif
 #include <Eigen/Sparse>
+#include <hpp/bezier-com-traj/solver/eiquadprog-fast.hpp>
 #include <stdexcept>
 
 namespace solvers {
@@ -38,37 +38,41 @@ typedef Eigen::SparseVector<double> SpVec;
 typedef Eigen::SparseVector<int> SpVeci;
 
 namespace {
-void addConstraintMinBoundQuadProg(solvers::Cref_vectorX minBounds, std::pair<MatrixXd, VectorXd>& data) {
+void addConstraintMinBoundQuadProg(solvers::Cref_vectorX minBounds,
+                                   std::pair<MatrixXd, VectorXd>& data) {
   if (minBounds.size() == 0) return;
   MatrixXd& res = data.first;
   VectorXd& resv = data.second;
   MatrixXd D(res.rows() + res.cols(), res.cols());
   VectorXd d(resv.rows() + res.cols());
   D.block(0, 0, res.rows(), res.cols()) = res;
-  D.block(res.rows(), 0, res.cols(), res.cols()) = (-1.) * MatrixXd::Identity(res.cols(), res.cols());
+  D.block(res.rows(), 0, res.cols(), res.cols()) =
+      (-1.) * MatrixXd::Identity(res.cols(), res.cols());
   d.head(resv.size()) = resv;
   d.tail(res.cols()) = -minBounds;
   data.first = D;
   data.second = d;
 }
 
-void addConstraintMaxBoundQuadProg(solvers::Cref_vectorX maxBounds, std::pair<MatrixXd, VectorXd>& data) {
+void addConstraintMaxBoundQuadProg(solvers::Cref_vectorX maxBounds,
+                                   std::pair<MatrixXd, VectorXd>& data) {
   if (maxBounds.size() == 0) return;
   MatrixXd& res = data.first;
   VectorXd& resv = data.second;
   MatrixXd D(res.rows() + res.cols() - 3, res.cols());
   VectorXd d(resv.rows() + res.cols());
   D.block(0, 0, res.rows(), res.cols()) = res;
-  D.block(res.rows(), 0, res.cols(), res.cols()) = MatrixXd::Identity(res.cols(), res.cols());
+  D.block(res.rows(), 0, res.cols(), res.cols()) =
+      MatrixXd::Identity(res.cols(), res.cols());
   d.head(resv.size()) = resv;
   d.tail(res.cols()) = maxBounds;
   data.first = D;
   data.second = d;
 }
 
-std::pair<MatrixXd, VectorXd> addBoundaryConstraintsQuadProg(solvers::Cref_vectorX minBounds,
-                                                             solvers::Cref_vectorX maxBounds, const MatrixXd& CI,
-                                                             const VectorXd& ci0) {
+std::pair<MatrixXd, VectorXd> addBoundaryConstraintsQuadProg(
+    solvers::Cref_vectorX minBounds, solvers::Cref_vectorX maxBounds,
+    const MatrixXd& CI, const VectorXd& ci0) {
   std::pair<MatrixXd, VectorXd> data;
   data.first = CI;
   data.second = ci0;
@@ -78,8 +82,9 @@ std::pair<MatrixXd, VectorXd> addBoundaryConstraintsQuadProg(solvers::Cref_vecto
 }
 }  // namespace
 
-ResultData solve(const MatrixXd& A, const VectorXd& b, const MatrixXd& D, const VectorXd& d, const MatrixXd& Hess,
-                 const VectorXd& g, const VectorXd& initGuess, solvers::Cref_vectorX minBounds,
+ResultData solve(const MatrixXd& A, const VectorXd& b, const MatrixXd& D,
+                 const VectorXd& d, const MatrixXd& Hess, const VectorXd& g,
+                 const VectorXd& initGuess, solvers::Cref_vectorX minBounds,
                  solvers::Cref_vectorX maxBounds, const SolverType solver) {
   assert(!(is_nan(A)));
   assert(!(is_nan(b)));
@@ -101,12 +106,15 @@ ResultData solve(const MatrixXd& A, const VectorXd& b, const MatrixXd& D, const 
       // case SOLVER_QUADPROG_SPARSE:
       {
         assert(!(is_nan(Hess)));
-        std::pair<MatrixXd, VectorXd> CIp = addBoundaryConstraintsQuadProg(minBounds, maxBounds, A, b);
+        std::pair<MatrixXd, VectorXd> CIp =
+            addBoundaryConstraintsQuadProg(minBounds, maxBounds, A, b);
         VectorXd ce0 = -d;
-        tsid::solvers::EiquadprogFast QPsolver = tsid::solvers::EiquadprogFast();
+        tsid::solvers::EiquadprogFast QPsolver =
+            tsid::solvers::EiquadprogFast();
         tsid::solvers::EiquadprogFast_status status;
         // if(solver == SOLVER_QUADPROG)
-        status = QPsolver.solve_quadprog(Hess, g, D, ce0, -CIp.first, CIp.second, res.x);
+        status = QPsolver.solve_quadprog(Hess, g, D, ce0, -CIp.first,
+                                         CIp.second, res.x);
         /* else
          {
              SpMat Hsp = Hess.sparseView();
@@ -118,7 +126,8 @@ ResultData solve(const MatrixXd& A, const VectorXd& b, const MatrixXd& D, const 
       }
 #ifdef USE_GLPK_SOLVER
     case SOLVER_GLPK: {
-      res.success_ = (solvers::solveglpk(g, D, d, A, b, minBounds, maxBounds, res.x, res.cost_) == GLP_OPT);
+      res.success_ = (solvers::solveglpk(g, D, d, A, b, minBounds, maxBounds,
+                                         res.x, res.cost_) == GLP_OPT);
       return res;
     }
 #endif

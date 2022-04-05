@@ -50,7 +50,8 @@
 #define EIQUADPROG_FAST_STEP_1 "EIQUADPROG_FAST STEP_1"
 #define EIQUADPROG_FAST_STEP_1_1 "EIQUADPROG_FAST STEP_1_1"
 #define EIQUADPROG_FAST_STEP_1_2 "EIQUADPROG_FAST STEP_1_2"
-#define EIQUADPROG_FAST_STEP_1_UNCONSTR_MINIM "EIQUADPROG_FAST STEP_1_UNCONSTR_MINIM"
+#define EIQUADPROG_FAST_STEP_1_UNCONSTR_MINIM \
+  "EIQUADPROG_FAST STEP_1_UNCONSTR_MINIM"
 #define EIQUADPROG_FAST_STEP_2 "EIQUADPROG_FAST STEP_2"
 #define EIQUADPROG_FAST_STEP_2A "EIQUADPROG_FAST STEP_2A"
 #define EIQUADPROG_FAST_STEP_2B "EIQUADPROG_FAST STEP_2B"
@@ -135,17 +136,22 @@ class EiquadprogFast {
    * s.t. CE x + ce0 = 0
    *      CI x + ci0 >= 0
    */
-  EiquadprogFast_status solve_quadprog(const MatrixXd& Hess, const VectorXd& g0, const MatrixXd& CE,
-                                       const VectorXd& ce0, const MatrixXd& CI, const VectorXd& ci0, VectorXd& x);
+  EiquadprogFast_status solve_quadprog(const MatrixXd& Hess, const VectorXd& g0,
+                                       const MatrixXd& CE, const VectorXd& ce0,
+                                       const MatrixXd& CI, const VectorXd& ci0,
+                                       VectorXd& x);
   /**
    * solves the sparse problem
    * min. x' Hess x + 2 g0' x
    * s.t. CE x + ce0 = 0
    *      CI x + ci0 >= 0
    */
-  EiquadprogFast_status solve_quadprog_sparse(const SpMat& Hess, const VectorXd& g0, const MatrixXd& CE,
-                                              const VectorXd& ce0, const MatrixXd& CI, const VectorXd& ci0,
-                                              VectorXd& x);
+  EiquadprogFast_status solve_quadprog_sparse(const SpMat& Hess,
+                                              const VectorXd& g0,
+                                              const MatrixXd& CE,
+                                              const VectorXd& ce0,
+                                              const MatrixXd& CI,
+                                              const VectorXd& ci0, VectorXd& x);
 
   MatrixXd m_J;  // J * J' = Hessian <nVars,nVars>::d
   bool is_inverse_provided_;
@@ -161,7 +167,8 @@ class EiquadprogFast {
   Eigen::LLT<MatrixXd, Eigen::Lower> chol_;  // <nVars,nVars>::d
   // Eigen::LLT<MatrixXd,Eigen::Lower> chol_; // <nVars,nVars>::d
 
-  /// from QR of L' N, where L is Cholewsky factor of Hessian, and N is the matrix of active constraints
+  /// from QR of L' N, where L is Cholewsky factor of Hessian, and N is the
+  /// matrix of active constraints
   MatrixXd R;  // <nVars,nVars>::d
 
   /// CI*x+ci0
@@ -195,8 +202,8 @@ class EiquadprogFast {
   /// initialized as [1, ..., 1, .]
   /// if iaexcl(i)!=1 inequality constraint i cannot be added to the active set
   /// if adding ineq constraint i fails => iaexcl(i)=0
-  /// iaexcl(i)=0 iff ineq constraint i is linearly dependent to other active constraints
-  /// iaexcl(i)=1 otherwise
+  /// iaexcl(i)=0 iff ineq constraint i is linearly dependent to other active
+  /// constraints iaexcl(i)=1 otherwise
   VectorXi iaexcl;  //<nIneqCon>::i
 
   VectorXd x_old;  // old value of x <nVars>::d
@@ -207,7 +214,8 @@ class EiquadprogFast {
   VectorXd T1;  /// tmp variable used in add_constraint
 #endif
 
-  /// size of the active set A (containing the indices of the active constraints)
+  /// size of the active set A (containing the indices of the active
+  /// constraints)
   int q;
 
   /// number of active-set iterations
@@ -221,7 +229,8 @@ class EiquadprogFast {
 #endif
   }
 
-  inline void update_z(VectorXd& z, const MatrixXd& J, const VectorXd& d, int iq) {
+  inline void update_z(VectorXd& z, const MatrixXd& J, const VectorXd& d,
+                       int iq) {
 #ifdef OPTIMIZE_UPDATE_Z
     z.noalias() = J.rightCols(z.size() - iq) * d.tail(z.size() - iq);
 #else
@@ -229,14 +238,18 @@ class EiquadprogFast {
 #endif
   }
 
-  inline void update_r(const MatrixXd& R, VectorXd& r, const VectorXd& d, int iq) {
+  inline void update_r(const MatrixXd& R, VectorXd& r, const VectorXd& d,
+                       int iq) {
     r.head(iq) = d.head(iq);
-    R.topLeftCorner(iq, iq).triangularView<Eigen::Upper>().solveInPlace(r.head(iq));
+    R.topLeftCorner(iq, iq).triangularView<Eigen::Upper>().solveInPlace(
+        r.head(iq));
   }
 
-  inline bool add_constraint(MatrixXd& R, MatrixXd& J, VectorXd& d, int& iq, double& R_norm);
+  inline bool add_constraint(MatrixXd& R, MatrixXd& J, VectorXd& d, int& iq,
+                             double& R_norm);
 
-  inline void delete_constraint(MatrixXd& R, MatrixXd& J, VectorXi& A, VectorXd& u, int nEqCon, int& iq, int l);
+  inline void delete_constraint(MatrixXd& R, MatrixXd& J, VectorXi& A,
+                                VectorXd& u, int nEqCon, int& iq, int l);
 };
 
 } /* namespace solvers */

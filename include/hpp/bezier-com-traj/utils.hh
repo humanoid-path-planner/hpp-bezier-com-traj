@@ -6,12 +6,10 @@
 #ifndef BEZIER_COM_TRAJ_LIB_UTILS_H
 #define BEZIER_COM_TRAJ_LIB_UTILS_H
 
-#include <hpp/bezier-com-traj/local_config.hh>
+#include <Eigen/Dense>
 #include <hpp/bezier-com-traj/definitions.hh>
 #include <hpp/bezier-com-traj/flags.hh>
-
-#include <Eigen/Dense>
-
+#include <hpp/bezier-com-traj/local_config.hh>
 #include <vector>
 
 namespace bezier_com_traj {
@@ -37,8 +35,10 @@ struct waypoint_t {
   size_t size() const { return second.size(); }
 
   bool isApprox(const waypoint_t& other,
-                const value_type prec = Eigen::NumTraits<value_type>::dummy_precision()) const {
-    return first.isApprox(other.first, prec) && second.isApprox(other.second, prec);
+                const value_type prec =
+                    Eigen::NumTraits<value_type>::dummy_precision()) const {
+    return first.isApprox(other.first, prec) &&
+           second.isApprox(other.second, prec);
   }
 
   bool operator==(const waypoint_t& other) const { return isApprox(other); }
@@ -51,7 +51,8 @@ struct waypoint_t {
  * @param degree required degree
  * @return the bernstein polynoms
  */
-BEZIER_COM_TRAJ_DLLAPI std::vector<ndcurves::Bern<double> > ComputeBersteinPolynoms(const unsigned int degree);
+BEZIER_COM_TRAJ_DLLAPI std::vector<ndcurves::Bern<double> >
+ComputeBersteinPolynoms(const unsigned int degree);
 
 /**
  * @brief given the constraints of the problem, and a set of waypoints, return
@@ -62,18 +63,21 @@ BEZIER_COM_TRAJ_DLLAPI std::vector<ndcurves::Bern<double> > ComputeBersteinPolyn
  * @return the bezier curve
  */
 template <typename Bezier, typename Point>
-BEZIER_COM_TRAJ_DLLAPI Bezier computeBezierCurve(const ConstraintFlag& flag, const double T,
-                                                 const std::vector<Point>& pi, const Point& x);
+BEZIER_COM_TRAJ_DLLAPI Bezier computeBezierCurve(const ConstraintFlag& flag,
+                                                 const double T,
+                                                 const std::vector<Point>& pi,
+                                                 const Point& x);
 
 /**
  * @brief computeDiscretizedTime build an array of discretized points in time,
- * such that there is the same number of point in each phase. Doesn't contain t=0,
- * is of size pointsPerPhase*phaseTimings.size()
+ * such that there is the same number of point in each phase. Doesn't contain
+ * t=0, is of size pointsPerPhase*phaseTimings.size()
  * @param phaseTimings
  * @param pointsPerPhase
  * @return
  */
-T_time computeDiscretizedTimeFixed(const VectorX& phaseTimings, const unsigned int pointsPerPhase);
+T_time computeDiscretizedTimeFixed(const VectorX& phaseTimings,
+                                   const unsigned int pointsPerPhase);
 
 /**
  * @brief computeDiscretizedTime build an array of discretized points in time,
@@ -82,15 +86,16 @@ T_time computeDiscretizedTimeFixed(const VectorX& phaseTimings, const unsigned i
  * @param phaseTimings
  * @param timeStep
  * @return */
-T_time computeDiscretizedTime(const VectorX& phaseTimings, const double timeStep);
+T_time computeDiscretizedTime(const VectorX& phaseTimings,
+                              const double timeStep);
 
 /**
  * @brief write a polytope describe by A x <= b linear constraints in
  * a given filename
  * @return the bernstein polynoms
  */
-void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab, VectorX intPoint, const std::string& fileName,
-                    bool clipZ = false);
+void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab, VectorX intPoint,
+                    const std::string& fileName, bool clipZ = false);
 
 /**
  * @brief skew symmetric matrix
@@ -105,7 +110,9 @@ int Normalize(Ref_matrixXX A, Ref_vectorX b);
 }  // end namespace bezier_com_traj
 
 template <typename Bezier, typename Point>
-Bezier bezier_com_traj::computeBezierCurve(const ConstraintFlag& flag, const double T, const std::vector<Point>& pi,
+Bezier bezier_com_traj::computeBezierCurve(const ConstraintFlag& flag,
+                                           const double T,
+                                           const std::vector<Point>& pi,
                                            const Point& x) {
   std::vector<Point> wps;
   size_t i = 0;
@@ -128,12 +135,16 @@ Bezier bezier_com_traj::computeBezierCurve(const ConstraintFlag& flag, const dou
     i++;
   } else {
     if (flag & END_ACC) {
-      assert(flag & END_VEL && "You cannot constrain final acceleration if final velocity is not constrained.");
+      assert(flag & END_VEL &&
+             "You cannot constrain final acceleration if final velocity is not "
+             "constrained.");
       wps.push_back(pi[i]);
       i++;
     }
     if (flag & END_VEL) {
-      assert(flag & END_POS && "You cannot constrain final velocity if final position is not constrained.");
+      assert(flag & END_POS &&
+             "You cannot constrain final velocity if final position is not "
+             "constrained.");
       wps.push_back(pi[i]);
       i++;
     }

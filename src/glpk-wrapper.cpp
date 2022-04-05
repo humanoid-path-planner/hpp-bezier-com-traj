@@ -16,7 +16,9 @@
 //
 
 #include "hpp/bezier-com-traj/solver/glpk-wrapper.hpp"
+
 #include <glpk.h>
+
 #include <iostream>
 
 namespace solvers {
@@ -34,20 +36,23 @@ int getType(const VectorXd& mib, const VectorXd& mab, const int i) {
   return type;
 }
 
-int solveglpk(const VectorXd& g0, const MatrixXd& CE, const VectorXd& ce0, const MatrixXd& CI, const VectorXd& ci0,
-              solvers::Cref_vectorX minBounds, solvers::Cref_vectorX maxBounds, VectorXd& x, double& cost) {
+int solveglpk(const VectorXd& g0, const MatrixXd& CE, const VectorXd& ce0,
+              const MatrixXd& CI, const VectorXd& ci0,
+              solvers::Cref_vectorX minBounds, solvers::Cref_vectorX maxBounds,
+              VectorXd& x, double& cost) {
   glp_smcp opts;
   glp_init_smcp(&opts);
   opts.msg_lev = GLP_MSG_OFF;
   glp_prob* lp;
-  int ia[1 + 20000];                // Row indices of each element
-  int ja[1 + 20000];                // column indices of each element
-  double ar[1 + 20000];             // numerical values of corresponding elements
-  lp = glp_create_prob();           // creates a problem object
-  glp_set_prob_name(lp, "sample");  // assigns a symbolic name to the problem object
-  glp_set_obj_dir(lp, GLP_MIN);     // calls the routine glp_set_obj_dir to set the
-                                    // omptimization direction flag,
-                                    // where GLP_MAX means maximization
+  int ia[1 + 20000];       // Row indices of each element
+  int ja[1 + 20000];       // column indices of each element
+  double ar[1 + 20000];    // numerical values of corresponding elements
+  lp = glp_create_prob();  // creates a problem object
+  glp_set_prob_name(lp,
+                    "sample");  // assigns a symbolic name to the problem object
+  glp_set_obj_dir(lp, GLP_MIN);  // calls the routine glp_set_obj_dir to set the
+                                 // omptimization direction flag,
+                                 // where GLP_MAX means maximization
 
   // ROWS
   const int numEqConstraints = (int)(CE.rows());
@@ -62,7 +67,8 @@ int solveglpk(const VectorXd& g0, const MatrixXd& CE, const VectorXd& ce0, const
     glp_set_row_bnds(lp, idrow, GLP_UP, 0.0, ci0(i));
     for (int j = 0; j < xsize; ++j, ++idcol) {
       if (CI(i, j) != 0.) {
-        ia[idConsMat] = idrow, ja[idConsMat] = idcol, ar[idConsMat] = CI(i, j); /* a[1,1] = 1 */
+        ia[idConsMat] = idrow, ja[idConsMat] = idcol,
+        ar[idConsMat] = CI(i, j); /* a[1,1] = 1 */
         ++idConsMat;
       }
     }
@@ -72,7 +78,8 @@ int solveglpk(const VectorXd& g0, const MatrixXd& CE, const VectorXd& ce0, const
     glp_set_row_bnds(lp, idrow, GLP_FX, ce0(i), ce0(i));
     for (int j = 0; j < xsize; ++j, ++idcol) {
       if (CE(i, j) != 0.) {
-        ia[idConsMat] = idrow, ja[idConsMat] = idcol, ar[idConsMat] = CE(i, j); /* a[1,1] = 1 */
+        ia[idConsMat] = idrow, ja[idConsMat] = idcol,
+        ar[idConsMat] = CE(i, j); /* a[1,1] = 1 */
         ++idConsMat;
       }
     }
@@ -81,8 +88,10 @@ int solveglpk(const VectorXd& g0, const MatrixXd& CE, const VectorXd& ce0, const
 
   // COLUMNS
   glp_add_cols(lp, xsize);
-  VectorXd miB = minBounds.size() > 0 ? minBounds : VectorXd::Ones(xsize) * UNBOUNDED_DOWN;
-  VectorXd maB = maxBounds.size() > 0 ? maxBounds : VectorXd::Ones(xsize) * UNBOUNDED_UP;
+  VectorXd miB =
+      minBounds.size() > 0 ? minBounds : VectorXd::Ones(xsize) * UNBOUNDED_DOWN;
+  VectorXd maB =
+      maxBounds.size() > 0 ? maxBounds : VectorXd::Ones(xsize) * UNBOUNDED_UP;
   for (int i = 0; i < xsize; ++i, ++idcol) {
     glp_set_col_bnds(lp, idcol, getType(miB, maB, i), miB(i), maB(i));
     glp_set_obj_coef(lp, idcol, g0(i));
@@ -92,11 +101,13 @@ int solveglpk(const VectorXd& g0, const MatrixXd& CE, const VectorXd& ce0, const
   int res = glp_simplex(lp, &opts);
   res = glp_get_status(lp);
   if (res == GLP_OPT) {
-    cost = glp_get_obj_val(lp);  // obtains a computed value of the objective function
+    cost = glp_get_obj_val(
+        lp);  // obtains a computed value of the objective function
     idrow = 1;
     for (int i = 0; i < xsize; ++i, ++idrow) x(i) = glp_get_col_prim(lp, idrow);
   }
-  glp_delete_prob(lp);  // calls the routine glp_delete_prob, which frees all the memory
+  glp_delete_prob(
+      lp);  // calls the routine glp_delete_prob, which frees all the memory
   glp_free_env();
   return res;
 }

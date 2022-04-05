@@ -1,10 +1,10 @@
 #ifndef TEST_HELPER_HH
 #define TEST_HELPER_HH
 
-#include <hpp/bezier-com-traj/solve.hh>
-#include <hpp/bezier-com-traj/common_solve_methods.hh>
-#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include <boost/test/included/unit_test.hpp>
+#include <hpp/bezier-com-traj/common_solve_methods.hh>
+#include <hpp/bezier-com-traj/solve.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 
 using bezier_com_traj::Matrix3;
 using bezier_com_traj::MatrixX3;
@@ -48,7 +48,8 @@ std::pair<MatrixX3, MatrixX3> generateKinematicsConstraints() {
   return std::make_pair(N, V);
 }
 
-std::pair<MatrixXX, VectorX> generateKinematicsConstraints(Matrix3 endEffRotation, Vector3 endEffTranslation) {
+std::pair<MatrixXX, VectorX> generateKinematicsConstraints(
+    Matrix3 endEffRotation, Vector3 endEffTranslation) {
   std::pair<MatrixX3, MatrixX3> NV = generateKinematicsConstraints();
   MatrixX3 N = NV.first;
   MatrixX3 V = NV.second;
@@ -67,9 +68,12 @@ std::pair<MatrixXX, VectorX> generateKinematicsConstraints(Matrix3 endEffRotatio
   return std::make_pair(A, b);
 }
 
-std::pair<MatrixX3, MatrixX3> computeRectangularContacts(MatrixX3 normals, MatrixX3 positions, double size_X,
+std::pair<MatrixX3, MatrixX3> computeRectangularContacts(MatrixX3 normals,
+                                                         MatrixX3 positions,
+                                                         double size_X,
                                                          double size_Y) {
-  // TODO : consider normal != z (see code in rbprm :: stability.cc (or add it as dependency ?)
+  // TODO : consider normal != z (see code in rbprm :: stability.cc (or add it
+  // as dependency ?)
 
   BOOST_CHECK(normals.rows() == positions.rows());
   MatrixX3 rec_normals(normals.rows() * 4, 3);
@@ -83,7 +87,8 @@ std::pair<MatrixX3, MatrixX3> computeRectangularContacts(MatrixX3 normals, Matri
   for (long int ic = 0; ic < normals.rows(); ++ic) {
     for (long int i = 0; i < 4; ++i) {
       rec_normals.block<1, 3>(ic * 4 + i, 0) = normals.block<1, 3>(ic, 0);
-      rec_positions.block<1, 3>(ic * 4 + i, 0) = positions.block<1, 3>(ic, 0) + p.block<1, 3>(i, 0);
+      rec_positions.block<1, 3>(ic * 4 + i, 0) =
+          positions.block<1, 3>(ic, 0) + p.block<1, 3>(i, 0);
     }
   }
   return std::make_pair(rec_normals, rec_positions);
@@ -91,16 +96,20 @@ std::pair<MatrixX3, MatrixX3> computeRectangularContacts(MatrixX3 normals, Matri
 
 centroidal_dynamics::Equilibrium ComputeContactCone(
     MatrixX3 normals, MatrixX3 positions,
-    const centroidal_dynamics::EquilibriumAlgorithm algo = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP) {
-  centroidal_dynamics::Equilibrium contactCone("test-quasiStatic", MASS, 4, centroidal_dynamics::SOLVER_LP_QPOASES,
-                                               true, 10, false);
-  // centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
+    const centroidal_dynamics::EquilibriumAlgorithm algo =
+        centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP) {
+  centroidal_dynamics::Equilibrium contactCone(
+      "test-quasiStatic", MASS, 4, centroidal_dynamics::SOLVER_LP_QPOASES, true,
+      10, false);
+  // centroidal_dynamics::EquilibriumAlgorithm alg =
+  // centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
   contactCone.setNewContacts(positions, normals, MU, algo);
   return contactCone;
 }
 
-std::pair<MatrixXX, VectorX> generateStabilityConstraints(centroidal_dynamics::Equilibrium contactPhase,
-                                                          Vector3 acc = Vector3::Zero()) {
+std::pair<MatrixXX, VectorX> generateStabilityConstraints(
+    centroidal_dynamics::Equilibrium contactPhase,
+    Vector3 acc = Vector3::Zero()) {
   const Vector3& g = contactPhase.m_gravity;
   const Matrix3 gSkew = bezier_com_traj::skew(g);
   const Matrix3 accSkew = bezier_com_traj::skew(acc);
@@ -122,9 +131,12 @@ std::pair<MatrixXX, VectorX> generateStabilityConstraints(centroidal_dynamics::E
 
 std::pair<MatrixXX, VectorX> generateStabilityConstraints(
     MatrixX3 normals, MatrixX3 positions, Vector3 acc = Vector3::Zero(),
-    const centroidal_dynamics::EquilibriumAlgorithm algo = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP) {
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  centroidal_dynamics::Equilibrium contactPhase = ComputeContactCone(contacts.first, contacts.second, algo);
+    const centroidal_dynamics::EquilibriumAlgorithm algo =
+        centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP) {
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  centroidal_dynamics::Equilibrium contactPhase =
+      ComputeContactCone(contacts.first, contacts.second, algo);
   return generateStabilityConstraints(contactPhase, acc);
 }
 
@@ -134,10 +146,14 @@ std::pair<Matrix3, Vector3> computeCost() {
   return std::make_pair(H, g);
 }
 
-std::pair<MatrixX3, VectorX> generateConstraints(MatrixX3 normals, MatrixX3 positions, Matrix3 endEffRotation,
+std::pair<MatrixX3, VectorX> generateConstraints(MatrixX3 normals,
+                                                 MatrixX3 positions,
+                                                 Matrix3 endEffRotation,
                                                  Vector3 endEffTranslation) {
-  std::pair<MatrixX3, VectorX> Ab = generateKinematicsConstraints(endEffRotation, endEffTranslation);
-  std::pair<MatrixX3, VectorX> Cd = generateStabilityConstraints(normals, positions);
+  std::pair<MatrixX3, VectorX> Ab =
+      generateKinematicsConstraints(endEffRotation, endEffTranslation);
+  std::pair<MatrixX3, VectorX> Cd =
+      generateStabilityConstraints(normals, positions);
   size_t numIneq = Ab.first.rows() + Cd.first.rows();
   MatrixXX M(numIneq, 3);
   VectorX n(numIneq);
@@ -153,7 +169,8 @@ double fRandom(double fMin, double fMax) {
   return fMin + f * (fMax - fMin);
 }
 
-ConstraintsPair stackConstraints(const ConstraintsPair& Ab, const ConstraintsPair& Cd) {
+ConstraintsPair stackConstraints(const ConstraintsPair& Ab,
+                                 const ConstraintsPair& Cd) {
   size_t numIneq = Ab.first.rows() + Cd.first.rows();
   MatrixX3 M(numIneq, 3);
   VectorX n(numIneq);
@@ -164,7 +181,8 @@ ConstraintsPair stackConstraints(const ConstraintsPair& Ab, const ConstraintsPai
   return std::make_pair(M, n);
 }
 
-bool verifyKinematicConstraints(const ConstraintsPair& Ab, const Vector3& point) {
+bool verifyKinematicConstraints(const ConstraintsPair& Ab,
+                                const Vector3& point) {
   for (long int i = 0; i < Ab.second.size(); ++i) {
     if (Ab.first.block<1, 3>(i, 0).dot(point) > Ab.second[i]) {
       return false;
@@ -173,21 +191,24 @@ bool verifyKinematicConstraints(const ConstraintsPair& Ab, const Vector3& point)
   return true;
 }
 
-bool verifyStabilityConstraintsDLP(centroidal_dynamics::Equilibrium contactPhase, Vector3 c, Vector3 /*dc*/,
-                                   Vector3 ddc) {
+bool verifyStabilityConstraintsDLP(
+    centroidal_dynamics::Equilibrium contactPhase, Vector3 c, Vector3 /*dc*/,
+    Vector3 ddc) {
   bool success(false);
   double res;
   centroidal_dynamics::Equilibrium contactPhaseDLP(contactPhase);
   contactPhaseDLP.setAlgorithm(centroidal_dynamics::EQUILIBRIUM_ALGORITHM_DLP);
-  centroidal_dynamics::LP_status status = contactPhaseDLP.computeEquilibriumRobustness(c, ddc, res);
-  success = (status == centroidal_dynamics::LP_STATUS_OPTIMAL || status == centroidal_dynamics::LP_STATUS_UNBOUNDED);
+  centroidal_dynamics::LP_status status =
+      contactPhaseDLP.computeEquilibriumRobustness(c, ddc, res);
+  success = (status == centroidal_dynamics::LP_STATUS_OPTIMAL ||
+             status == centroidal_dynamics::LP_STATUS_UNBOUNDED);
   if (success) success = res >= -EPSILON;
   if (!success) std::cout << "fail level " << res << std::endl;
   return success;
 }
 
-bool verifyStabilityConstraintsPP(centroidal_dynamics::Equilibrium contactPhase, Vector3 c, Vector3 /*dc*/,
-                                  Vector3 acc) {
+bool verifyStabilityConstraintsPP(centroidal_dynamics::Equilibrium contactPhase,
+                                  Vector3 c, Vector3 /*dc*/, Vector3 acc) {
   // compute inequalities :
   const Vector3& g = contactPhase.m_gravity;
   const Matrix3 gSkew = bezier_com_traj::skew(g);

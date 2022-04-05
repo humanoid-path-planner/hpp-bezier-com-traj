@@ -18,9 +18,10 @@
 
 #define BOOST_TEST_MODULE transition - quasiStatic
 #include <boost/test/included/unit_test.hpp>
-#include <hpp/bezier-com-traj/solve.hh>
 #include <hpp/bezier-com-traj/common_solve_methods.hh>
+#include <hpp/bezier-com-traj/solve.hh>
 #include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
+
 #include "test_helper.hh"
 
 BOOST_AUTO_TEST_SUITE(quasiStatic)
@@ -31,19 +32,20 @@ BOOST_AUTO_TEST_CASE(single_support) {
   normal << 0, 0, 1;
   MatrixX3 position(1, 3);
   position << 0, 0, 0;
-  std::pair<MatrixX3, VectorX> Ab = generateConstraints(normal, position, Matrix3::Identity(), Vector3::Zero());
+  std::pair<MatrixX3, VectorX> Ab = generateConstraints(
+      normal, position, Matrix3::Identity(), Vector3::Zero());
   std::pair<Matrix3, Vector3> Hg = computeCost();
   Vector3 init = Vector3::Zero();
   bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab, Hg, init);
   BOOST_CHECK(res.success_);
 
-  // sample positions for second foot inside kinematics constraints and check for feasibility :
+  // sample positions for second foot inside kinematics constraints and check
+  // for feasibility :
 }
 
 BOOST_AUTO_TEST_CASE(quasiStatic_exist) {
-  // sample positions for second foot inside kinematics constraints and check for feasibility :
-  // Vector3 firstLeg_n(0,0,1);
-  // Vector3 firstLeg_p(0,0,0);
+  // sample positions for second foot inside kinematics constraints and check
+  // for feasibility : Vector3 firstLeg_n(0,0,1); Vector3 firstLeg_p(0,0,0);
 
   for (size_t i = 0; i < 500; ++i) {
     MatrixX3 normal(1, 3);
@@ -55,7 +57,8 @@ BOOST_AUTO_TEST_CASE(quasiStatic_exist) {
     normal.block<1, 3>(0, 0) = Vector3(0, 0, 1);
     position.block<1, 3>(0, 0) = Vector3(x, y, 0.);
 
-    std::pair<MatrixX3, VectorX> Ab = generateConstraints(normal, position, Matrix3::Identity(), Vector3::Zero());
+    std::pair<MatrixX3, VectorX> Ab = generateConstraints(
+        normal, position, Matrix3::Identity(), Vector3::Zero());
     std::pair<Matrix3, Vector3> Hg = computeCost();
     Vector3 init = Vector3::Zero();
     bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab, Hg, init);
@@ -74,7 +77,8 @@ BOOST_AUTO_TEST_CASE(quasiStatic_empty_upX) {
     normal.block<1, 3>(0, 0) = Vector3(0, 0, 1);
     position.block<1, 3>(0, 0) = Vector3(x, y, 0.);
 
-    std::pair<MatrixX3, VectorX> Ab = generateConstraints(normal, position, Matrix3::Identity(), Vector3::Zero());
+    std::pair<MatrixX3, VectorX> Ab = generateConstraints(
+        normal, position, Matrix3::Identity(), Vector3::Zero());
     std::pair<Matrix3, Vector3> Hg = computeCost();
     Vector3 init = Vector3::Zero();
     bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab, Hg, init);
@@ -93,7 +97,8 @@ BOOST_AUTO_TEST_CASE(quasiStatic_empty_downX) {
     normal.block<1, 3>(0, 0) = Vector3(0, 0, 1);
     position.block<1, 3>(0, 0) = Vector3(x, y, 0.);
 
-    std::pair<MatrixX3, VectorX> Ab = generateConstraints(normal, position, Matrix3::Identity(), Vector3::Zero());
+    std::pair<MatrixX3, VectorX> Ab = generateConstraints(
+        normal, position, Matrix3::Identity(), Vector3::Zero());
     std::pair<Matrix3, Vector3> Hg = computeCost();
     Vector3 init = Vector3::Zero();
     bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab, Hg, init);
@@ -112,7 +117,8 @@ BOOST_AUTO_TEST_CASE(quasiStatic_empty_downY) {
     normal.block<1, 3>(0, 0) = Vector3(0, 0, 1);
     position.block<1, 3>(0, 0) = Vector3(x, y, 0.);
 
-    std::pair<MatrixX3, VectorX> Ab = generateConstraints(normal, position, Matrix3::Identity(), Vector3::Zero());
+    std::pair<MatrixX3, VectorX> Ab = generateConstraints(
+        normal, position, Matrix3::Identity(), Vector3::Zero());
     std::pair<Matrix3, Vector3> Hg = computeCost();
     Vector3 init = Vector3::Zero();
     bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab, Hg, init);
@@ -131,7 +137,8 @@ BOOST_AUTO_TEST_CASE(quasiStatic_empty_upY) {
     normal.block<1, 3>(0, 0) = Vector3(0, 0, 1);
     position.block<1, 3>(0, 0) = Vector3(x, y, 0.);
 
-    std::pair<MatrixX3, VectorX> Ab = generateConstraints(normal, position, Matrix3::Identity(), Vector3::Zero());
+    std::pair<MatrixX3, VectorX> Ab = generateConstraints(
+        normal, position, Matrix3::Identity(), Vector3::Zero());
     std::pair<Matrix3, Vector3> Hg = computeCost();
     Vector3 init = Vector3::Zero();
     bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab, Hg, init);

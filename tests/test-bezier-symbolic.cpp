@@ -17,19 +17,21 @@
 // <http://www.gnu.org/licenses/>.
 
 #define BOOST_TEST_MODULE transition
+#include <ndcurves/bezier_curve.h>
+
 #include <boost/test/included/unit_test.hpp>
-#include <hpp/bezier-com-traj/solve.hh>
 #include <hpp/bezier-com-traj/common_solve_methods.hh>
 #include <hpp/bezier-com-traj/data.hh>
+#include <hpp/bezier-com-traj/solve.hh>
 #include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
+
 #include "test_helper.hh"
-#include <ndcurves/bezier_curve.h>
 
 using namespace bezier_com_traj;
 const double T = 1.5;
 
-ProblemData buildPData(
-    const centroidal_dynamics::EquilibriumAlgorithm algo = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP) {
+ProblemData buildPData(const centroidal_dynamics::EquilibriumAlgorithm algo =
+                           centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP) {
   ProblemData pData;
   pData.c0_ = Vector3(0, 0.5, 5.);
   pData.c1_ = Vector3(2, -0.5, 5.);
@@ -44,18 +46,25 @@ ProblemData buildPData(
   positions.block<1, 3>(0, 0) = Vector3(0, 0.1, 0);
   normals.block<1, 3>(1, 0) = Vector3(0, 0, 1);
   positions.block<1, 3>(1, 0) = Vector3(0, -0.1, 0);
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  pData.contacts_.push_back(
-      new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second, algo)));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  pData.contacts_.push_back(new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second, algo)));
 
   return pData;
 }
 
-std::vector<point_t> generate_wps() { return computeConstantWaypoints(buildPData(), T); }
+std::vector<point_t> generate_wps() {
+  return computeConstantWaypoints(buildPData(), T);
+}
 
-bezier_wp_t::t_point_t generate_wps_symbolic() { return computeConstantWaypointsSymbolic(buildPData(), T); }
+bezier_wp_t::t_point_t generate_wps_symbolic() {
+  return computeConstantWaypointsSymbolic(buildPData(), T);
+}
 
-VectorX eval(const waypoint_t& w, const point_t& x) { return w.first * x + w.second; }
+VectorX eval(const waypoint_t& w, const point_t& x) {
+  return w.first * x + w.second;
+}
 
 void vectorEqual(const VectorX& a, const VectorX& b, const double EPS = 1e-14) {
   BOOST_CHECK_EQUAL(a.size(), b.size());
@@ -177,12 +186,14 @@ BOOST_AUTO_TEST_CASE(symbolic_split_c_bench) {
   clock_t s0, e0;
   std::pair<bezier_wp_t, bezier_wp_t> splitted = c_sym.split(0.5);
   s0 = clock();
-  for (std::vector<double>::const_iterator cit = values.begin(); cit != values.end(); ++cit) {
+  for (std::vector<double>::const_iterator cit = values.begin();
+       cit != values.end(); ++cit) {
     splitted = c_sym.split(*cit);
   }
   e0 = clock();
 
-  std::cout << "Time required to split a c curve : " << ((double)(e0 - s0) / CLOCKS_PER_SEC) / 100. << " ms "
+  std::cout << "Time required to split a c curve : "
+            << ((double)(e0 - s0) / CLOCKS_PER_SEC) / 100. << " ms "
             << std::endl;
 }
 
@@ -220,12 +231,14 @@ BOOST_AUTO_TEST_CASE(symbolic_split_w_bench) {
   clock_t s0, e0;
   std::pair<bezier_wp_t, bezier_wp_t> splitted = w.split(0.5);
   s0 = clock();
-  for (std::vector<double>::const_iterator cit = values.begin(); cit != values.end(); ++cit) {
+  for (std::vector<double>::const_iterator cit = values.begin();
+       cit != values.end(); ++cit) {
     splitted = w.split(*cit);
   }
   e0 = clock();
 
-  std::cout << "Time required to split a w curve : " << ((double)(e0 - s0) / CLOCKS_PER_SEC) / 100. << " ms "
+  std::cout << "Time required to split a w curve : "
+            << ((double)(e0 - s0) / CLOCKS_PER_SEC) / 100. << " ms "
             << std::endl;
 }
 

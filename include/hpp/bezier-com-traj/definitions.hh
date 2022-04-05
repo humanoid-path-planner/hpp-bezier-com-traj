@@ -6,9 +6,10 @@
 #ifndef BEZIER_COM_TRAJ_DEFINITIONS_H
 #define BEZIER_COM_TRAJ_DEFINITIONS_H
 
-#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include <ndcurves/bezier_curve.h>
+
 #include <Eigen/Dense>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 
 namespace bezier_com_traj {
 

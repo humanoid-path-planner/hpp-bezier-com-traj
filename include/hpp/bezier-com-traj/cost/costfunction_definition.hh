@@ -7,11 +7,13 @@
 #define BEZIER_COM_COST_WP_DEF_H
 
 #include <hpp/bezier-com-traj/data.hh>
+
 #include "boost/assign.hpp"
 
 namespace bezier_com_traj {
 /**
- * This file contains definitions for the different cost functions used in qp minimization
+ * This file contains definitions for the different cost functions used in qp
+ * minimization
  */
 namespace cost {
 
@@ -23,7 +25,8 @@ namespace cost {
  * @param H hessian cost matrix to be filled
  * @param g vector matrix
  */
-void genCostFunction(const ProblemData& pData, const VectorX& Ts, const double T, const T_time& timeArray, MatrixXX& H,
+void genCostFunction(const ProblemData& pData, const VectorX& Ts,
+                     const double T, const T_time& timeArray, MatrixXX& H,
                      VectorX& g);
 
 }  // namespace cost

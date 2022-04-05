@@ -3,14 +3,15 @@
  * Author: Steve Tonneau
  */
 
+#include <hpp/bezier-com-traj/common_solve_methods.hh>
 #include <hpp/bezier-com-traj/solve.hh>
 #include <hpp/bezier-com-traj/utils.hh>
-#include <hpp/bezier-com-traj/common_solve_methods.hh>
 
 using namespace bezier_com_traj;
 namespace bezier_com_traj {
-waypoint6_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, const Matrix3& /*p1X*/,
-               const Matrix3& /*gX*/, const double alpha) {
+waypoint6_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X,
+               const Matrix3& /*p1X*/, const Matrix3& /*gX*/,
+               const double alpha) {
   waypoint6_t w = initwp<waypoint6_t>();
   w.first.block<3, 3>(0, 0) = 6 * alpha * Matrix3::Identity();
   w.first.block<3, 3>(3, 0) = 6 * alpha * p0X;
@@ -19,7 +20,8 @@ waypoint6_t w0(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& p0X, c
   return w;
 }
 
-waypoint6_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/,
+waypoint6_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/,
+               const Matrix3& /*p0X*/, const Matrix3& /*p1X*/,
                const Matrix3& gX, const double alpha) {
   waypoint6_t w = initwp<waypoint6_t>();
   w.first.block<3, 3>(0, 0) = 3 * alpha * Matrix3::Identity();
@@ -29,7 +31,8 @@ waypoint6_t w1(point_t_tC p0, point_t_tC p1, point_t_tC /*g*/, const Matrix3& /*
   return w;
 }
 
-waypoint6_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/,
+waypoint6_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g,
+               const Matrix3& /*p0X*/, const Matrix3& /*p1X*/,
                const Matrix3& gX, const double alpha) {
   waypoint6_t w = initwp<waypoint6_t>();
   // w.first.block<3,3>(0,0) = 0;
@@ -39,7 +42,8 @@ waypoint6_t w2(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*
   return w;
 }
 
-waypoint6_t w3(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/,
+waypoint6_t w3(point_t_tC p0, point_t_tC p1, point_t_tC g,
+               const Matrix3& /*p0X*/, const Matrix3& /*p1X*/,
                const Matrix3& /*gX*/, const double alpha) {
   waypoint6_t w = initwp<waypoint6_t>();
   w.first.block<3, 3>(0, 0) = -3 * alpha * Matrix3::Identity();
@@ -49,7 +53,8 @@ waypoint6_t w3(point_t_tC p0, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*
   return w;
 }
 
-waypoint6_t w4(point_t_tC /*p0*/, point_t_tC p1, point_t_tC g, const Matrix3& /*p0X*/, const Matrix3& /*p1X*/,
+waypoint6_t w4(point_t_tC /*p0*/, point_t_tC p1, point_t_tC g,
+               const Matrix3& /*p0X*/, const Matrix3& /*p1X*/,
                const Matrix3& /*gX*/, const double alpha) {
   waypoint6_t w = initwp<waypoint6_t>();
   w.first.block<3, 3>(0, 0) = -6 * alpha * Matrix3::Identity();
@@ -103,9 +108,12 @@ waypoint6_t u4(point_t_tC /*l0*/, const double /*alpha*/) {
   return w;
 }
 
-int computeNumSteps(const double T, const double timeStep) { return timeStep > 0. ? int(T / timeStep) : -1; }
+int computeNumSteps(const double T, const double timeStep) {
+  return timeStep > 0. ? int(T / timeStep) : -1;
+}
 
-std::vector<waypoint6_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, point_t_tC g, const double T,
+std::vector<waypoint6_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0,
+                                             point_t_tC g, const double T,
                                              const double timeStep) {
   int numSteps = computeNumSteps(T, timeStep);
   static const double n = 3.;  // degree
@@ -127,7 +135,8 @@ std::vector<waypoint6_t> ComputeAllWaypoints(point_t_tC p0, point_t_tC dc0, poin
   return wps;
 }
 
-std::vector<waypoint6_t> ComputeAllWaypointsAngularMomentum(point_t_tC l0, const double T, const double timeStep) {
+std::vector<waypoint6_t> ComputeAllWaypointsAngularMomentum(
+    point_t_tC l0, const double T, const double timeStep) {
   int numSteps = computeNumSteps(T, timeStep);
   double alpha = 1. / (T);
   std::vector<waypoint6_t> wps;
@@ -145,23 +154,28 @@ std::vector<waypoint6_t> ComputeAllWaypointsAngularMomentum(point_t_tC l0, const
 
 /* compute the inequality methods that determine the 6D bezier curve w(t)
 as a function of a variable waypoint for the 3D COM trajectory.
-The initial curve is of degree 3 (init pos and velocity, 0 velocity constraints + one free variable).
-The 6d curve is of degree 2*n-2 = 4, thus 5 control points are to be computed.
-Each control point produces a 6 * 3 inequality matrix wix, and a 6 *1 column right member wsi.
-Premultiplying it by H gives mH w_xi * x <= mH_wsi where m is the mass
-Stacking all of these results in a big inequality matrix A and a column vector x that determines the constraints
-On the 6d curves, Ain x <= Aub
+The initial curve is of degree 3 (init pos and velocity, 0 velocity constraints
++ one free variable). The 6d curve is of degree 2*n-2 = 4, thus 5 control points
+are to be computed. Each control point produces a 6 * 3 inequality matrix wix,
+and a 6 *1 column right member wsi. Premultiplying it by H gives mH w_xi * x <=
+mH_wsi where m is the mass Stacking all of these results in a big inequality
+matrix A and a column vector x that determines the constraints On the 6d curves,
+Ain x <= Aub
 */
-std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData, point_t_tC c0, point_t_tC dc0,
-                                                               point_t_tC l0, const bool useAngMomentum,
-                                                               const double T, const double timeStep, bool& fail) {
+std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(
+    const ContactData& cData, point_t_tC c0, point_t_tC dc0, point_t_tC l0,
+    const bool useAngMomentum, const double T, const double timeStep,
+    bool& fail) {
   std::vector<waypoint6_t> wps, wpL;
-  wps = ComputeAllWaypoints(c0, dc0, cData.contactPhase_->m_gravity, T, timeStep);
+  wps =
+      ComputeAllWaypoints(c0, dc0, cData.contactPhase_->m_gravity, T, timeStep);
   if (useAngMomentum) wpL = ComputeAllWaypointsAngularMomentum(l0, T, timeStep);
-  return compute6dControlPointInequalities(cData, wps, wpL, useAngMomentum, fail);
+  return compute6dControlPointInequalities(cData, wps, wpL, useAngMomentum,
+                                           fail);
 }
 
-std::pair<MatrixXX, VectorX> computeCostFunction(point_t_tC p0, point_t_tC l0, const bool useAngMomentum) {
+std::pair<MatrixXX, VectorX> computeCostFunction(point_t_tC p0, point_t_tC l0,
+                                                 const bool useAngMomentum) {
   int dimPb = useAngMomentum ? 6 : 3;
   std::pair<MatrixXX, VectorX> res;
   res.first = MatrixXX::Zero(dimPb, dimPb);
@@ -185,12 +199,14 @@ std::pair<MatrixXX, VectorX> computeCostFunction(point_t_tC p0, point_t_tC l0, c
 void computeRealCost(const ProblemData& pData, ResultData& resData) {
   if (pData.useAngularMomentum_) {
     Vector3 xL = resData.x.tail(3);
-    resData.cost_ = (1. / 5.) * (9. * pData.l0_.dot(pData.l0_) - 9. * pData.l0_.dot(xL) + 6. * xL.dot(xL));
+    resData.cost_ = (1. / 5.) * (9. * pData.l0_.dot(pData.l0_) -
+                                 9. * pData.l0_.dot(xL) + 6. * xL.dot(xL));
   } else
     resData.cost_ = (pData.c0_ - resData.x).norm();
 }
 
-void computeC_of_T(const ProblemData& pData, const std::vector<double>& Ts, ResultDataCOMTraj& res) {
+void computeC_of_T(const ProblemData& pData, const std::vector<double>& Ts,
+                   ResultDataCOMTraj& res) {
   std::vector<Vector3> wps;
   wps.push_back(pData.c0_);
   wps.push_back(pData.dc0_ * Ts[0] / 3 + pData.c0_);
@@ -199,7 +215,8 @@ void computeC_of_T(const ProblemData& pData, const std::vector<double>& Ts, Resu
   res.c_of_t_ = bezier_t(wps.begin(), wps.end(), 0., Ts[0]);
 }
 
-void computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts, ResultDataCOMTraj& res) {
+void computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts,
+                    ResultDataCOMTraj& res) {
   if (pData.useAngularMomentum_) {
     std::vector<Vector3> wps;
     wps.push_back(3 * (res.x.tail(3) - pData.l0_));
@@ -211,17 +228,20 @@ void computedL_of_T(const ProblemData& pData, const std::vector<double>& Ts, Res
 }
 
 // no angular momentum for now
-ResultDataCOMTraj solve0step(const ProblemData& pData, const std::vector<double>& Ts, const double timeStep) {
+ResultDataCOMTraj solve0step(const ProblemData& pData,
+                             const std::vector<double>& Ts,
+                             const double timeStep) {
   assert(pData.representation_ == DOUBLE_DESCRIPTION);
   assert(pData.contacts_.size() == 1);
   assert(Ts.size() == pData.contacts_.size());
   bool fail = true;
-  std::pair<MatrixXX, VectorX> Ab =
-      compute6dControlPointInequalities(pData.contacts_.front(), pData.c0_, pData.dc0_, pData.l0_,
-                                        pData.useAngularMomentum_, Ts.front(), timeStep, fail);
+  std::pair<MatrixXX, VectorX> Ab = compute6dControlPointInequalities(
+      pData.contacts_.front(), pData.c0_, pData.dc0_, pData.l0_,
+      pData.useAngularMomentum_, Ts.front(), timeStep, fail);
   ResultDataCOMTraj res;
   if (fail) return res;
-  std::pair<MatrixXX, VectorX> Hg = computeCostFunction(pData.c0_, pData.l0_, pData.useAngularMomentum_);
+  std::pair<MatrixXX, VectorX> Hg =
+      computeCostFunction(pData.c0_, pData.l0_, pData.useAngularMomentum_);
   int dimPb = pData.useAngularMomentum_ ? 6 : 3;
   VectorX init = VectorX(dimPb);
   init.head(3) = pData.c0_;
