@@ -39,18 +39,23 @@ enum BEZIER_COM_TRAJ_DLLAPI GIWCRepresentation {
   UNKNOWN_REPRESENTATION = 0x00004
 };
 
-inline ConstraintFlag operator~(ConstraintFlag a) { return static_cast<ConstraintFlag>(~static_cast<const int>(a)); }
+inline ConstraintFlag operator~(ConstraintFlag a) {
+  return static_cast<ConstraintFlag>(~static_cast<const int>(a));
+}
 
 inline ConstraintFlag operator|(ConstraintFlag a, ConstraintFlag b) {
-  return static_cast<ConstraintFlag>(static_cast<const int>(a) | static_cast<const int>(b));
+  return static_cast<ConstraintFlag>(static_cast<const int>(a) |
+                                     static_cast<const int>(b));
 }
 
 inline ConstraintFlag operator&(ConstraintFlag a, ConstraintFlag b) {
-  return static_cast<ConstraintFlag>(static_cast<const int>(a) & static_cast<const int>(b));
+  return static_cast<ConstraintFlag>(static_cast<const int>(a) &
+                                     static_cast<const int>(b));
 }
 
 inline ConstraintFlag operator^(ConstraintFlag a, ConstraintFlag b) {
-  return static_cast<ConstraintFlag>(static_cast<const int>(a) ^ static_cast<const int>(b));
+  return static_cast<ConstraintFlag>(static_cast<const int>(a) ^
+                                     static_cast<const int>(b));
 }
 
 inline ConstraintFlag& operator|=(ConstraintFlag& a, ConstraintFlag b) {

@@ -18,15 +18,17 @@
 
 #define BOOST_TEST_MODULE transition
 #include <boost/test/included/unit_test.hpp>
-#include <hpp/bezier-com-traj/solve.hh>
 #include <hpp/bezier-com-traj/common_solve_methods.hh>
 #include <hpp/bezier-com-traj/data.hh>
+#include <hpp/bezier-com-traj/solve.hh>
 #include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
+
 #include "test_helper.hh"
 
 #define NOMINAL_COM_HEIGHT 0.795
 
-std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings, const int pointsPerPhase) {
+std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings,
+                                           const int pointsPerPhase) {
   std::vector<double> timeArray;
   double t = 0;
   double t_total = 0;
@@ -44,15 +46,21 @@ std::vector<double> computeDiscretizedTime(const VectorX& phaseTimings, const in
   return timeArray;
 }
 
-bool check_constraints(const bezier_com_traj::ContactData& contactPhase, Vector3 c, Vector3 dc, Vector3 ddc) {
-  BOOST_CHECK(verifyKinematicConstraints(std::make_pair(contactPhase.Kin_, contactPhase.kin_), c));
-  BOOST_CHECK(verifyStabilityConstraintsDLP(*contactPhase.contactPhase_, c, dc, ddc));
-  BOOST_CHECK(verifyStabilityConstraintsPP(*contactPhase.contactPhase_, c, dc, ddc));
+bool check_constraints(const bezier_com_traj::ContactData& contactPhase,
+                       Vector3 c, Vector3 dc, Vector3 ddc) {
+  BOOST_CHECK(verifyKinematicConstraints(
+      std::make_pair(contactPhase.Kin_, contactPhase.kin_), c));
+  BOOST_CHECK(
+      verifyStabilityConstraintsDLP(*contactPhase.contactPhase_, c, dc, ddc));
+  BOOST_CHECK(
+      verifyStabilityConstraintsPP(*contactPhase.contactPhase_, c, dc, ddc));
   return true;
 }
 
-void discretized_check(const bezier_com_traj::ProblemData& pData, const VectorX& Ts,
-                       const bezier_com_traj::ResultDataCOMTraj& res, const int pointsPerPhase, const double t_total) {
+void discretized_check(const bezier_com_traj::ProblemData& pData,
+                       const VectorX& Ts,
+                       const bezier_com_traj::ResultDataCOMTraj& res,
+                       const int pointsPerPhase, const double t_total) {
   // check if timing is respected
   std::vector<double> timings = computeDiscretizedTime(Ts, pointsPerPhase);
   BOOST_CHECK_EQUAL(timings.back(), t_total);
@@ -72,8 +80,10 @@ void discretized_check(const bezier_com_traj::ProblemData& pData, const VectorX&
   // check if each discretized point is feasible :
 
   std::vector<int>
-      stepIdForPhase;  // stepIdForPhase[i] is the id of the last step of phase i / first step of phase i+1 (overlap)
-  for (int i = 0; i < Ts.size(); ++i) stepIdForPhase.push_back(pointsPerPhase * (i + 1) - 1);
+      stepIdForPhase;  // stepIdForPhase[i] is the id of the last step of phase
+                       // i / first step of phase i+1 (overlap)
+  for (int i = 0; i < Ts.size(); ++i)
+    stepIdForPhase.push_back(pointsPerPhase * (i + 1) - 1);
   std::size_t id_phase = 0;
   bezier_com_traj::ContactData phase = pData.contacts_[id_phase];
 
@@ -96,8 +106,9 @@ void discretized_check(const bezier_com_traj::ProblemData& pData, const VectorX&
   }
 }
 
-void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts, bool shouldFail = false,
-                      bool continuous = false, bool test_continuous = true) {
+void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts,
+                      bool shouldFail = false, bool continuous = false,
+                      bool test_continuous = true) {
   BOOST_CHECK_EQUAL(pData.contacts_.size(), Ts.size());
 
   double t_total = 0;
@@ -109,7 +120,8 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts, bool shou
   bezier_com_traj::ResultDataCOMTraj res;
   if (continuous) {
     // testing all available solvers
-    res = bezier_com_traj::computeCOMTraj(pData, Ts, -1, solvers::SOLVER_QUADPROG);
+    res = bezier_com_traj::computeCOMTraj(pData, Ts, -1,
+                                          solvers::SOLVER_QUADPROG);
     if (pData.representation_ == bezier_com_traj::FORCE) {
       /*bezier_com_traj::ResultDataCOMTraj res2 =
               bezier_com_traj::computeCOMTraj(pData,Ts,-1,solvers::SOLVER_QUADPROG_SPARSE);
@@ -119,14 +131,17 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts, bool shou
           std::cout << " x " << res.cost_ << std::endl;
           std::cout << " x2 " << res2.cost_ << std::endl;
           discretized_check(pData,Ts,res2,pointsPerPhase,t_total);
-          BOOST_CHECK(!res.success_ || (res.x.head<3>() - res2.x.head<3>()).norm() < EPSILON);
+          BOOST_CHECK(!res.success_ || (res.x.head<3>() -
+      res2.x.head<3>()).norm() < EPSILON);
       }*/
 #ifdef USE_GLPK_SOLVER
       // clock_t s0,e0;
       // s0 = clock();
-      bezier_com_traj::ResultDataCOMTraj res3 = bezier_com_traj::computeCOMTraj(pData, Ts, -1, solvers::SOLVER_GLPK);
+      bezier_com_traj::ResultDataCOMTraj res3 =
+          bezier_com_traj::computeCOMTraj(pData, Ts, -1, solvers::SOLVER_GLPK);
       // e0 = clock();
-      // std::cout<<"Time to perform full lp : "<<((double)(e0-s0)/CLOCKS_PER_SEC)*1000.<<" ms "<<std::endl;
+      // std::cout<<"Time to perform full lp :
+      // "<<((double)(e0-s0)/CLOCKS_PER_SEC)*1000.<<" ms "<<std::endl;
       BOOST_CHECK(res.success_ == res3.success_);
       if (res3.success_) {
         discretized_check(pData, Ts, res3, pointsPerPhase, t_total);
@@ -139,13 +154,16 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts, bool shou
   if (shouldFail) {
     BOOST_CHECK(!res.success_);
     if (test_continuous) {
-      res = bezier_com_traj::computeCOMTraj(pData, Ts, -1, solvers::SOLVER_QUADPROG);
+      res = bezier_com_traj::computeCOMTraj(pData, Ts, -1,
+                                            solvers::SOLVER_QUADPROG);
       BOOST_CHECK(!res.success_);
       pData.representation_ = bezier_com_traj::FORCE;
-      res = bezier_com_traj::computeCOMTraj(pData, Ts, -1, solvers::SOLVER_QUADPROG);
+      res = bezier_com_traj::computeCOMTraj(pData, Ts, -1,
+                                            solvers::SOLVER_QUADPROG);
       BOOST_CHECK(!res.success_);
 #ifdef USE_GLPK_SOLVER
-      res = bezier_com_traj::computeCOMTraj(pData, Ts, -1, solvers::SOLVER_GLPK);
+      res =
+          bezier_com_traj::computeCOMTraj(pData, Ts, -1, solvers::SOLVER_GLPK);
       BOOST_CHECK(!res.success_);
 #endif
     }
@@ -155,7 +173,8 @@ void check_transition(bezier_com_traj::ProblemData& pData, VectorX Ts, bool shou
   BOOST_CHECK(res.success_);
 
   if (res.success_) discretized_check(pData, Ts, res, pointsPerPhase, t_total);
-  if (continuous && pData.representation_ == bezier_com_traj::DOUBLE_DESCRIPTION) {
+  if (continuous &&
+      pData.representation_ == bezier_com_traj::DOUBLE_DESCRIPTION) {
     pData.representation_ = bezier_com_traj::FORCE;
     check_transition(pData, Ts, shouldFail, true);
   } else if (!continuous && test_continuous)
@@ -180,11 +199,16 @@ bezier_com_traj::ContactData phase0_flat() {
   positions.block<1, 3>(0, 0) = Vector3(0, 0.1, 0);
   normals.block<1, 3>(1, 0) = Vector3(0, 0, 1);
   positions.block<1, 3>(1, 0) = Vector3(0, -0.1, 0);
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second));
 
-  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, -0.1, 0));
-  ConstraintsPair kin = stackConstraints(kin1, generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, 0.1, 0)));
+  ConstraintsPair kin1 =
+      generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, -0.1, 0));
+  ConstraintsPair kin = stackConstraints(
+      kin1,
+      generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, 0.1, 0)));
   cData.Kin_ = kin.first;
   cData.kin_ = kin.second;
 
@@ -196,10 +220,13 @@ bezier_com_traj::ContactData phase1_flat() {
   MatrixX3 normals(1, 3), positions(1, 3);
   normals.block<1, 3>(0, 0) = Vector3(0, 0, 1);
   positions.block<1, 3>(0, 0) = Vector3(0, -0.1, 0);
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second));
 
-  ConstraintsPair kin = generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, -0.1, 0));
+  ConstraintsPair kin =
+      generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, -0.1, 0));
   cData.Kin_ = kin.first;
   cData.kin_ = kin.second;
 
@@ -213,12 +240,16 @@ bezier_com_traj::ContactData phase2_flat() {
   positions.block<1, 3>(0, 0) = Vector3(0.3, 0.1, 0);
   normals.block<1, 3>(1, 0) = Vector3(0, 0, 1);
   positions.block<1, 3>(1, 0) = Vector3(0, -0.1, 0);
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second));
 
-  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, -0.1, 0));
-  ConstraintsPair kin =
-      stackConstraints(kin1, generateKinematicsConstraints(Matrix3::Identity(), Vector3(0.3, 0.1, 0)));
+  ConstraintsPair kin1 =
+      generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, -0.1, 0));
+  ConstraintsPair kin = stackConstraints(
+      kin1,
+      generateKinematicsConstraints(Matrix3::Identity(), Vector3(0.3, 0.1, 0)));
   cData.Kin_ = kin.first;
   cData.kin_ = kin.second;
 
@@ -243,11 +274,14 @@ bezier_com_traj::ProblemData gen_problem_data_flat() {
 
 BOOST_AUTO_TEST_CASE(quasi_static) {
   // compute kinematic constraints for the right foot :
-  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, -0.1, 0));
-  ConstraintsPair kin0 =
-      stackConstraints(kin1, generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, 0.1, 0)));
-  ConstraintsPair kin2 =
-      stackConstraints(kin1, generateKinematicsConstraints(Matrix3::Identity(), Vector3(0.3, 0.1, 0)));
+  ConstraintsPair kin1 =
+      generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, -0.1, 0));
+  ConstraintsPair kin0 = stackConstraints(
+      kin1,
+      generateKinematicsConstraints(Matrix3::Identity(), Vector3(0, 0.1, 0)));
+  ConstraintsPair kin2 = stackConstraints(
+      kin1,
+      generateKinematicsConstraints(Matrix3::Identity(), Vector3(0.3, 0.1, 0)));
 
   bezier_com_traj::ContactData cDataMid = phase1_flat();
   ConstraintsPair stab = generateStabilityConstraints(*cDataMid.contactPhase_);
@@ -256,11 +290,13 @@ BOOST_AUTO_TEST_CASE(quasi_static) {
   Vector3 init = Vector3::Zero();
 
   ConstraintsPair Ab_first = stackConstraints(kin0, stab);
-  bezier_com_traj::ResultData res_first = bezier_com_traj::solve(Ab_first, Hg, init);
+  bezier_com_traj::ResultData res_first =
+      bezier_com_traj::solve(Ab_first, Hg, init);
   BOOST_CHECK(res_first.success_);
 
   ConstraintsPair Ab_second = stackConstraints(kin2, stab);
-  bezier_com_traj::ResultData res_second = bezier_com_traj::solve(Ab_second, Hg, init);
+  bezier_com_traj::ResultData res_second =
+      bezier_com_traj::solve(Ab_second, Hg, init);
   BOOST_CHECK(res_second.success_);
   delete cDataMid.contactPhase_;
 }
@@ -274,7 +310,9 @@ BOOST_AUTO_TEST_CASE(transition) {
 
 BOOST_AUTO_TEST_CASE(transition_noc1) {
   bezier_com_traj::ProblemData pData = gen_problem_data_flat();
-  pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::END_VEL;
+  pData.constraints_.flag_ = bezier_com_traj::INIT_POS |
+                             bezier_com_traj::INIT_VEL |
+                             bezier_com_traj::END_VEL;
   VectorX Ts(3);
   Ts << 0.6, 0.6, 0.6;
   check_transition(pData, Ts);
@@ -284,7 +322,9 @@ BOOST_AUTO_TEST_CASE(transition_no_terminal_constraints) {
   bezier_com_traj::ProblemData pData = gen_problem_data_flat();
   pData.contacts_.pop_back();
   pData.contacts_.pop_back();
-  pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::INIT_ACC;
+  pData.constraints_.flag_ = bezier_com_traj::INIT_POS |
+                             bezier_com_traj::INIT_VEL |
+                             bezier_com_traj::INIT_ACC;
   VectorX Ts(1);
   Ts << 0.2;
   check_transition(pData, Ts, false, false, true);
@@ -342,7 +382,8 @@ BOOST_AUTO_TEST_CASE(transition_ddc0_noAcc) {
 
 BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1_noAcc) {
   bezier_com_traj::ProblemData pData = gen_problem_data_flat();
-  pData.constraints_.flag_ |= bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC;
+  pData.constraints_.flag_ |=
+      bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC;
   pData.constraints_.constraintAcceleration_ = false;
   VectorX Ts(3);
   Ts << 0.6, 0.6, 0.6;
@@ -354,7 +395,8 @@ BOOST_AUTO_TEST_CASE(transition_Acc1) {
   pData.constraints_.maxAcceleration_ = 1.;
   VectorX Ts(3);
   Ts << 0.6, 0.6, 0.6;
-  check_transition(pData, Ts, false, false, false);  // fail with continuous formulation
+  check_transition(pData, Ts, false, false,
+                   false);  // fail with continuous formulation
 }
 
 BOOST_AUTO_TEST_CASE(transition_noDc1_Acc1) {
@@ -363,7 +405,8 @@ BOOST_AUTO_TEST_CASE(transition_noDc1_Acc1) {
   pData.constraints_.maxAcceleration_ = 1.;
   VectorX Ts(3);
   Ts << 0.6, 0.6, 0.6;
-  check_transition(pData, Ts, false, false, false);  // fail with continuous formulation
+  check_transition(pData, Ts, false, false,
+                   false);  // fail with continuous formulation
 }
 BOOST_AUTO_TEST_CASE(transition_ddc0_Acc2) {
   bezier_com_traj::ProblemData pData = gen_problem_data_flat();
@@ -371,12 +414,14 @@ BOOST_AUTO_TEST_CASE(transition_ddc0_Acc2) {
   pData.constraints_.maxAcceleration_ = 2.;
   VectorX Ts(3);
   Ts << 0.6, 0.6, 0.6;
-  check_transition(pData, Ts, false, false, false);  // fail with continuous formulation
+  check_transition(pData, Ts, false, false,
+                   false);  // fail with continuous formulation
 }
 
 BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1_Acc2) {
   bezier_com_traj::ProblemData pData = gen_problem_data_flat();
-  pData.constraints_.flag_ |= bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC;
+  pData.constraints_.flag_ |=
+      bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC;
   pData.constraints_.maxAcceleration_ = 2.;
   VectorX Ts(3);
   Ts << 0.6, 0.6, 0.6;
@@ -385,11 +430,13 @@ BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1_Acc2) {
 
 BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1_Acc05) {
   bezier_com_traj::ProblemData pData = gen_problem_data_flat();
-  pData.constraints_.flag_ |= bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC;
+  pData.constraints_.flag_ |=
+      bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC;
   pData.constraints_.maxAcceleration_ = 0.5;
   VectorX Ts(3);
   Ts << 0.6, 0.6, 0.6;
-  check_transition(pData, Ts, false, false, false);  // fail with continuous formulation
+  check_transition(pData, Ts, false, false,
+                   false);  // fail with continuous formulation
 }
 
 BOOST_AUTO_TEST_CASE(transition_Acc05) {
@@ -397,7 +444,8 @@ BOOST_AUTO_TEST_CASE(transition_Acc05) {
   pData.constraints_.maxAcceleration_ = 0.5;
   VectorX Ts(3);
   Ts << 0.6, 0.6, 0.6;
-  check_transition(pData, Ts, false, false, false);  // fail with continuous formulation
+  check_transition(pData, Ts, false, false,
+                   false);  // fail with continuous formulation
 }
 
 // constraints that should fails :
@@ -433,7 +481,8 @@ BOOST_AUTO_TEST_CASE(transition_ddc0_Acc1) {
 
 BOOST_AUTO_TEST_CASE(transition_ddc0_ddc1_Acc02) {
   bezier_com_traj::ProblemData pData = gen_problem_data_flat();
-  pData.constraints_.flag_ |= bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC;
+  pData.constraints_.flag_ |=
+      bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC;
   pData.constraints_.maxAcceleration_ = 0.2;
   pData.constraints_.constraintAcceleration_ = true;
   VectorX Ts(3);
@@ -446,7 +495,8 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(platform)
 
 // platform : first step :
-// (0.35,0.1,0) ; (0.35,-0.1,0) -> (0.775, 0.23, -0.02);(0.35,-0.1,0)  (normal : 0.0, -0.423, 0.906)
+// (0.35,0.1,0) ; (0.35,-0.1,0) -> (0.775, 0.23, -0.02);(0.35,-0.1,0)  (normal :
+// 0.0, -0.423, 0.906)
 
 // second step :
 // (0.775, 0.23, -0.02);(0.35,-0.1,0) -> (0.775, 0.23, -0.02);(1.15,-0.1,0)
@@ -462,12 +512,16 @@ bezier_com_traj::ContactData phase0_platform() {
   positions.block<1, 3>(0, 0) = Vector3(0.35, 0.1, 0);
   normals.block<1, 3>(1, 0) = Vector3(0, 0, 1);
   positions.block<1, 3>(1, 0) = Vector3(0.35, -0.1, 0);
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second));
 
-  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(), Vector3(0.35, -0.1, 0));
+  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(),
+                                                       Vector3(0.35, -0.1, 0));
   ConstraintsPair kin =
-      stackConstraints(kin1, generateKinematicsConstraints(Matrix3::Identity(), Vector3(0.35, 0.1, 0)));
+      stackConstraints(kin1, generateKinematicsConstraints(
+                                 Matrix3::Identity(), Vector3(0.35, 0.1, 0)));
   cData.Kin_ = kin.first;
   cData.kin_ = kin.second;
 
@@ -479,10 +533,13 @@ bezier_com_traj::ContactData phase1_platform() {
   MatrixX3 normals(1, 3), positions(1, 3);
   normals.block<1, 3>(0, 0) = Vector3(0, 0, 1);
   positions.block<1, 3>(0, 0) = Vector3(0.35, -0.1, 0);
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second));
 
-  ConstraintsPair kin = generateKinematicsConstraints(Matrix3::Identity(), Vector3(0.35, -0.1, 0));
+  ConstraintsPair kin = generateKinematicsConstraints(Matrix3::Identity(),
+                                                      Vector3(0.35, -0.1, 0));
   cData.Kin_ = kin.first;
   cData.kin_ = kin.second;
 
@@ -496,14 +553,18 @@ bezier_com_traj::ContactData phase2_platform() {
   positions.block<1, 3>(0, 0) = Vector3(0.775, 0.23, -0.02);
   normals.block<1, 3>(1, 0) = Vector3(0, 0, 1);
   positions.block<1, 3>(1, 0) = Vector3(0.35, -0.1, 0);
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second));
 
-  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(), Vector3(0.35, -0.1, 0));
-  Eigen::Quaterniond quat =
-      Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d::UnitZ(), Eigen::Vector3d(0.0, -0.423, 0.906));
+  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(),
+                                                       Vector3(0.35, -0.1, 0));
+  Eigen::Quaterniond quat = Eigen::Quaterniond::FromTwoVectors(
+      Eigen::Vector3d::UnitZ(), Eigen::Vector3d(0.0, -0.423, 0.906));
   Matrix3 rot = quat.normalized().toRotationMatrix();
-  ConstraintsPair kin = stackConstraints(kin1, generateKinematicsConstraints(rot, Vector3(0.775, 0.23, -0.02)));
+  ConstraintsPair kin = stackConstraints(
+      kin1, generateKinematicsConstraints(rot, Vector3(0.775, 0.23, -0.02)));
   cData.Kin_ = kin.first;
   cData.kin_ = kin.second;
 
@@ -516,13 +577,16 @@ bezier_com_traj::ContactData phase3_platform() {
   normals.block<1, 3>(0, 0) = Vector3(0.0, -0.423, 0.906).normalized();
   positions.block<1, 3>(0, 0) = Vector3(0.775, 0.23, -0.02);
 
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second));
 
-  Eigen::Quaterniond quat =
-      Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d::UnitZ(), Eigen::Vector3d(0.0, -0.423, 0.906));
+  Eigen::Quaterniond quat = Eigen::Quaterniond::FromTwoVectors(
+      Eigen::Vector3d::UnitZ(), Eigen::Vector3d(0.0, -0.423, 0.906));
   Matrix3 rot = quat.normalized().toRotationMatrix();
-  ConstraintsPair kin = generateKinematicsConstraints(rot, Vector3(0.775, 0.23, -0.02));
+  ConstraintsPair kin =
+      generateKinematicsConstraints(rot, Vector3(0.775, 0.23, -0.02));
   cData.Kin_ = kin.first;
   cData.kin_ = kin.second;
 
@@ -536,14 +600,18 @@ bezier_com_traj::ContactData phase4_platform() {
   positions.block<1, 3>(0, 0) = Vector3(0.775, 0.23, -0.02);
   normals.block<1, 3>(1, 0) = Vector3(0, 0, 1);
   positions.block<1, 3>(1, 0) = Vector3(1.15, -0.1, 0);
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second));
 
-  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(), Vector3(1.15, -0.1, 0));
-  Eigen::Quaterniond quat =
-      Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d::UnitZ(), Eigen::Vector3d(0.0, -0.423, 0.906));
+  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(),
+                                                       Vector3(1.15, -0.1, 0));
+  Eigen::Quaterniond quat = Eigen::Quaterniond::FromTwoVectors(
+      Eigen::Vector3d::UnitZ(), Eigen::Vector3d(0.0, -0.423, 0.906));
   Matrix3 rot = quat.normalized().toRotationMatrix();
-  ConstraintsPair kin = stackConstraints(kin1, generateKinematicsConstraints(rot, Vector3(0.775, 0.23, -0.02)));
+  ConstraintsPair kin = stackConstraints(
+      kin1, generateKinematicsConstraints(rot, Vector3(0.775, 0.23, -0.02)));
   cData.Kin_ = kin.first;
   cData.kin_ = kin.second;
 
@@ -556,10 +624,13 @@ bezier_com_traj::ContactData phase5_platform() {
   normals.block<1, 3>(0, 0) = Vector3(0, 0, 1);
   positions.block<1, 3>(0, 0) = Vector3(1.15, -0.1, 0);
 
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second));
 
-  ConstraintsPair kin = generateKinematicsConstraints(Matrix3::Identity(), Vector3(1.15, -0.1, 0));
+  ConstraintsPair kin = generateKinematicsConstraints(Matrix3::Identity(),
+                                                      Vector3(1.15, -0.1, 0));
   cData.Kin_ = kin.first;
   cData.kin_ = kin.second;
 
@@ -574,12 +645,16 @@ bezier_com_traj::ContactData phase6_platform() {
   normals.block<1, 3>(1, 0) = Vector3(0, 0, 1);
   positions.block<1, 3>(1, 0) = Vector3(1.15, 0.1, 0);
 
-  std::pair<MatrixX3, MatrixX3> contacts = computeRectangularContacts(normals, positions, LX, LY);
-  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(ComputeContactCone(contacts.first, contacts.second));
+  std::pair<MatrixX3, MatrixX3> contacts =
+      computeRectangularContacts(normals, positions, LX, LY);
+  cData.contactPhase_ = new centroidal_dynamics::Equilibrium(
+      ComputeContactCone(contacts.first, contacts.second));
 
-  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(), Vector3(1.15, -0.1, 0));
+  ConstraintsPair kin1 = generateKinematicsConstraints(Matrix3::Identity(),
+                                                       Vector3(1.15, -0.1, 0));
   ConstraintsPair kin =
-      stackConstraints(kin1, generateKinematicsConstraints(Matrix3::Identity(), Vector3(1.15, 0.1, 0)));
+      stackConstraints(kin1, generateKinematicsConstraints(
+                                 Matrix3::Identity(), Vector3(1.15, 0.1, 0)));
   cData.Kin_ = kin.first;
   cData.kin_ = kin.second;
 
@@ -642,17 +717,20 @@ BOOST_AUTO_TEST_CASE(quasi_static_0) {
   bezier_com_traj::ContactData cDataSecond = phase2_platform();
 
   ConstraintsPair kin_first = std::make_pair(cDataFirst.Kin_, cDataFirst.kin_);
-  ConstraintsPair kin_second = std::make_pair(cDataSecond.Kin_, cDataSecond.kin_);
+  ConstraintsPair kin_second =
+      std::make_pair(cDataSecond.Kin_, cDataSecond.kin_);
   ConstraintsPair stab = generateStabilityConstraints(*cDataMid.contactPhase_);
   std::pair<Matrix3, Vector3> Hg = computeCost();
   Vector3 init = Vector3::Zero();
 
   ConstraintsPair Ab_first = stackConstraints(kin_first, stab);
-  bezier_com_traj::ResultData res_first = bezier_com_traj::solve(Ab_first, Hg, init);
+  bezier_com_traj::ResultData res_first =
+      bezier_com_traj::solve(Ab_first, Hg, init);
   BOOST_CHECK(res_first.success_);
 
   ConstraintsPair Ab_second = stackConstraints(kin_second, stab);
-  bezier_com_traj::ResultData res_second = bezier_com_traj::solve(Ab_second, Hg, init);
+  bezier_com_traj::ResultData res_second =
+      bezier_com_traj::solve(Ab_second, Hg, init);
   BOOST_CHECK(res_second.success_);
 
   delete cDataFirst.contactPhase_;
@@ -668,17 +746,20 @@ BOOST_AUTO_TEST_CASE(quasi_static_1) {
   bezier_com_traj::ContactData cDataSecond = phase4_platform();
 
   ConstraintsPair kin_first = std::make_pair(cDataFirst.Kin_, cDataFirst.kin_);
-  ConstraintsPair kin_second = std::make_pair(cDataSecond.Kin_, cDataSecond.kin_);
+  ConstraintsPair kin_second =
+      std::make_pair(cDataSecond.Kin_, cDataSecond.kin_);
   ConstraintsPair stab = generateStabilityConstraints(*cDataMid.contactPhase_);
   std::pair<Matrix3, Vector3> Hg = computeCost();
   Vector3 init = Vector3::Zero();
 
   ConstraintsPair Ab_first = stackConstraints(kin_first, stab);
-  bezier_com_traj::ResultData res_first = bezier_com_traj::solve(Ab_first, Hg, init);
+  bezier_com_traj::ResultData res_first =
+      bezier_com_traj::solve(Ab_first, Hg, init);
   BOOST_CHECK(!res_first.success_);
 
   ConstraintsPair Ab_second = stackConstraints(kin_second, stab);
-  bezier_com_traj::ResultData res_second = bezier_com_traj::solve(Ab_second, Hg, init);
+  bezier_com_traj::ResultData res_second =
+      bezier_com_traj::solve(Ab_second, Hg, init);
   BOOST_CHECK(!res_second.success_);
 
   delete cDataFirst.contactPhase_;
@@ -694,17 +775,20 @@ BOOST_AUTO_TEST_CASE(quasi_static_2) {
   bezier_com_traj::ContactData cDataSecond = phase6_platform();
 
   ConstraintsPair kin_first = std::make_pair(cDataFirst.Kin_, cDataFirst.kin_);
-  ConstraintsPair kin_second = std::make_pair(cDataSecond.Kin_, cDataSecond.kin_);
+  ConstraintsPair kin_second =
+      std::make_pair(cDataSecond.Kin_, cDataSecond.kin_);
   ConstraintsPair stab = generateStabilityConstraints(*cDataMid.contactPhase_);
   std::pair<Matrix3, Vector3> Hg = computeCost();
   Vector3 init = Vector3::Zero();
 
   ConstraintsPair Ab_first = stackConstraints(kin_first, stab);
-  bezier_com_traj::ResultData res_first = bezier_com_traj::solve(Ab_first, Hg, init);
+  bezier_com_traj::ResultData res_first =
+      bezier_com_traj::solve(Ab_first, Hg, init);
   BOOST_CHECK(res_first.success_);
 
   ConstraintsPair Ab_second = stackConstraints(kin_second, stab);
-  bezier_com_traj::ResultData res_second = bezier_com_traj::solve(Ab_second, Hg, init);
+  bezier_com_traj::ResultData res_second =
+      bezier_com_traj::solve(Ab_second, Hg, init);
   BOOST_CHECK(res_second.success_);
 
   delete cDataFirst.contactPhase_;

@@ -6,15 +6,15 @@
 #ifndef BEZIER_COM_TRAJ_LIB_DATA_H
 #define BEZIER_COM_TRAJ_LIB_DATA_H
 
-#include <hpp/bezier-com-traj/local_config.hh>
-#include <hpp/bezier-com-traj/flags.hh>
-#include <hpp/bezier-com-traj/definitions.hh>
-#include <hpp/bezier-com-traj/utils.hh>
-#include <hpp/bezier-com-traj/solver/solver-abstract.hpp>
 #include <ndcurves/bezier_curve.h>
-#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
-#include <Eigen/Dense>
 
+#include <Eigen/Dense>
+#include <hpp/bezier-com-traj/definitions.hh>
+#include <hpp/bezier-com-traj/flags.hh>
+#include <hpp/bezier-com-traj/local_config.hh>
+#include <hpp/bezier-com-traj/solver/solver-abstract.hpp>
+#include <hpp/bezier-com-traj/utils.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include <vector>
 
 namespace bezier_com_traj {
@@ -33,7 +33,8 @@ struct BEZIER_COM_TRAJ_DLLAPI ContactData {
         ang_(VectorX::Zero(0)) {}
 
   ContactData(const ContactData& other)
-      : contactPhase_(new centroidal_dynamics::Equilibrium(*(other.contactPhase_))),
+      : contactPhase_(
+            new centroidal_dynamics::Equilibrium(*(other.contactPhase_))),
         Kin_(other.Kin_),
         kin_(other.kin_),
         Ang_(other.Ang_),
@@ -56,8 +57,8 @@ struct BEZIER_COM_TRAJ_DLLAPI ContactData {
 
 /**
  * @brief Used to define the constraints on the trajectory generation problem.
- * Flags are used to constrain initial and terminal com positions an derivatives.
- * Additionally, the maximum acceleration can be bounded.
+ * Flags are used to constrain initial and terminal com positions an
+ * derivatives. Additionally, the maximum acceleration can be bounded.
  */
 struct BEZIER_COM_TRAJ_DLLAPI Constraints {
   Constraints()
@@ -67,7 +68,10 @@ struct BEZIER_COM_TRAJ_DLLAPI Constraints {
         reduce_h_(1e-3) {}
 
   Constraints(ConstraintFlag flag)
-      : flag_(flag), constraintAcceleration_(false), maxAcceleration_(10.), reduce_h_(1e-3) {}
+      : flag_(flag),
+        constraintAcceleration_(false),
+        maxAcceleration_(10.),
+        reduce_h_(1e-3) {}
 
   ~Constraints() {}
 

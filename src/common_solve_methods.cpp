@@ -5,8 +5,9 @@
 #include <hpp/bezier-com-traj/waypoints/waypoints_definition.hh>
 
 namespace bezier_com_traj {
-std::vector<waypoint6_t> ComputeDiscretizedWaypoints(const std::vector<waypoint6_t>& wps,
-                                                     const std::vector<ndcurves::Bern<double> >& berns, int numSteps) {
+std::vector<waypoint6_t> ComputeDiscretizedWaypoints(
+    const std::vector<waypoint6_t>& wps,
+    const std::vector<ndcurves::Bern<double> >& berns, int numSteps) {
   double dt = 1. / double(numSteps);
   std::vector<waypoint6_t> res;
   for (int i = 0; i < numSteps + 1; ++i) {
@@ -21,27 +22,30 @@ std::vector<waypoint6_t> ComputeDiscretizedWaypoints(const std::vector<waypoint6
   return res;
 }
 
-MatrixXX initMatrixA(const int dimH, const std::vector<waypoint6_t>& wps, const long int extraConstraintSize,
+MatrixXX initMatrixA(const int dimH, const std::vector<waypoint6_t>& wps,
+                     const long int extraConstraintSize,
                      const bool useAngMomentum) {
   int dimPb = useAngMomentum ? 6 : 3;
   return MatrixXX::Zero(dimH * wps.size() + extraConstraintSize, dimPb);
 }
 
-MatrixXX initMatrixD(const int colG, const std::vector<waypoint6_t>& wps, const long int extraConstraintSize,
+MatrixXX initMatrixD(const int colG, const std::vector<waypoint6_t>& wps,
+                     const long int extraConstraintSize,
                      const bool useAngMomentum) {
   int dimPb = useAngMomentum ? 6 : 3;
   return MatrixXX::Zero(6 + extraConstraintSize, wps.size() * colG + dimPb);
 }
 
-void addKinematic(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Kin, Cref_vectorX kin,
-                  const long int otherConstraintIndex) {
+void addKinematic(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Kin,
+                  Cref_vectorX kin, const long int otherConstraintIndex) {
   int dimKin = (int)(kin.rows());
   if (dimKin == 0) return;
   A.block(A.rows() - dimKin - otherConstraintIndex, 0, dimKin, 3) = Kin;
   b.segment(A.rows() - dimKin - otherConstraintIndex, dimKin) = kin;
 }
 
-void addAngularMomentum(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Ang, Cref_vectorX ang) {
+void addAngularMomentum(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Ang,
+                        Cref_vectorX ang) {
   int dimAng = (int)(ang.rows());
   if (dimAng > 0) {
     A.block(A.rows() - dimAng, 3, dimAng, 3) = Ang;
@@ -50,13 +54,15 @@ void addAngularMomentum(Ref_matrixXX A, Ref_vectorX b, Cref_matrixX3 Ang, Cref_v
 }
 
 int removeZeroRows(Ref_matrixXX& A, Ref_vectorX& b) {
-  Eigen::Matrix<bool, Eigen::Dynamic, 1> empty = (A.array() == 0).rowwise().all();
+  Eigen::Matrix<bool, Eigen::Dynamic, 1> empty =
+      (A.array() == 0).rowwise().all();
   size_t last = A.rows() - 1;
   for (size_t i = 0; i < last + 1;) {
     if (empty(i)) {
       assert(A.row(i).norm() == 0);
       if (b(i) < 0) {
-        // std::cout << "empty row for A while correponding b is negative. Problem is infeasible" << b(i) << std::endl;
+        // std::cout << "empty row for A while correponding b is negative.
+        // Problem is infeasible" << b(i) << std::endl;
         return -1;
       }
       A.row(i).swap(A.row(last));
@@ -79,16 +85,17 @@ int Normalize(Ref_matrixXX A, Ref_vectorX b) {
   return zeroindex;
 }
 
-std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData& cData,
-                                                               const std::vector<waypoint6_t>& wps,
-                                                               const std::vector<waypoint6_t>& wpL,
-                                                               const bool useAngMomentum, bool& fail) {
+std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(
+    const ContactData& cData, const std::vector<waypoint6_t>& wps,
+    const std::vector<waypoint6_t>& wpL, const bool useAngMomentum,
+    bool& fail) {
   MatrixXX A;
   VectorX b;
   // gravity vector
   const point_t& g = cData.contactPhase_->m_gravity;
   // compute GIWC
-  assert(cData.contactPhase_->getAlgorithm() == centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP);
+  assert(cData.contactPhase_->getAlgorithm() ==
+         centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP);
   centroidal_dynamics::MatrixXX Hrow;
   VectorX h;
   cData.contactPhase_->getPolytopeInequalities(Hrow, h);
@@ -105,7 +112,8 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
   bc.head(3) = g;  // constant part of Aub, Aubi = mH * (bc - wsi)
   int i = 0;
   std::vector<waypoint6_t>::const_iterator wpLcit = wpL.begin();
-  for (std::vector<waypoint6_t>::const_iterator wpcit = wps.begin(); wpcit != wps.end(); ++wpcit) {
+  for (std::vector<waypoint6_t>::const_iterator wpcit = wps.begin();
+       wpcit != wps.end(); ++wpcit) {
     A.block(i * dimH, 0, dimH, 3) = mH * wpcit->first;
     b.segment(i * dimH, dimH) = mH * (bc - wpcit->second);
     if (useAngMomentum) {
@@ -132,28 +140,35 @@ std::pair<MatrixXX, VectorX> compute6dControlPointInequalities(const ContactData
   return std::make_pair(A, b);
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D, Cref_vectorX d, Cref_matrixXX H, Cref_vectorX g,
-                 Cref_vectorX initGuess, Cref_vectorX minBounds, Cref_vectorX maxBounds,
-                 const solvers::SolverType solver) {
-  return solvers::solve(A, ci0, D, d, H, g, initGuess, minBounds, maxBounds, solver);
+ResultData solve(Cref_matrixXX A, Cref_vectorX ci0, Cref_matrixXX D,
+                 Cref_vectorX d, Cref_matrixXX H, Cref_vectorX g,
+                 Cref_vectorX initGuess, Cref_vectorX minBounds,
+                 Cref_vectorX maxBounds, const solvers::SolverType solver) {
+  return solvers::solve(A, ci0, D, d, H, g, initGuess, minBounds, maxBounds,
+                        solver);
 }
 
-ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H, Cref_vectorX g, Cref_vectorX initGuess,
+ResultData solve(Cref_matrixXX A, Cref_vectorX b, Cref_matrixXX H,
+                 Cref_vectorX g, Cref_vectorX initGuess,
                  const solvers::SolverType solver) {
   MatrixXX D = MatrixXX::Zero(0, A.cols());
   VectorX d = VectorX::Zero(0);
   return solvers::solve(A, b, D, d, H, g, initGuess, d, d, solver);
 }
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab, const std::pair<MatrixXX, VectorX>& Hg, const VectorX& init,
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
+                 const std::pair<MatrixXX, VectorX>& Hg, const VectorX& init,
                  const solvers::SolverType solver) {
   return solve(Ab.first, Ab.second, Hg.first, Hg.second, init, solver);
 }
 
-ResultData solve(const std::pair<MatrixXX, VectorX>& Ab, const std::pair<MatrixXX, VectorX>& Dd,
-                 const std::pair<MatrixXX, VectorX>& Hg, Cref_vectorX minBounds, Cref_vectorX maxBounds,
-                 const VectorX& init, const solvers::SolverType solver) {
-  return solve(Ab.first, Ab.second, Dd.first, Dd.second, Hg.first, Hg.second, init, minBounds, maxBounds, solver);
+ResultData solve(const std::pair<MatrixXX, VectorX>& Ab,
+                 const std::pair<MatrixXX, VectorX>& Dd,
+                 const std::pair<MatrixXX, VectorX>& Hg, Cref_vectorX minBounds,
+                 Cref_vectorX maxBounds, const VectorX& init,
+                 const solvers::SolverType solver) {
+  return solve(Ab.first, Ab.second, Dd.first, Dd.second, Hg.first, Hg.second,
+               init, minBounds, maxBounds, solver);
 }
 
 }  // namespace bezier_com_traj
