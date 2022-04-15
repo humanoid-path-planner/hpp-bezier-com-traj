@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <package format='2'>
     <name>hpp-bezier-com-traj</name>
-    <version>4.12.0</version>
+    <version>4.13.0</version>
     <description>Multi contact trajectory generation for the COM using Bezier curves</description>
 
     <maintainer email='guilhem.saurel@laas.fr'>Guilhem Saurel</maintainer>
