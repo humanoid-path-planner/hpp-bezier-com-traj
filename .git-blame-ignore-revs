@@ -3,3 +3,5 @@
 
 # [Python] allow Python 3 & fix format (Guilhem Saurel, 2019-09-25)
 c9d5314ca82524d5aab0dffd75c40564262495b1
+# pre-commit run -a (Guilhem Saurel, 2022-10-05)
+5bac51b3232c27d606faeaa6746de9a04de149d6
