@@ -26,12 +26,12 @@
 #define OPTIMIZE_UPDATE_Z
 #define OPTIMIZE_HESSIAN_INVERSE
 #define OPTIMIZE_UNCONSTR_MINIM
-//#define TRACE_SOLVER 1
+// #define TRACE_SOLVER 1
 
-//#define USE_WARM_START
-//#define PROFILE_EIQUADPROG
+// #define USE_WARM_START
+// #define PROFILE_EIQUADPROG
 
-//#define DEBUG_STREAM(msg) std::cout<<msg;
+// #define DEBUG_STREAM(msg) std::cout<<msg;
 #define DEBUG_STREAM(msg)
 
 #ifdef PROFILE_EIQUADPROG
