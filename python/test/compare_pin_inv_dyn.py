@@ -116,7 +116,6 @@ def __check_trajectory(p0, p1, p2, p3, T, H, mass, g, time_step=0.1, dL=allZeros
 
 
 def test_continuous_cpp_vs_continuous_py(N_CONTACTS=2, solver="qpoases", verb=0):
-
     mu = 0.5
     # friction coefficient
     lx = 0.1
