@@ -1,7 +1,5 @@
 import ndcurves  # noqa - necessary to register ndcurves::bezier_curve
 import numpy as np
-from numpy import array
-from hpp_centroidal_dynamics import Equilibrium, EquilibriumAlgorithm, SolverLP
 from hpp_bezier_com_traj import (
     SOLVER_QUADPROG,
     ConstraintFlag,
@@ -11,6 +9,8 @@ from hpp_bezier_com_traj import (
     computeCOMTraj,
     zeroStepCapturability,
 )
+from hpp_centroidal_dynamics import Equilibrium, EquilibriumAlgorithm, SolverLP
+from numpy import array
 
 # testing constructors
 eq = Equilibrium("test", 54.0, 4)

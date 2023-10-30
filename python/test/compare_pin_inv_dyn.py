@@ -10,11 +10,11 @@ from __future__ import print_function
 from math import atan, pi
 
 import numpy as np
+from centroidal_dynamics import Equilibrium, EquilibriumAlgorithm
+from curves import bezier
 from numpy import array, asarray, asmatrix
 from numpy import cross as X
 from numpy import matrix, zeros
-
-from centroidal_dynamics import Equilibrium, EquilibriumAlgorithm
 from pinocchio_inv_dyn.multi_contact.bezier.bezier_0_step_capturability import (
     BezierZeroStepCapturability,
     compute_CWC,
@@ -24,7 +24,6 @@ from pinocchio_inv_dyn.multi_contact.utils import (
     find_static_equilibrium_com,
     generate_contacts,
 )
-from curves import bezier
 
 __EPS = 1e-5
 np.set_printoptions(precision=2, suppress=True, linewidth=100)
