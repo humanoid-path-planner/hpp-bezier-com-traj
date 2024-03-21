@@ -1,5 +1,30 @@
-[tool.black]
-exclude = "cmake"
+[build-system]
+build-backend = "cmeel.build"
+requires = [
+  "cmeel-boost[build] ~= 1.83.0",
+  "cmeel-glpk[build]",
+  "cmeel[build]",
+  "hpp-centroidal-dynamics[build]",
+  "ndcurves[build]"
+]
+
+[project]
+dependencies = [
+  "cmeel-boost ~= 1.83.0",
+  "cmeel-glpk",
+  "hpp-centroidal-dynamics",
+  "ndcurves"
+]
+description = "Multi contact trajectory generation for the COM using Bezier curves"
+license = "BSD-2-Clause"
+name = "hpp-bezier-com-traj"
+version = "5.0.0"
+
+[tool.cmeel]
+configure-args = ["-DUSE_GLPK=ON"]
 
 [tool.isort]
 profile = "black"
+
+[tool.tomlsort]
+all = true
