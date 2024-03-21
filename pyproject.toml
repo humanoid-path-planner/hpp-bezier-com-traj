@@ -23,8 +23,11 @@ version = "5.0.0"
 [tool.cmeel]
 configure-args = ["-DUSE_GLPK=ON"]
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+extend-exclude = ["cmake"]
+
+[tool.ruff.lint]
+extend-select = ["I", "NPY", "RUF", "UP", "W"]
 
 [tool.tomlsort]
 all = true
