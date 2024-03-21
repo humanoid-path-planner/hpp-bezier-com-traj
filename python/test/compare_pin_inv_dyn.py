@@ -1,20 +1,16 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thu Sep  1 16:54:39 2016
 
 @author: stonneau
 """
 
-from __future__ import print_function
-
 from math import atan, pi
 
 import numpy as np
 from centroidal_dynamics import Equilibrium, EquilibriumAlgorithm
 from curves import bezier
-from numpy import array, asarray, asmatrix
+from numpy import array, asarray, asmatrix, matrix, zeros
 from numpy import cross as X
-from numpy import matrix, zeros
 from pinocchio_inv_dyn.multi_contact.bezier.bezier_0_step_capturability import (
     BezierZeroStepCapturability,
     compute_CWC,
@@ -161,7 +157,8 @@ def test_continuous_cpp_vs_continuous_py(N_CONTACTS=2, solver="qpoases", verb=0)
             mass, [X_LB, Y_LB, Z_LB], [X_UB, Y_UB, Z_UB], H, h
         )
 
-    dc0 = np.random.uniform(-1, 1, size=3)
+    rng = np.random.default_rng()
+    dc0 = rng.uniform(-1, 1, size=3)
 
     Z_MIN = np.max(p[:, 2]) - 0.1
     Ineq_kin = zeros([3, 3])
