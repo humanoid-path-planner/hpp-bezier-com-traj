@@ -35,9 +35,7 @@ add_project_dependency(hpp-centroidal-dynamics REQUIRED)
 add_project_dependency(ndcurves 1.0.0 REQUIRED)
 
 if(USE_GLPK)
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-                        "${PROJECT_SOURCE_DIR}/cmake/find-external/glpk")
-  add_project_dependency(glpk REQUIRED)
+  add_project_dependency(glpk REQUIRED FIND_EXTERNAL glpk)
   add_definitions(-DUSE_GLPK_SOLVER=1)
 endif(USE_GLPK)
 
