@@ -2,7 +2,9 @@
   "nodes": {
     "flake-parts": {
       "inputs": {
-        "nixpkgs-lib": "nixpkgs-lib"
+        "nixpkgs-lib": [
+          "nixpkgs"
+        ]
       },
       "locked": {
         "lastModified": 1717285511,
@@ -15,6 +17,54 @@
       "original": {
         "owner": "hercules-ci",
         "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "hpp-centroidal-dynamics": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1719580311,
+        "narHash": "sha256-t4xi0DRyB2IXNenwRaibKN0VRqpKgCcOqNhg0utTeqc=",
+        "owner": "humanoid-path-planner",
+        "repo": "hpp-centroidal-dynamics",
+        "rev": "f544bb342f55964b3c35eff32be78eb9ac2aebd1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "humanoid-path-planner",
+        "ref": "release/5.1.0",
+        "repo": "hpp-centroidal-dynamics",
+        "type": "github"
+      }
+    },
+    "ndcurves": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1719583351,
+        "narHash": "sha256-N0XZQGm4uNArzPHbSl9bBM0kTwi7cCDOzPCM3lJ98Gk=",
+        "owner": "loco-3d",
+        "repo": "ndcurves",
+        "rev": "e84762286a356e185f38c9846ee8a9c4c49be43b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "loco-3d",
+        "ref": "release/1.5.0",
+        "repo": "ndcurves",
         "type": "github"
       }
     },
@@ -34,21 +84,11 @@
         "type": "github"
       }
     },
-    "nixpkgs-lib": {
-      "locked": {
-        "lastModified": 1717284937,
-        "narHash": "sha256-lIbdfCsf8LMFloheeE6N31+BMIeixqyQWbSr2vk79EQ=",
-        "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs/archive/eb9ceca17df2ea50a250b6b27f7bf6ab0186f198.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs/archive/eb9ceca17df2ea50a250b6b27f7bf6ab0186f198.tar.gz"
-      }
-    },
     "root": {
       "inputs": {
         "flake-parts": "flake-parts",
+        "hpp-centroidal-dynamics": "hpp-centroidal-dynamics",
+        "ndcurves": "ndcurves",
         "nixpkgs": "nixpkgs"
       }
     }
