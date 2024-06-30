@@ -37,9 +37,12 @@
           ...
         }:
         {
-          packages.default = pkgs.callPackage ./. {
-            hpp-centroidal-dynamics = inputs.hpp-centroidal-dynamics.packages.${system}.default;
-            ndcurves = inputs.ndcurves.packages.${system}.default;
+          packages = {
+            inherit (pkgs) cachix;
+            default = pkgs.callPackage ./. {
+              hpp-centroidal-dynamics = inputs.hpp-centroidal-dynamics.packages.${system}.default;
+              ndcurves = inputs.ndcurves.packages.${system}.default;
+            };
           };
           devShells.default = pkgs.mkShell { inputsFrom = [ self'.packages.default ]; };
         };
