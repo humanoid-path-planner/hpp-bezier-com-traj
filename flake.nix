@@ -8,7 +8,7 @@
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
     hpp-centroidal-dynamics = {
-      url = "github:humanoid-path-planner/hpp-centroidal-dynamics/release/5.1.0";
+      url = "github:humanoid-path-planner/hpp-centroidal-dynamics";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };

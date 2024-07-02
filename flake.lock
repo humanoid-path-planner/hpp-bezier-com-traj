@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1717285511,
-        "narHash": "sha256-iKzJcpdXih14qYVcZ9QC9XuZYnPc6T8YImb6dX166kw=",
+        "lastModified": 1719877454,
+        "narHash": "sha256-g5N1yyOSsPNiOlFfkuI/wcUjmtah+nxdImJqrSATjOU=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "2a55567fcf15b1b1c7ed712a2c6fadaec7412ea8",
+        "rev": "4e3583423212f9303aa1a6337f8dffb415920e4f",
         "type": "github"
       },
       "original": {
@@ -30,16 +30,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1719580311,
-        "narHash": "sha256-t4xi0DRyB2IXNenwRaibKN0VRqpKgCcOqNhg0utTeqc=",
+        "lastModified": 1719769266,
+        "narHash": "sha256-z5JfncCDNHYhpGZ+CDiq/o/1g7bGbfiBrcEx0aIoD6w=",
         "owner": "humanoid-path-planner",
         "repo": "hpp-centroidal-dynamics",
-        "rev": "f544bb342f55964b3c35eff32be78eb9ac2aebd1",
+        "rev": "f4622a437cf7a596897f38d61e5477a7b6387877",
         "type": "github"
       },
       "original": {
         "owner": "humanoid-path-planner",
-        "ref": "release/5.1.0",
         "repo": "hpp-centroidal-dynamics",
         "type": "github"
       }
@@ -70,11 +69,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1719575122,
-        "narHash": "sha256-1x3SNH6GtWgpHmhxO4pCz6nidxjCAheF0FpSXSjqRrg=",
+        "lastModified": 1719674427,
+        "narHash": "sha256-z2hCpVyfnmYTA5iabf1SW4peFV9itE1JJcXNBKIFkDg=",
         "owner": "nim65s",
         "repo": "nixpkgs",
-        "rev": "5206f72d0fadec6f15e6130a86c0695ceb5ec92d",
+        "rev": "b81610d293fac26c2ec6a81718a979bc25f8c155",
         "type": "github"
       },
       "original": {
