@@ -20,65 +20,17 @@
         "type": "github"
       }
     },
-    "hpp-centroidal-dynamics": {
-      "inputs": {
-        "flake-parts": [
-          "flake-parts"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1719769266,
-        "narHash": "sha256-z5JfncCDNHYhpGZ+CDiq/o/1g7bGbfiBrcEx0aIoD6w=",
-        "owner": "humanoid-path-planner",
-        "repo": "hpp-centroidal-dynamics",
-        "rev": "f4622a437cf7a596897f38d61e5477a7b6387877",
-        "type": "github"
-      },
-      "original": {
-        "owner": "humanoid-path-planner",
-        "repo": "hpp-centroidal-dynamics",
-        "type": "github"
-      }
-    },
-    "ndcurves": {
-      "inputs": {
-        "flake-parts": [
-          "flake-parts"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1719583351,
-        "narHash": "sha256-N0XZQGm4uNArzPHbSl9bBM0kTwi7cCDOzPCM3lJ98Gk=",
-        "owner": "loco-3d",
-        "repo": "ndcurves",
-        "rev": "e84762286a356e185f38c9846ee8a9c4c49be43b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "loco-3d",
-        "ref": "release/1.5.0",
-        "repo": "ndcurves",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1719674427,
-        "narHash": "sha256-z2hCpVyfnmYTA5iabf1SW4peFV9itE1JJcXNBKIFkDg=",
-        "owner": "nim65s",
+        "lastModified": 1727174734,
+        "narHash": "sha256-xa3TynMF5vaWonmTOg/Ejc1Fmo0GkQnCaVRVkBc3z2I=",
+        "owner": "gepetto",
         "repo": "nixpkgs",
-        "rev": "b81610d293fac26c2ec6a81718a979bc25f8c155",
+        "rev": "0ad139a0e4372abc12320c8c92ee90e0e5e296e1",
         "type": "github"
       },
       "original": {
-        "owner": "nim65s",
-        "ref": "gepetto",
+        "owner": "gepetto",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -86,8 +38,6 @@
     "root": {
       "inputs": {
         "flake-parts": "flake-parts",
-        "hpp-centroidal-dynamics": "hpp-centroidal-dynamics",
-        "ndcurves": "ndcurves",
         "nixpkgs": "nixpkgs"
       }
     }
