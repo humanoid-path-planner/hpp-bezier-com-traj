@@ -18,7 +18,7 @@ dependencies = [
 description = "Multi contact trajectory generation for the COM using Bezier curves"
 license = "BSD-2-Clause"
 name = "hpp-bezier-com-traj"
-version = "5.2.0"
+version = "6.0.0"
 
 [tool.cmeel]
 configure-args = ["-DUSE_GLPK=ON"]
