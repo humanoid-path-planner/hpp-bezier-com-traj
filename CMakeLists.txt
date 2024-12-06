@@ -62,7 +62,7 @@ endif(BUILD_PYTHON_INTERFACE)
 # Project dependencies
 
 add_project_dependency(hpp-centroidal-dynamics REQUIRED)
-add_project_dependency(ndcurves 1.0.0 REQUIRED)
+add_project_dependency(ndcurves REQUIRED)
 
 if(USE_GLPK)
   add_project_dependency(glpk REQUIRED FIND_EXTERNAL glpk)
