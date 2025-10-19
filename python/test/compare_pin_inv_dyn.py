@@ -297,7 +297,7 @@ if __name__ == "__main__":
         # (H,h) = compute_GIWC(p, N, mu);
         global mass
         global g_vector
-        (B_sp, b_sp) = compute_support_polygon(
+        (_B_sp, _b_sp) = compute_support_polygon(
             H, h, mass, g_vector, eliminate_redundancies=False
         )
         X_MIN = np.min(p[:, 0])
@@ -360,7 +360,7 @@ if __name__ == "__main__":
             t_max,
             c_of_t,
             dc_of_t,
-            ddc_of_t,
+            _ddc_of_t,
             H,
             h,
             p,
