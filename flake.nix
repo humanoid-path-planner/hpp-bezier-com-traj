@@ -14,36 +14,27 @@
   outputs =
     inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } (
-      { lib, self, ... }:
+      { lib, ... }:
       {
         systems = import inputs.systems;
         imports = [
           inputs.gepetto.flakeModule
-          { gepetto-pkgs.overlays = [ self.overlays.default ]; }
-        ];
-        flake.overlays.default = _final: prev: {
-          hpp-bezier-com-traj = prev.hpp-bezier-com-traj.overrideAttrs {
-            src = lib.fileset.toSource {
-              root = ./.;
-              fileset = lib.fileset.unions [
-                ./CMakeLists.txt
-                ./include
-                ./package.xml
-                ./python
-                ./src
-                ./tests
-              ];
-            };
-          };
-        };
-        perSystem =
-          { pkgs, self', ... }:
           {
-            packages = {
-              default = self'.packages.hpp-bezier-com-traj;
-              hpp-bezier-com-traj = pkgs.python3Packages.hpp-bezier-com-traj;
+            gazebros2nix.overrides.hpp-bezier-com-traj = _final: {
+              src = lib.fileset.toSource {
+                root = ./.;
+                fileset = lib.fileset.unions [
+                  ./CMakeLists.txt
+                  ./include
+                  ./package.xml
+                  ./python
+                  ./src
+                  ./tests
+                ];
+              };
             };
-          };
+          }
+        ];
       }
     );
 }
