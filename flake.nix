@@ -8,6 +8,7 @@
     inputs.gepetto.lib.mkFlakoboros inputs (
       { lib, ... }:
       {
+        extraDevPyPackages = [ "hpp-bezier-com-traj" ];
         overrideAttrs.hpp-bezier-com-traj = {
           src = lib.fileset.toSource {
             root = ./.;
