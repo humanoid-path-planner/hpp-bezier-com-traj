@@ -173,7 +173,13 @@ int main() {
 
   MatrixX3 p, N;
   RVector3 com_LB, com_UB;
-  Equilibrium solver_PP("PP", mass, generatorsPerContact, SOLVER_LP_QPOASES,
+  Equilibrium solver_PP("PP", mass, generatorsPerContact,
+#ifdef CLP_FOUND
+                        SOLVER_LP_CLP
+#else
+                        SOLVER_LP_QPOASES
+#endif
+                        ,
                         false, 10, false);
   int succContinuous = 0, succDiscretize = 0, succdL = 0, succDiscretizedL = 0,
       succKin = 0, succdLKin = 0, succdLAng = 0;
