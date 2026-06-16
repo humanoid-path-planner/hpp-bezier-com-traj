@@ -1,14 +1,22 @@
 <?xml version='1.0'?>
-<package format='2'>
-    <name>hpp-bezier-com-traj</name>
-    <version>8.0.0</version>
-    <description>Multi contact trajectory generation for the COM using Bezier curves</description>
+<package format='3'>
+  <name>hpp_bezier_com_traj</name>
+  <version>8.0.0</version>
+  <description>Multi contact trajectory generation for the COM using Bezier curves</description>
+  <author>Pierre Fernbach</author>
+  <author>Steve Tonneau</author>
+  <maintainer email='guilhem.saurel@laas.fr'>Guilhem Saurel</maintainer>
+  <license>BSD-2-Clause</license>
 
-    <maintainer email='guilhem.saurel@laas.fr'>Guilhem Saurel</maintainer>
-    <license>BSD</license>
+  <depend>eigenpy</depend>
+  <depend>glpk</depend>
+  <depend>hpp_centroidal_dynamics</depend>
+  <depend>ndcurves</depend>
 
-    <author>Pierre Fernbach</author>
-    <author>Steve Tonneau</author>
+  <buildtool_depend>cmake</buildtool_depend>
+  <build_depend>jrl_cmakemodules</build_depend>
 
-    <buildtool_depend>catkin</buildtool_depend>
+  <export>
+    <build_type>cmake</build_type>
+  </export>
 </package>
