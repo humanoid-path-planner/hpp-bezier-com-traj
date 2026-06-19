@@ -99,8 +99,14 @@ centroidal_dynamics::Equilibrium ComputeContactCone(
     const centroidal_dynamics::EquilibriumAlgorithm algo =
         centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP) {
   centroidal_dynamics::Equilibrium contactCone(
-      "test-quasiStatic", MASS, 4, centroidal_dynamics::SOLVER_LP_QPOASES, true,
-      10, false);
+      "test-quasiStatic", MASS, 4,
+#ifdef CLP_FOUND
+      centroidal_dynamics::SOLVER_LP_CLP
+#else
+      centroidal_dynamics::SOLVER_LP_QPOASES
+#endif
+      ,
+      true, 10, false);
   // centroidal_dynamics::EquilibriumAlgorithm alg =
   // centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
   contactCone.setNewContacts(positions, normals, MU, algo);
