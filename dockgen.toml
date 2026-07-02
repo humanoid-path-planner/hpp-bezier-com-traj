@@ -1,0 +1,10 @@
+[hpp-bezier-com-traj]
+apt_deps = ["libglpk-dev"]
+src_deps = ["hpp-centroidal-dynamics"]
+url = "."
+
+[hpp-centroidal-dynamics]
+url = "github:humanoid-path-planner"
+
+[ndcurves]
+url = "github:loco-3d"
