@@ -15,7 +15,6 @@ jobs:
       NOT_TEST_BUILD: true # TODO
       UPSTREAM_WORKSPACE: |
         github:humanoid-path-planner/hpp-centroidal-dynamics#devel
-        github:loco-3d/ndcurves#devel
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
